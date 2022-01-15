@@ -68,6 +68,13 @@ def calcul_equipes(hpers):
 
 # il faut assigner les employés aux équipes selon les règles de gestion des non_dispo.
 
+# types de non dispo: 1 = quart pour non-dispo (selon la struc de cette table : le quart par défaut)
+#                     2  = vacances
+#                     3  = autres cas de non-dispo
+
+# Pour le moment ce sont des créneaux à interpréter selon le type de dispo.
+
+
 #  -- a) choisir les employés soit dans l'ordre d'ancienneté ou alors au hasard ?? (les plus anciens sur les equipes de jour, par exemple)
 #  -- b) pour chaque équipe et cpt < nb_emplo requis,
 #         cpt_eq = 0
