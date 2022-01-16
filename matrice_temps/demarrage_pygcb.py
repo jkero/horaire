@@ -38,6 +38,7 @@ def create_connection(db_file):
             print("sem : " + str(week))
             print("employes requis ("+ str(hpers_req) + "/" + str(temps_quart) + ") =  " + str(hpers_req/temps_quart))
             print("nb. equipes = emp_requis/max_par_eqp = " + str(employes_requis) + "/" + str(max_emp_par_equipe) + " = " + str("%2.0f") % (employes_requis/max_emp_par_equipe))
+            verifier_dispo_employe(conn, auj)
 # la composition des equipes doit se faire par jour, à cause des non-dispos qui peuvent être une seule journée.
         else:
             print("Error! cannot create the database connection.")
@@ -123,6 +124,34 @@ def select_count_emp_dispo(conn, sem):
     res = cur.execute("select distinct count(id) from employes where non_dispo_fk is NULL").fetchone()
     return res[0]
 
+def verifier_dispo_employe(conn, date):
+# premier type: non_dispo_fk is null
+    cur = conn.cursor()
+    res = cur.execute("SELECT count('nom') from employes where non_dispo_fk is NULL").fetchone()
+    print("dispos type 4 verifiées pour " + str(res[0]))
+    res2 = conn.cursor()
+    res2 = cur.execute("SELECT count('nom') from employes where non_dispo_fk NOT NULL").fetchone()
+    print("dispos type 1-3 a valider  pour " + str(res2[0]))
+
+    all_full_dispos = "SELECT * from employes where non_dispo_fk is NULL"
+    all_cond_dispos = "SELECT * from employes where non_dispo_fk not NULL"
+
+    res_les_non_disp = cur.execute(all_cond_dispos).fetchall()
+    for enr in res_les_non_disp:
+        print(enr[5])
+        cur2 = conn.cursor()
+        the_q = "select * from emp_non_dispo where id = " + str(enr[5])
+        print("la query : " + the_q)
+        res3 = cur2.execute(the_q)
+        print(res3.fetchall())
+
+#        resdispo = cur.execute("select '" + date + "' between date('') from emp_non_dispo where non_dispo_fk is NULL").fetchone()
+
+
+
+    res = cur.execute("SELECT count('nom') from employes where non_dispo_fk is NULL").fetchone()
+    print("dispos type 4 verifiées pour " + str(res[0]))
+
 if __name__ == '__main__':
     create_connection(r"C:\Users\j\Documents\pythonProject\matrice_temps\letemps.db")
 
@@ -148,3 +177,11 @@ if __name__ == '__main__':
 #       sinon
 #           creer equipe_courante(index+1)
 #           inserer_employe
+
+#import datetime
+
+#def weeknum_to_dates(weeknum): mmouais
+
+#    return [datetime.strptime("2022-W"+ str(weeknum) + str(x), "%Y-W%W-%w").strftime('%d.%m.%Y') for x in range(-6,0)]
+
+#weeknum_to_dates(37)
