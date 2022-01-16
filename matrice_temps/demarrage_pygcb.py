@@ -68,9 +68,10 @@ def calcul_equipes(hpers):
 
 # il faut assigner les employés aux équipes selon les règles de gestion des non_dispo.
 
-# types de non dispo: 1 = quart pour non-dispo (selon la struc de cette table : le quart par défaut)
-#                     2  = vacances
-#                     3  = autres cas de non-dispo
+# types de non dispo: 1 = quart pour non-dispo (temps/date précis où il y a non-dispo)
+#                     2  = vacances (temps/date précis où il y a non-dispo)
+#                     3  = autres cas de non-dispo (temps/date précis où il y a non-dispo)
+#                     4  = quart assigné (seules les heures sont importantes)
 
 # Pour le moment ce sont des créneaux à interpréter selon le type de dispo.
 
@@ -94,6 +95,17 @@ def calcul_equipes(hpers):
 # bref, quand un employe est intégré, il faut lui appliquer une grille de non dispos et de quarts, selon la période (on lui assigne un quart + les vacances + les autres non-dispos.).
 
 def select_hpers(conn, sem):
+    """
+    Query all rows in the tasks table
+    :param conn: the Connection object
+    :return:
+    """
+    cur = conn.cursor()
+    res = cur.execute("SELECT hpers FROM previsions_hpers where semaine = " + sem).fetchone()
+    print(res[0])
+    return res[0]
+
+def select_count_emp_dispo(conn, sem, type_dispo):
     """
     Query all rows in the tasks table
     :param conn: the Connection object
