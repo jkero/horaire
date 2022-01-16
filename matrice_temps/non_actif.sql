@@ -1,0 +1,1 @@
+select id, nom from employes where debut = "0" and fin = "0"

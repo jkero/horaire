@@ -1,0 +1,1 @@
+select date('2022-01-22','-6 day', 'weekday 0','+6 day') 
