@@ -140,7 +140,7 @@ def verifier_dispo_employe(conn, date):
     for enr in res_les_non_disp:
         print(enr[5])
         cur2 = conn.cursor()
-        the_q = "select * from emp_non_dispo where id = " + str(enr[5])
+        the_q = "select * from emp_non_dispo where id = " + str(enr[5]) # TODO il faut débrouiller les comparaisons de dates
         print("la query : " + the_q)
         res3 = cur2.execute(the_q)
         print(res3.fetchall())
