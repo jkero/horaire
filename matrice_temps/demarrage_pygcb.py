@@ -22,12 +22,23 @@ from sqlite3 import Error
 def create_connection(db_file):
     """ create a database connection to a SQLite database """
     conn = None
+    temps_quart = 7.5
+    max_emp_par_equipe = 4
+    nb_quarts_par_jour = 3
     try:
         conn = sqlite3.connect(db_file)
         if conn is not None:
             auj = datetime.today()
             week = str((auj).isocalendar()[1])
+            hpers_req = select_hpers(conn,week)
+            employes_dispos = select_count_emp_dispo(conn, week)
             calcul_equipes(select_hpers(conn,week))
+            employes_requis = hpers_req/temps_quart
+            print("auj :" + str(auj))
+            print("sem : " + str(week))
+            print("employes requis ("+ str(hpers_req) + "/" + str(temps_quart) + ") =  " + str(hpers_req/temps_quart))
+            print("nb. equipes = emp_requis/max_par_eqp = " + str(employes_requis) + "/" + str(max_emp_par_equipe) + " = " + str("%2.0f") % (employes_requis/max_emp_par_equipe))
+# la composition des equipes doit se faire par jour, à cause des non-dispos qui peuvent être une seule journée.
         else:
             print("Error! cannot create the database connection.")
     except Error as e:
@@ -37,9 +48,7 @@ def create_connection(db_file):
             conn.close()
 
 def calcul_equipes(hpers):
-    temps_quart = 7.5
-    max_emp_par_equipe = 4
-    nb_quarts_par_jour = 3
+    print("---------")
  # la logique equipes + hpers + quarts est en partie ici.
 
 # 50 heures personnes signifie qu'un travail a besoin de 50 heures * 1 personne
@@ -102,18 +111,16 @@ def select_hpers(conn, sem):
     """
     cur = conn.cursor()
     res = cur.execute("SELECT hpers FROM previsions_hpers where semaine = " + sem).fetchone()
-    print(res[0])
     return res[0]
 
-def select_count_emp_dispo(conn, sem, type_dispo):
+def select_count_emp_dispo(conn, sem):
     """
     Query all rows in the tasks table
     :param conn: the Connection object
     :return:
     """
     cur = conn.cursor()
-    res = cur.execute("SELECT hpers FROM previsions_hpers where semaine = " + sem).fetchone()
-    print(res[0])
+    res = cur.execute("select distinct count(id) from employes where non_dispo_fk is NULL").fetchone()
     return res[0]
 
 if __name__ == '__main__':
@@ -121,3 +128,23 @@ if __name__ == '__main__':
 
 
 #print(datetime.fromisoformat(auj2).isocalendar()[1])
+# trouver le dimanche de la semaine sqlite SELECT date('2022-01-22','-6 day', 'weekday 0'); // 2022-01-16
+# la semaine de ce dimanche SELECT strftime('%W',date('2022-01-16','-6 day', 'weekday 0')); // 02
+# auj = datetime.today()
+# auj.strftime('%Y-%m-%d')
+# '2022-01-16' --> avoir la date seulement
+
+# si un jour des non_dispos de l'emp == journée de constitution de l'équipe, alors rejeter l'emp.
+
+# logique constituer les equipes
+#
+#creer equipe_courante(index)
+#
+# shuffle employés? Liste par rang ancienneté?
+#
+# pour chaque employé disponible ET non-assigné (R.16.) #employé est dispo (fk_dispo = null ou alors scan(date non_dispo) != ce jour-ci)
+#       si eq.courante.nb_equipiers < max_par_equipe
+#           inserer_employe
+#       sinon
+#           creer equipe_courante(index+1)
+#           inserer_employe

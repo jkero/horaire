@@ -44,23 +44,29 @@ def lire_fich(conn):
 
 def ajouter_employe(conn, cpt, nom, prenom):
     # araay qui suit : multiple, h_debut, h_fin
-    criteres_affect = [[7,'5','13'],[8,'8','16'],[9,'12','20']]
+    criteres_affect = [[14,'5','13'],[9,'8','16'],[13,'12','20']]
     hd = '0'
     hf = '0'
-    le_type = '4'  # quart par : defaut ne refere pas a table emp_non_dispo.
-    if cpt % criteres_affect[0][0]:
+    # quart par : defaut ne refere pas a table emp_non_dispo. pas de fk non-dispo
+    if cpt % criteres_affect[0][0] == 0:
         hd = criteres_affect[0][1]
         hf = criteres_affect[0][2]
-    elif cpt % criteres_affect[1][0]:
+    elif cpt % criteres_affect[1][0] == 0:
         hd = criteres_affect[1][1]
         hf = criteres_affect[1][2]
-    elif cpt % criteres_affect[2][0]:
+    elif cpt % criteres_affect[2][0] == 0:
         hd = criteres_affect[2][1]
         hf = criteres_affect[2][2]
-    chaine_sql = "insert into employes(\"nom\",\"prenom\") values ('"+ nom + "','" + prenom +"','" + hd + "' ,'" + hf +"','" + le_type +"')"
+
+    chaine_sql = "insert into employes(\"nom\",\"prenom\",\"debut\",\"fin\") values ('"+ nom + "','" + prenom +"','" + hd + "' ,'" + hf +"')"
     print(chaine_sql)
     c = conn.cursor()
-    c.execute(chaine_sql)
+    try:
+        c.execute(chaine_sql)
+    except Error:
+        print(Error)
+    finally:
+        conn.commit()
 
 
 
