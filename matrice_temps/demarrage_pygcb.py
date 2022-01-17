@@ -39,7 +39,7 @@ def create_connection(db_file):
             print("employes requis ("+ str(hpers_req) + "/" + str(temps_quart) + ") =  " + str(hpers_req/temps_quart))
             print("nb. equipes = emp_requis/max_par_eqp = " + str(employes_requis) + "/" + str(max_emp_par_equipe) + " = " + str("%2.0f") % (employes_requis/max_emp_par_equipe))
             #verifier_dispo_employe(conn, auj)
-            equipes = {'A': []}
+            equipes = {'A': [],'B': [],'C': []}
             attribution_equipe(conn, equipes, auj)
 # la composition des equipes doit se faire par jour, à cause des non-dispos qui peuvent être une seule journée.
         else:
@@ -74,32 +74,6 @@ def select_count_emp_dispo(conn, sem):
     res = cur.execute("select distinct count(id) from employes where non_dispo_fk is NULL").fetchone()
     return res[0]
 
-def verifier_dispo_employe(conn, date):
-# premier type: non_dispo_fk is null
-    cur = conn.cursor()
-    res = cur.execute("SELECT count('nom') from employes where non_dispo_fk is NULL").fetchone()
-    print("dispos type 4 verifiées pour " + str(res[0]))
-    res2 = conn.cursor()
-    res2 = cur.execute("SELECT count('nom') from employes where non_dispo_fk NOT NULL").fetchone()
-    print("dispos type 1-3 a valider  pour " + str(res2[0]))
-
-    all_full_dispos = "SELECT * from employes where non_dispo_fk is NULL"
-    all_cond_dispos = "SELECT * from employes where non_dispo_fk not NULL"
-
-    res_les_non_disp = cur.execute(all_cond_dispos).fetchall()
-    for enr in res_les_non_disp:
-        print(enr[5])
-        cur2 = conn.cursor()
-        the_q = "select * from emp_non_dispo where id = " + str(enr[5]) # TODO il faut débrouiller les comparaisons de dates
-        print("la query : " + the_q)
-        res3 = cur2.execute(the_q).fetchall()
-        check_inclusion(date, res3[0][2],res3[0][3])
- #       print(res3[2] + " - " + res3[3])
-#        resdispo = cur.execute("select '" + date + "' between date('') from emp_non_dispo where non_dispo_fk is NULL").fetchone()
-
-    res = cur.execute("SELECT count('nom') from employes where non_dispo_fk is NULL").fetchone()
-    print("dispos type 4 verifiées pour " + str(res[0]))
-
 def check_inclusion(ref, deb, fin):
     print(str(type(ref)) + str(ref))
     print(str(type(deb) )+ str(deb))
@@ -108,11 +82,12 @@ def check_inclusion(ref, deb, fin):
     la_fin = datetime.fromisoformat(fin)
 #    for n in range(int((la_fin - le_deb).days) + 1):
 #        print(le_deb + timedelta(n))
+    print(str((ref <= la_fin) & (ref >= le_deb)))
     return (str((ref <= la_fin) & (ref >= le_deb)))
 
 def attribution_equipe(conn, les_equipes, date):
-    all_full_dispos = "SELECT * from employes"
-    find_dispo_dates_and_type = ("select emp_non_dispo.t_exact_debut,emp_non_dispo.t_exact_fin, emp_non_dispo.type_non_dispo from emp_non_dispo where id = ?")
+    all_full_dispos = "SELECT distinct nom, prenom, debut, fin,non_dispo_fk from employes order by rang"
+    find_dispo_dates_and_type = ("select distinct emp_non_dispo.t_exact_debut,emp_non_dispo.t_exact_fin, emp_non_dispo.type_non_dispo from emp_non_dispo where id = ?")
     curseur = conn.cursor()
     curseur2 = conn.cursor()
     curseur.execute(all_full_dispos)
@@ -121,19 +96,34 @@ def attribution_equipe(conn, les_equipes, date):
     print(len(rows))
     conn.set_trace_callback(print)
     for emp in rows:
-        if emp[5] != None:
-            curseur2.execute(find_dispo_dates_and_type, str(emp[5]))
+        if emp[4] != None:
+            curseur2.execute(find_dispo_dates_and_type, str(emp[4]))
             res = curseur2.fetchone()
             print(res[0])
-            valide = check_inclusion(date, res[0], res[1])
-            if valide:
-                for nom_eq in les_equipes:
-                    if len(les_equipes[nom_eq])< 5:
-                        les_equipes[nom_eq].append(emp[2])
-                    else:
-                        continue
+            invalide = check_inclusion(date, res[0], res[1])
+            print(type(invalide))
+
+            if invalide == 'True':
+                print('************** ' + str(emp[1]).upper() + " " + str(emp[0]).upper() + " exclu " + invalide)
+                continue
+            else:
+                affecte_equipes(les_equipes, emp)
+
+        else:
+            affecte_equipes(les_equipes, emp)
 
     print(les_equipes.items())
+
+
+def affecte_equipes(les_equipes, emp):
+    for nom_eq in les_equipes:
+        if len(les_equipes[nom_eq]) < 4:
+            les_equipes[nom_eq].append(emp[1][0] + ". " + emp[0])
+            break
+        else:
+            continue
+
+
 if __name__ == '__main__':
     create_connection(r"C:\Users\j\Documents\pythonProject\matrice_temps\letemps.db")
 
@@ -214,9 +204,35 @@ if __name__ == '__main__':
 #           inserer_employe
 
 #import datetime
-
-#def weeknum_to_dates(weeknum): mmouais
-
-#    return [datetime.strptime("2022-W"+ str(weeknum) + str(x), "%Y-W%W-%w").strftime('%d.%m.%Y') for x in range(-6,0)]
-
-#weeknum_to_dates(37)
+#
+# #def weeknum_to_dates(weeknum): mmouais
+#
+# #    return [datetime.strptime("2022-W"+ str(weeknum) + str(x), "%Y-W%W-%w").strftime('%d.%m.%Y') for x in range(-6,0)]
+#
+# #weeknum_to_dates(37)
+#
+# def verifier_dispo_employe(conn, date):
+# # premier type: non_dispo_fk is null
+#     cur = conn.cursor()
+#     res = cur.execute("SELECT count('nom') from employes where non_dispo_fk is NULL order by rang").fetchone()
+#     print("dispos type 4 verifiées pour " + str(res[0]))
+#     res2 = conn.cursor()
+#     res2 = cur.execute("SELECT count('nom') from employes where non_dispo_fk NOT NULL order by rang").fetchone()
+#     print("dispos type 1-3 a valider  pour " + str(res2[0]))
+#
+#     all_full_dispos = "SELECT dictinct * from employes where non_dispo_fk is NULL order by rang"
+#     all_cond_dispos = "SELECT distinct * from employes where non_dispo_fk not NULL order by rang"
+#
+#     res_les_non_disp = cur.execute(all_cond_dispos).fetchall()
+#     for enr in res_les_non_disp:
+#         print(enr[5])
+#         cur2 = conn.cursor()
+#         the_q = "select distinct * from emp_non_dispo where id = " + str(enr[5]) # TODO il faut débrouiller les comparaisons de dates
+#         print("la query : " + the_q)
+#         res3 = cur2.execute(the_q).fetchall()
+#         check_inclusion(date, res3[0][2],res3[0][3])
+#  #       print(res3[2] + " - " + res3[3])
+# #        resdispo = cur.execute("select '" + date + "' between date('') from emp_non_dispo where non_dispo_fk is NULL").fetchone()
+#
+#     res = cur.execute("SELECT distinct count('nom') from employes where non_dispo_fk is NULL").fetchone()
+#     print("dispos type 4 verifiées pour " + str(res[0]))

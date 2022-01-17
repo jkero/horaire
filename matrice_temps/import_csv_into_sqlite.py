@@ -32,17 +32,18 @@ def main():
 
 def lire_fich(conn):
         cpt=0
-        with open('forbes.csv', encoding="UTF-8") as csvfile:
+        with open('athletes.csv', encoding="UTF-8") as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
                 s = (row['Name'].strip().replace('\'', ''))
+                r = row['Rank']
                 if " " in s:
                     a,b,*_ = s.split(" ")
                 cpt = cpt+1
                 print(str(cpt) + ": "+  a + " " + b)
-                ajouter_employe(conn, cpt, a, b)
+                ajouter_employe(conn, cpt, b, a, r)
 
-def ajouter_employe(conn, cpt, nom, prenom):
+def ajouter_employe(conn, cpt, nom, prenom, rang):
     # araay qui suit : multiple, h_debut, h_fin
     criteres_affect = [[14,'5','13'],[9,'8','16'],[13,'12','20']]
     hd = '0'
@@ -58,7 +59,7 @@ def ajouter_employe(conn, cpt, nom, prenom):
         hd = criteres_affect[2][1]
         hf = criteres_affect[2][2]
 
-    chaine_sql = "insert into employes(\"nom\",\"prenom\",\"debut\",\"fin\") values ('"+ nom + "','" + prenom +"','" + hd + "' ,'" + hf +"')"
+    chaine_sql = "insert into employes(\"nom\",\"prenom\",\"debut\",\"fin\",\"rang\") values ('"+ nom + "','" + prenom +"','" + hd + "' ,'" + hf + "','" + rang +"')"
     print(chaine_sql)
     c = conn.cursor()
     try:
