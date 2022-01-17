@@ -2,7 +2,7 @@ import sqlite3
 
 from sqlite3 import Error
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 # pour demarrer la generation de l'horaire pour une période donnée, ça prend la saisie de valeurs de base.
 # nb employes
@@ -28,7 +28,7 @@ def create_connection(db_file):
     try:
         conn = sqlite3.connect(db_file)
         if conn is not None:
-            auj = datetime.today()
+            auj = datetime.fromisoformat("2022-02-17 12:12")
             week = str((auj).isocalendar()[1])
             hpers_req = select_hpers(conn,week)
             employes_dispos = select_count_emp_dispo(conn, week)
@@ -38,7 +38,9 @@ def create_connection(db_file):
             print("sem : " + str(week))
             print("employes requis ("+ str(hpers_req) + "/" + str(temps_quart) + ") =  " + str(hpers_req/temps_quart))
             print("nb. equipes = emp_requis/max_par_eqp = " + str(employes_requis) + "/" + str(max_emp_par_equipe) + " = " + str("%2.0f") % (employes_requis/max_emp_par_equipe))
-            verifier_dispo_employe(conn, auj)
+            #verifier_dispo_employe(conn, auj)
+            equipes = {'A': []}
+            attribution_equipe(conn, equipes, auj)
 # la composition des equipes doit se faire par jour, à cause des non-dispos qui peuvent être une seule journée.
         else:
             print("Error! cannot create the database connection.")
@@ -50,6 +52,91 @@ def create_connection(db_file):
 
 def calcul_equipes(hpers):
     print("---------")
+
+
+def select_hpers(conn, sem):
+    """
+    Query all rows in the tasks table
+    :param conn: the Connection object
+    :return:
+    """
+    cur = conn.cursor()
+    res = cur.execute("SELECT hpers FROM previsions_hpers where semaine = " + sem).fetchone()
+    return res[0]
+
+def select_count_emp_dispo(conn, sem):
+    """
+    Query all rows in the tasks table
+    :param conn: the Connection object
+    :return:
+    """
+    cur = conn.cursor()
+    res = cur.execute("select distinct count(id) from employes where non_dispo_fk is NULL").fetchone()
+    return res[0]
+
+def verifier_dispo_employe(conn, date):
+# premier type: non_dispo_fk is null
+    cur = conn.cursor()
+    res = cur.execute("SELECT count('nom') from employes where non_dispo_fk is NULL").fetchone()
+    print("dispos type 4 verifiées pour " + str(res[0]))
+    res2 = conn.cursor()
+    res2 = cur.execute("SELECT count('nom') from employes where non_dispo_fk NOT NULL").fetchone()
+    print("dispos type 1-3 a valider  pour " + str(res2[0]))
+
+    all_full_dispos = "SELECT * from employes where non_dispo_fk is NULL"
+    all_cond_dispos = "SELECT * from employes where non_dispo_fk not NULL"
+
+    res_les_non_disp = cur.execute(all_cond_dispos).fetchall()
+    for enr in res_les_non_disp:
+        print(enr[5])
+        cur2 = conn.cursor()
+        the_q = "select * from emp_non_dispo where id = " + str(enr[5]) # TODO il faut débrouiller les comparaisons de dates
+        print("la query : " + the_q)
+        res3 = cur2.execute(the_q).fetchall()
+        check_inclusion(date, res3[0][2],res3[0][3])
+ #       print(res3[2] + " - " + res3[3])
+#        resdispo = cur.execute("select '" + date + "' between date('') from emp_non_dispo where non_dispo_fk is NULL").fetchone()
+
+    res = cur.execute("SELECT count('nom') from employes where non_dispo_fk is NULL").fetchone()
+    print("dispos type 4 verifiées pour " + str(res[0]))
+
+def check_inclusion(ref, deb, fin):
+    print(str(type(ref)) + str(ref))
+    print(str(type(deb) )+ str(deb))
+    print(str(type(fin)) + str(fin))
+    le_deb = datetime.fromisoformat(deb)
+    la_fin = datetime.fromisoformat(fin)
+#    for n in range(int((la_fin - le_deb).days) + 1):
+#        print(le_deb + timedelta(n))
+    return (str((ref <= la_fin) & (ref >= le_deb)))
+
+def attribution_equipe(conn, les_equipes, date):
+    all_full_dispos = "SELECT * from employes"
+    find_dispo_dates_and_type = ("select emp_non_dispo.t_exact_debut,emp_non_dispo.t_exact_fin, emp_non_dispo.type_non_dispo from emp_non_dispo where id = ?")
+    curseur = conn.cursor()
+    curseur2 = conn.cursor()
+    curseur.execute(all_full_dispos)
+    rows = curseur.fetchall()
+    print(type(rows))
+    print(len(rows))
+    conn.set_trace_callback(print)
+    for emp in rows:
+        if emp[5] != None:
+            curseur2.execute(find_dispo_dates_and_type, str(emp[5]))
+            res = curseur2.fetchone()
+            print(res[0])
+            valide = check_inclusion(date, res[0], res[1])
+            if valide:
+                for nom_eq in les_equipes:
+                    if len(les_equipes[nom_eq])< 5:
+                        les_equipes[nom_eq].append(emp[2])
+                    else:
+                        continue
+
+    print(les_equipes.items())
+if __name__ == '__main__':
+    create_connection(r"C:\Users\j\Documents\pythonProject\matrice_temps\letemps.db")
+
  # la logique equipes + hpers + quarts est en partie ici.
 
 # 50 heures personnes signifie qu'un travail a besoin de 50 heures * 1 personne
@@ -103,58 +190,6 @@ def calcul_equipes(hpers):
 #eq      y/w,x/z      y/w,x/z     c/ab/d     c/ab/d     c/ab/d       c/ab/d      y/w,x/z
 
 # bref, quand un employe est intégré, il faut lui appliquer une grille de non dispos et de quarts, selon la période (on lui assigne un quart + les vacances + les autres non-dispos.).
-
-def select_hpers(conn, sem):
-    """
-    Query all rows in the tasks table
-    :param conn: the Connection object
-    :return:
-    """
-    cur = conn.cursor()
-    res = cur.execute("SELECT hpers FROM previsions_hpers where semaine = " + sem).fetchone()
-    return res[0]
-
-def select_count_emp_dispo(conn, sem):
-    """
-    Query all rows in the tasks table
-    :param conn: the Connection object
-    :return:
-    """
-    cur = conn.cursor()
-    res = cur.execute("select distinct count(id) from employes where non_dispo_fk is NULL").fetchone()
-    return res[0]
-
-def verifier_dispo_employe(conn, date):
-# premier type: non_dispo_fk is null
-    cur = conn.cursor()
-    res = cur.execute("SELECT count('nom') from employes where non_dispo_fk is NULL").fetchone()
-    print("dispos type 4 verifiées pour " + str(res[0]))
-    res2 = conn.cursor()
-    res2 = cur.execute("SELECT count('nom') from employes where non_dispo_fk NOT NULL").fetchone()
-    print("dispos type 1-3 a valider  pour " + str(res2[0]))
-
-    all_full_dispos = "SELECT * from employes where non_dispo_fk is NULL"
-    all_cond_dispos = "SELECT * from employes where non_dispo_fk not NULL"
-
-    res_les_non_disp = cur.execute(all_cond_dispos).fetchall()
-    for enr in res_les_non_disp:
-        print(enr[5])
-        cur2 = conn.cursor()
-        the_q = "select * from emp_non_dispo where id = " + str(enr[5]) # TODO il faut débrouiller les comparaisons de dates
-        print("la query : " + the_q)
-        res3 = cur2.execute(the_q)
-        print(res3.fetchall())
-
-#        resdispo = cur.execute("select '" + date + "' between date('') from emp_non_dispo where non_dispo_fk is NULL").fetchone()
-
-
-
-    res = cur.execute("SELECT count('nom') from employes where non_dispo_fk is NULL").fetchone()
-    print("dispos type 4 verifiées pour " + str(res[0]))
-
-if __name__ == '__main__':
-    create_connection(r"C:\Users\j\Documents\pythonProject\matrice_temps\letemps.db")
-
 
 #print(datetime.fromisoformat(auj2).isocalendar()[1])
 # trouver le dimanche de la semaine sqlite SELECT date('2022-01-22','-6 day', 'weekday 0'); // 2022-01-16
