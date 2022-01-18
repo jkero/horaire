@@ -1,0 +1,4 @@
+def weeknum_to_dates(weeknum):
+    return [datetime.datetime.strptime("2021-W"+ str(weeknum) + str(x), "%Y-W%W-%w").strftime('%d.%m.%Y') for x in range(-5,0)]
+
+weeknum_to_dates(37)

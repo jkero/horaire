@@ -88,6 +88,11 @@ def check_inclusion(ref, deb, fin):
 def attribution_equipe(conn, les_equipes, date):
     all_full_dispos = "SELECT distinct nom, prenom, debut, fin, id from employes order by rang"
     find_dispo_dates_and_type = ("select distinct emp_non_dispo.t_exact_debut,emp_non_dispo.t_exact_fin, emp_non_dispo.type_non_dispo from emp_non_dispo where id_empl_fk = ?")
+
+    # Attention ici la fk sur dispo ne parche pas. ça prend plutot un fk de l'id emplo dasn la tables des non_dispos, car un emplo peut avoir plusieurs non_dispos.
+    #  De plus quand on valide la dispo, il faut corriger car la req retourne n non-dispos, on fait pas ça ici, TODO revoir tables
+
+
     curseur = conn.cursor()
     curseur2 = conn.cursor()
     curseur.execute(all_full_dispos)
