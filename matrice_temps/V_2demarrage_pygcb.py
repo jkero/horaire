@@ -1,5 +1,5 @@
 import sqlite3
-import traceback,sys
+import traceback,sys, math
 
 from sqlite3 import Error
 
@@ -26,6 +26,10 @@ def create_connection(db_file):
     temps_quart = 7.5
     max_emp_par_equipe = 4
     nb_quarts_par_jour = 3
+    equipes = {}
+    equipes_maximales = {'A': [['8-16'],[]],'B': [['8-16'],[]],'C': [['8-16'],[]], \
+                         'D': [['5-13'],[]],'E': [['5-13'],[]],'F': [['5-13'],[]], \
+                         'G': [['12-20'],[]],'H': [['12-20'],[]],'I': [['12-20'],[]]}
     try:
         conn = sqlite3.connect(db_file)
         if conn is not None:
@@ -38,15 +42,25 @@ def create_connection(db_file):
             print("auj :" + str(auj))
             print("sem : " + str(week))
             print("employes requis ("+ str(hpers_req) + "/" + str(temps_quart) + ") =  " + str(hpers_req/temps_quart))
-            print("nb. equipes = emp_requis/max_par_eqp = " + str(employes_requis) + "/" + str(max_emp_par_equipe) + " = " + str("%2.0f") % (employes_requis/max_emp_par_equipe))
-            #verifier_dispo_employe(conn, auj)
-            equipes = {'A': [],'B': [],'C': []}
+            print("nb. equipes = emp_requis/max_par_eqp = " + str(employes_requis) + "/" + str(max_emp_par_equipe) + " = " + str("%2.2f") % (employes_requis/max_emp_par_equipe))
+#   //TODO autre detail: equipes ont un quart determiné et il faudra tenter de verifier quarts par defaut des employes en les placant dans les equipes
+#   //TODO le nb d'equipes et le dictionnaire doivent être automatiques
+            count = 0
+            for key in equipes_maximales:
+                if count < round(employes_requis/max_emp_par_equipe):
+                    equipes[key] = equipes_maximales[key]
+                    count  = count + 1
+
+            print (str(equipes))
+
             attribution_equipe(conn, equipes, auj)
-# la composition des equipes doit se faire par jour, à cause des non-dispos qui peuvent être une seule journée.
+# la composition des equipes doit se faire par jour, à cause des non-dispos qui peuvent être une seule journée. //TODO attribution selon boucle par jour pour semaine en cours
         else:
             print("Error! cannot create the database connection.")
+
     except Error as e:
-        print(e)
+            print(e)
+
     finally:
         if conn:
             conn.close()
@@ -96,7 +110,7 @@ def check_inclusion(ref, res_non_dispo, conn):
 def attribution_equipe(conn, les_equipes, date):
     all_full_dispos = "SELECT distinct nom, prenom, debut, fin, id from employes order by rang"
 
-    find_dispo_dates_and_type = "select distinct emp_non_dispo.t_exact_debut,emp_non_dispo.t_exact_fin, emp_non_dispo.type_non_dispo, id_empl_fk from emp_non_dispo where id_empl_fk = '%s'"
+    find_dispo_dates_and_type = "select emp_non_dispo.t_exact_debut,emp_non_dispo.t_exact_fin, emp_non_dispo.type_non_dispo, id_empl_fk from emp_non_dispo where id_empl_fk = '%s' order by id_empl_fk"
 
     # Attention ici la fk sur dispo ne parche pas. ça prend plutot un fk de l'id emplo dasn la tables des non_dispos, car un emplo peut avoir plusieurs non_dispos.
     #  De plus quand on valide la dispo, il faut corriger car la req retourne n non-dispos, on fait pas ça ici, TODO revoir tables
@@ -108,7 +122,7 @@ def attribution_equipe(conn, les_equipes, date):
     rows = curseur.fetchall()
 #    print(type(rows))
 #    print(len(rows))
-    conn.set_trace_callback(print)
+    #conn.set_trace_callback(print)
 
     try:
         for emp in rows:
@@ -116,17 +130,23 @@ def attribution_equipe(conn, les_equipes, date):
  #           print(type(emp[4]))
             curseur2.execute(find_dispo_dates_and_type % str(emp[4]))
             res = curseur2.fetchall()
+            marqueur_non_dispo = 0
  #           print("resu pour employe " + str(emp[4])  + " " + str(len(res)))
             if len(res) > 0:
+                print(str(res))
                 for enr_dispo in res:
                     invalide = check_inclusion(date, enr_dispo, conn)
                     if invalide == 'True':
                          print('************** ' + str(emp[1]).upper() + " " + str(emp[0]).upper() + " exclu " + invalide)
+                         marqueur_non_dispo = 1
                          break
                     else:
-                      affecte_equipes(les_equipes, emp)
+                          affecte_equipes(les_equipes, emp)
+
             else:
                 affecte_equipes(les_equipes, emp)
+
+
 
     except Exception:
         traceback.print_exc(file=sys.stdout)
@@ -137,8 +157,9 @@ def attribution_equipe(conn, les_equipes, date):
 
 def affecte_equipes(les_equipes, emp):
     for nom_eq in les_equipes:
-        if len(les_equipes[nom_eq]) < 4:
-            les_equipes[nom_eq].append(emp[1][0] + ". " + emp[0])
+#        print(str(nom_eq))
+        if len(les_equipes[nom_eq][1]) < 4:
+            les_equipes[nom_eq][1].append(emp[1][0] + ". " + emp[0])
             break
         else:
             continue
