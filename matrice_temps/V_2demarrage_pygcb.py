@@ -1,4 +1,5 @@
 import sqlite3
+import traceback,sys
 
 from sqlite3 import Error
 
@@ -28,7 +29,7 @@ def create_connection(db_file):
     try:
         conn = sqlite3.connect(db_file)
         if conn is not None:
-            auj = datetime.fromisoformat("2022-02-17 12:12")
+            auj = datetime.fromisoformat("2022-04-01 12:12")
             week = str((auj).isocalendar()[1])
             hpers_req = select_hpers(conn,week)
             employes_dispos = select_count_emp_dispo(conn, week)
@@ -71,52 +72,65 @@ def select_count_emp_dispo(conn, sem):
     :return:
     """
     cur = conn.cursor()
-    res = cur.execute("select distinct count(id) from employes where non_dispo_fk is NULL").fetchone()
+    res = cur.execute("select distinct count(id) from employes order by rang").fetchone()
     return res[0]
 
-def check_inclusion(ref, deb, fin):
-    print(str(type(ref)) + str(ref))
-    print(str(type(deb) )+ str(deb))
-    print(str(type(fin)) + str(fin))
+def check_inclusion(ref, res_non_dispo, conn):
+#    print("res non dispo deb = " + str(res_non_dispo[0]) + "res non dispo fin = " + str(res_non_dispo[1]))
+    req_non_dispo_employe = "select t_exact_debut, t_exact_fin, type_non_dispo from emp_non_dispo where id_empl_fk = ?"
+    deb = res_non_dispo[0]
+    fin = res_non_dispo[1]
+
+#    print(str(type(ref)) + str(ref))
+#    print(str(type(deb) )+ str(deb))
+#    print(str(type(fin)) + str(fin))
     le_deb = datetime.fromisoformat(deb)
     la_fin = datetime.fromisoformat(fin)
-#    for n in range(int((la_fin - le_deb).days) + 1):
-#        print(le_deb + timedelta(n))
+    # for n in range(int((la_fin - le_deb).days) + 1):
+    #     print(le_deb + timedelta(n))
+    #
     print(str((ref <= la_fin) & (ref >= le_deb)))
     return (str((ref <= la_fin) & (ref >= le_deb)))
 
+
 def attribution_equipe(conn, les_equipes, date):
     all_full_dispos = "SELECT distinct nom, prenom, debut, fin, id from employes order by rang"
-    find_dispo_dates_and_type = ("select distinct emp_non_dispo.t_exact_debut,emp_non_dispo.t_exact_fin, emp_non_dispo.type_non_dispo from emp_non_dispo where id_empl_fk = ?")
+
+    find_dispo_dates_and_type = "select distinct emp_non_dispo.t_exact_debut,emp_non_dispo.t_exact_fin, emp_non_dispo.type_non_dispo, id_empl_fk from emp_non_dispo where id_empl_fk = '%s'"
 
     # Attention ici la fk sur dispo ne parche pas. ça prend plutot un fk de l'id emplo dasn la tables des non_dispos, car un emplo peut avoir plusieurs non_dispos.
     #  De plus quand on valide la dispo, il faut corriger car la req retourne n non-dispos, on fait pas ça ici, TODO revoir tables
 
-
     curseur = conn.cursor()
     curseur2 = conn.cursor()
     curseur.execute(all_full_dispos)
-    rows = curseur.fetchall()
-    print(type(rows))
-    print(len(rows))
-    conn.set_trace_callback(print)
-    for emp in rows:
-        print(str(emp[4]))
-        if emp[4] != None:
-            curseur2.execute(find_dispo_dates_and_type, str(emp[4]))
-            res = curseur2.fetchall()
-            print(res[0])
-            invalide = check_inclusion(date, res[0], res[1])
-            print(type(invalide))
 
-            if invalide == 'True':
-                print('************** ' + str(emp[1]).upper() + " " + str(emp[0]).upper() + " exclu " + invalide)
-                continue
+    rows = curseur.fetchall()
+#    print(type(rows))
+#    print(len(rows))
+    conn.set_trace_callback(print)
+
+    try:
+        for emp in rows:
+ #           print(str(emp[4]))
+ #           print(type(emp[4]))
+            curseur2.execute(find_dispo_dates_and_type % str(emp[4]))
+            res = curseur2.fetchall()
+ #           print("resu pour employe " + str(emp[4])  + " " + str(len(res)))
+            if len(res) > 0:
+                for enr_dispo in res:
+                    invalide = check_inclusion(date, enr_dispo, conn)
+                    if invalide == 'True':
+                         print('************** ' + str(emp[1]).upper() + " " + str(emp[0]).upper() + " exclu " + invalide)
+                         break
+                    else:
+                      affecte_equipes(les_equipes, emp)
             else:
                 affecte_equipes(les_equipes, emp)
 
-        else:
-            affecte_equipes(les_equipes, emp)
+    except Exception:
+        traceback.print_exc(file=sys.stdout)
+
 
     print(les_equipes.items())
 
@@ -218,7 +232,7 @@ if __name__ == '__main__':
 # #weeknum_to_dates(37)
 #
 # def verifier_dispo_employe(conn, date):
-# # premier type: non_dispo_fk is null
+# # premier type: non_dispo_fk is null   //CORRIGE CETTE CLE EST ENLEVEE
 #     cur = conn.cursor()
 #     res = cur.execute("SELECT count('nom') from employes where non_dispo_fk is NULL order by rang").fetchone()
 #     print("dispos type 4 verifiées pour " + str(res[0]))
