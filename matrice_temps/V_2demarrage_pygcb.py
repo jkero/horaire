@@ -1,24 +1,19 @@
 import sqlite3
-import traceback,sys, math
-
+import sys
+import traceback
+from datetime import datetime
 from sqlite3 import Error
 
-from datetime import date, datetime, timedelta
 
 # pour demarrer la generation de l'horaire pour une période donnée, ça prend la saisie de valeurs de base.
 # nb employes
 # nb equipes
 # prévisions heures/personnes pour la période v. table previsions_hpers
-
 # auj= datetime.today()
 # auj2 = "2022-01-03 01:00"
 # dt_string = auj.strftime("%Y-%m-%d %H:%M")
 # print("date = " + dt_string)
 # print("semaine " + str((auj).isocalendar()[1]))
-
-import sqlite3
-
-from sqlite3 import Error
 
 def create_connection(db_file):
     """ create a database connection to a SQLite database """
@@ -51,7 +46,7 @@ def create_connection(db_file):
                     equipes[key] = equipes_maximales[key]
                     count  = count + 1
 
-            print (str(equipes))
+#            print (str(equipes))
 
             attribution_equipe(conn, equipes, auj)
 # la composition des equipes doit se faire par jour, à cause des non-dispos qui peuvent être une seule journée. //TODO attribution selon boucle par jour pour semaine en cours
@@ -89,12 +84,12 @@ def select_count_emp_dispo(conn, sem):
     res = cur.execute("select distinct count(id) from employes order by rang").fetchone()
     return res[0]
 
-def check_inclusion(ref, res_non_dispo, conn):
+def check_conflit(ref, res_non_dispo, conn):
 #    print("res non dispo deb = " + str(res_non_dispo[0]) + "res non dispo fin = " + str(res_non_dispo[1]))
     req_non_dispo_employe = "select t_exact_debut, t_exact_fin, type_non_dispo from emp_non_dispo where id_empl_fk = ?"
     deb = res_non_dispo[0]
     fin = res_non_dispo[1]
-
+    retourne = 'True'
 #    print(str(type(ref)) + str(ref))
 #    print(str(type(deb) )+ str(deb))
 #    print(str(type(fin)) + str(fin))
@@ -103,48 +98,51 @@ def check_inclusion(ref, res_non_dispo, conn):
     # for n in range(int((la_fin - le_deb).days) + 1):
     #     print(le_deb + timedelta(n))
     #
-    print(str((ref <= la_fin) & (ref >= le_deb)))
-    return (str((ref <= la_fin) & (ref >= le_deb)))
+    if (str((ref <= la_fin) & (ref >= le_deb))) == 'True':
+        retourne = (str((ref <= la_fin) & (ref >= le_deb)))
+        print("\n conflit de " + str(ref) + " pour date de" + str(le_deb) + " à " + str(la_fin))
+    else:
+        retourne= "False"
+    return retourne
 
 
 def attribution_equipe(conn, les_equipes, date):
-    all_full_dispos = "SELECT distinct nom, prenom, debut, fin, id from employes order by rang"
+    all_emp = "SELECT distinct nom, prenom, debut, fin, id from employes order by rang"
 
     find_dispo_dates_and_type = "select emp_non_dispo.t_exact_debut,emp_non_dispo.t_exact_fin, emp_non_dispo.type_non_dispo, id_empl_fk from emp_non_dispo where id_empl_fk = '%s' order by id_empl_fk"
 
     # Attention ici la fk sur dispo ne parche pas. ça prend plutot un fk de l'id emplo dasn la tables des non_dispos, car un emplo peut avoir plusieurs non_dispos.
     #  De plus quand on valide la dispo, il faut corriger car la req retourne n non-dispos, on fait pas ça ici, TODO revoir tables
 
-    curseur = conn.cursor()
-    curseur2 = conn.cursor()
-    curseur.execute(all_full_dispos)
+    curseur_emp = conn.cursor()
 
-    rows = curseur.fetchall()
-#    print(type(rows))
-#    print(len(rows))
-    #conn.set_trace_callback(print)
+    curseur_dispo = conn.cursor()
+
+    curseur_emp.execute(all_emp)
+    rows = curseur_emp.fetchall()
+
+#    conn.set_trace_callback(print)
 
     try:
         for emp in rows:
- #           print(str(emp[4]))
- #           print(type(emp[4]))
-            curseur2.execute(find_dispo_dates_and_type % str(emp[4]))
-            res = curseur2.fetchall()
-            marqueur_non_dispo = 0
- #           print("resu pour employe " + str(emp[4])  + " " + str(len(res)))
+            curseur_dispo.execute(find_dispo_dates_and_type % str(emp[4]))
+            res = curseur_dispo.fetchall()
+            skip_emp = 'True'
             if len(res) > 0:
-                print(str(res))
-                for enr_dispo in res:
-                    invalide = check_inclusion(date, enr_dispo, conn)
-                    if invalide == 'True':
-                         print('************** ' + str(emp[1]).upper() + " " + str(emp[0]).upper() + " exclu " + invalide)
-                         marqueur_non_dispo = 1
-                         break
-                    else:
-                          affecte_equipes(les_equipes, emp)
+               for enr_dispo in res:
+                   conflit = check_conflit(date, enr_dispo, conn)
+                   if conflit == 'True':
+                      skip_emp = 'True'
+                      print('\n ************** ' + str(emp[1]).upper() + " " + str(emp[0]).upper() + " exclu " + conflit)
+                      break
+                   else:
+                       skip_emp = 'False'
 
+               if skip_emp == 'False':
+                   print(str(emp[4]) + " peut passer")
+                   affecte_equipes(les_equipes, emp)
             else:
-                affecte_equipes(les_equipes, emp)
+                affecte_equipes(les_equipes,emp)
 
 
 
@@ -152,7 +150,7 @@ def attribution_equipe(conn, les_equipes, date):
         traceback.print_exc(file=sys.stdout)
 
 
-    print(les_equipes.items())
+    print("\n" + str(les_equipes.items()))
 
 
 def affecte_equipes(les_equipes, emp):
