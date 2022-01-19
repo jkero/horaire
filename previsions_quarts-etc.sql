@@ -1,0 +1,1 @@
+select previsions_hpers.hpers, previsions_hpers.heures_par_jour, previsions_hpers.nb_max_par_eq, round(previsions_hpers.hpers / previsions_hpers.heures_par_jour,1) as nb_quart_eq, round(round(previsions_hpers.hpers / previsions_hpers.heures_par_jour,1)/previsions_hpers.nb_max_par_eq,1) from previsions_hpers  

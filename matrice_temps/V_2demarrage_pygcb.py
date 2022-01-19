@@ -211,6 +211,7 @@ def affecte_equipes(les_equipes, emp):
 # 140 / 7.5 = 18.7 jours/pers ; 18.7/4 = 4.7 (5) quart-équipes. À un quart par jour ça fait 5 jours. A 3 quarts pas jour
 #  ça fait 1.7 jour. La règle du nb de quarts par jour devrait être un chiffre dans la table des prévisions, puisque
 #  les chiffres sont logiquement reliés. //TODO nb_eq-quarts (prev ~ hpers), ordre assign.des créneaux-quarts, plages des créneaux-quarts
+#//TODO modelr la talbe des previsions pour refleter plusieurs regles de gestion
 
 if __name__ == '__main__':
     create_connection(r"C:\Users\j\Documents\pythonProject\matrice_temps\letemps.db")
