@@ -1,7 +1,6 @@
 import sqlite3
-import sys
-import traceback
-from datetime import datetime
+import sys, traceback, calendar, locale
+from datetime import datetime, timedelta
 from sqlite3 import Error
 import xlsxwriter
 
@@ -15,8 +14,21 @@ import xlsxwriter
 # dt_string = auj.strftime("%Y-%m-%d %H:%M")
 # print("date = " + dt_string)
 # print("semaine " + str((auj).isocalendar()[1]))
+auj = datetime.fromisoformat('2022-04-01 12:12')
+week = str((auj).isocalendar()[1])
 
-def create_connection(db_file):
+def semaine(week):
+    calendar.setfirstweekday(6)
+    locale.setlocale(locale.LC_ALL, 'FR_ca')
+    les_jours = [['Lundi', ''], ['Mardi', ''], ['Mercredi', ''], ['Jeudi', ''], ['Vendredi', ''], ['Samedi', ''],['dimanche', '']]
+    lundi = auj + timedelta(days=-auj.weekday())
+    incr = auj.weekday()
+    for jours in les_jours:
+        jours[1] = (auj + timedelta(days=-incr)).strftime('%Y-%m-%d')
+        incr = incr - 1
+    print(str(les_jours))
+
+def create_connection(db_file): #//TODO reorganiser le code sasn rapport avec la connection (sortir de cette methode)
     """ create a database connection to a SQLite database """
     conn = None
     temps_quart = 7.5
@@ -26,11 +38,10 @@ def create_connection(db_file):
     equipes_maximales = {'A': [['8-16'],[]],'B': [['8-16'],[]],'C': [['8-16'],[]], \
                          'D': [['5-13'],[]],'E': [['5-13'],[]],'F': [['5-13'],[]], \
                          'G': [['12-20'],[]],'H': [['12-20'],[]],'I': [['12-20'],[]]}
+    les_dates_de_la_semaine = semaine(week)
     try:
         conn = sqlite3.connect(db_file)
         if conn is not None:
-            auj = datetime.fromisoformat("2022-04-01 12:12")
-            week = str((auj).isocalendar()[1])
             hpers_req = select_hpers(conn,week)
             employes_dispos = select_count_emp_dispo(conn, week)
             calcul_equipes(select_hpers(conn,week))
@@ -107,7 +118,7 @@ def check_conflit(ref, res_non_dispo, conn):
         retourne= "False"
     return retourne
 
-def ecrire_excel(equipes):
+def ecrire_equipes_excel(equipes):
     # Create an new Excel file and add a worksheet.
     workbook = xlsxwriter.Workbook('demo.xlsx')
     worksheet = workbook.add_worksheet()
@@ -177,7 +188,7 @@ def attribution_equipe(conn, les_equipes, date):
             else:
                 affecte_equipes(les_equipes,emp)
 
-        ecrire_excel(les_equipes)
+        ecrire_equipes_excel(les_equipes)
 
     except Exception:
         traceback.print_exc(file=sys.stdout)
@@ -195,8 +206,11 @@ def affecte_equipes(les_equipes, emp):
         else:
             continue
 
-
-
+# //TODO on affecte les équipes TQ hpers = hpers des prévisions - ou alors c'est une fonction "quarts" qui s'en occupe
+# par exemple : prev = 140 hpers, max_pers_eq = 4, temps_quart = 7.5 alors on a:
+# 140 / 7.5 = 18.7 jours/pers ; 18.7/4 = 4.7 (5) quart-équipes. À un quart par jour ça fait 5 jours. A 3 quarts pas jour
+#  ça fait 1.7 jour. La règle du nb de quarts par jour devrait être un chiffre dans la table des prévisions, puisque
+#  les chiffres sont logiquement reliés. //TODO nb_eq-quarts (prev ~ hpers), ordre assign.des créneaux-quarts, plages des créneaux-quarts
 
 if __name__ == '__main__':
     create_connection(r"C:\Users\j\Documents\pythonProject\matrice_temps\letemps.db")
