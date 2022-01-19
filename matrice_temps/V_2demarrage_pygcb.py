@@ -3,6 +3,7 @@ import sys
 import traceback
 from datetime import datetime
 from sqlite3 import Error
+import xlsxwriter
 
 
 # pour demarrer la generation de l'horaire pour une période donnée, ça prend la saisie de valeurs de base.
@@ -49,6 +50,7 @@ def create_connection(db_file):
 #            print (str(equipes))
 
             attribution_equipe(conn, equipes, auj)
+
 # la composition des equipes doit se faire par jour, à cause des non-dispos qui peuvent être une seule journée. //TODO attribution selon boucle par jour pour semaine en cours
         else:
             print("Error! cannot create the database connection.")
@@ -105,6 +107,37 @@ def check_conflit(ref, res_non_dispo, conn):
         retourne= "False"
     return retourne
 
+def ecrire_excel(equipes):
+    # Create an new Excel file and add a worksheet.
+    workbook = xlsxwriter.Workbook('demo.xlsx')
+    worksheet = workbook.add_worksheet()
+
+    # Widen the first column to make the text clearer.
+    worksheet.set_column('A:A', 20)
+
+    # Add a bold format to use to highlight cells.
+    bold = workbook.add_format({'bold': True})
+
+    # Write some simple text.
+    worksheet.write('A1', 'Equipes')
+
+    # Text with formatting.
+    col = 1
+    row = 0
+
+    for keys in equipes: #A-E
+        col = col + 1
+        for indx_eq in range(1, len(equipes[keys][1])+1): #4
+            worksheet.write(row, col, keys, bold)
+            worksheet.write((row + indx_eq), col, equipes[keys][1][indx_eq-1])
+
+
+
+     # Insert an image.
+#    worksheet.insert_image('B5', 'logo.png')
+
+    workbook.close()
+
 
 def attribution_equipe(conn, les_equipes, date):
     all_emp = "SELECT distinct nom, prenom, debut, fin, id from employes order by rang"
@@ -144,13 +177,13 @@ def attribution_equipe(conn, les_equipes, date):
             else:
                 affecte_equipes(les_equipes,emp)
 
-
+        ecrire_excel(les_equipes)
 
     except Exception:
         traceback.print_exc(file=sys.stdout)
 
 
-    print("\n" + str(les_equipes.items()))
+    print("\n" + str(les_equipes))
 
 
 def affecte_equipes(les_equipes, emp):
@@ -161,6 +194,8 @@ def affecte_equipes(les_equipes, emp):
             break
         else:
             continue
+
+
 
 
 if __name__ == '__main__':
@@ -275,3 +310,4 @@ if __name__ == '__main__':
 #
 #     res = cur.execute("SELECT distinct count('nom') from employes where non_dispo_fk is NULL").fetchone()
 #     print("dispos type 4 verifiées pour " + str(res[0]))
+
