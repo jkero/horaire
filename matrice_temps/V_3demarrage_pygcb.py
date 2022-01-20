@@ -31,7 +31,8 @@ class horaire:
     equipes_maximales = {'A': [['8-16'], []], 'B': [['8-16'], []], 'C': [['8-16'], []], \
                          'D': [['5-13'], []], 'E': [['5-13'], []], 'F': [['5-13'], []], \
                          'G': [['12-20'], []], 'H': [['12-20'], []], 'I': [['12-20'], []]}
-
+    cpt_heures = 0
+    valeur_repartition = 0
 
     def __init__(self, la_journee):
         self.auj = datetime.fromisoformat(la_journee)        
@@ -204,12 +205,20 @@ class horaire:
             traceback.print_exc(file=sys.stdout)
 
     def affecte_equipes(self, emp):
+        if self.nb_quart_en_eq - int(self.nb_quart_en_eq) > 0.00:
+            self.valeur_repartition = int(self.nb_quarts_indivi/(self.nb_quart_en_eq + 0.5) +.5)
+
         for nom_eq in self.equipes:
-            if len(self.equipes[nom_eq][1]) < self.max_emp_par_equipe:
+            if (len(self.equipes[nom_eq][1]) < self.valeur_repartition) and (self.cpt_heures < self.hpers) :
                 self.equipes[nom_eq][1].append(emp[1][0] + ". " + emp[0])
+                self.cpt_heures = self.cpt_heures + self.duree_quart
                 break
             else:
                 continue
+# equipes inegales si nb_quart_en_eq est fractionnaire le_nb - int(le_nb) <> 0.0000.
+# alors il y a une répartition à faire 7/7/4 devient 6/6/6
+# je prends nb_quart_indivi / int(nb_quart_en_eq + .5) j'ai un montant moyen par équipe, je l'arrondis à l'entier suivant.
+# ça donne le chiffre qui rmeplace le nb max par equipes
 
     def ecrire_equipes_excel(self):
         # Create an new Excel file and add a worksheet.
