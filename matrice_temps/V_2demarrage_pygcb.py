@@ -52,6 +52,7 @@ def create_connection(db_file): #//TODO reorganiser le code sasn rapport avec la
             print("nb. equipes = emp_requis/max_par_eqp = " + str(employes_requis) + "/" + str(max_emp_par_equipe) + " = " + str("%2.2f") % (employes_requis/max_emp_par_equipe))
 #   //TODO autre detail: equipes ont un quart determiné et il faudra tenter de verifier quarts par defaut des employes en les placant dans les equipes
 #   //TODO le nb d'equipes et le dictionnaire doivent être automatiques
+#   //TODO vu les modifs à  la table previsions, modifier le traitement des nombres fondamentaux
             count = 0
             for key in equipes_maximales:
                 if count < round(employes_requis/max_emp_par_equipe):

@@ -9,213 +9,249 @@ import xlsxwriter
 # nb employes
 # nb equipes
 # prévisions heures/personnes pour la période v. table previsions_hpers
-# auj= datetime.today()
-# auj2 = "2022-01-03 01:00"
-# dt_string = auj.strftime("%Y-%m-%d %H:%M")
+# self.auj= datetime.today()
+# self.auj2 = "2022-01-03 01:00"
+# dt_string = self.auj.strftime("%Y-%m-%d %H:%M")
 # print("date = " + dt_string)
-# print("semaine " + str((auj).isocalendar()[1]))
-auj = datetime.fromisoformat('2022-04-01 12:12')
-week = str((auj).isocalendar()[1])
+# print("semaine " + str((self.auj).isocalendar()[1]))
 
-def semaine(week):
-    calendar.setfirstweekday(6)
-    locale.setlocale(locale.LC_ALL, 'FR_ca')
-    les_jours = [['Lundi', ''], ['Mardi', ''], ['Mercredi', ''], ['Jeudi', ''], ['Vendredi', ''], ['Samedi', ''],['dimanche', '']]
-    lundi = auj + timedelta(days=-auj.weekday())
-    incr = auj.weekday()
-    for jours in les_jours:
-        jours[1] = (auj + timedelta(days=-incr)).strftime('%Y-%m-%d')
-        incr = incr - 1
-    print(str(les_jours))
-
-def create_connection(db_file): #//TODO reorganiser le code sasn rapport avec la connection (sortir de cette methode)
-    """ create a database connection to a SQLite database """
+class horaire:
+    auj = ''
+    week= ''
+    les_dates_de_la_semaine = ''
     conn = None
-    temps_quart = 7.5
+    hpers_req = 0
+    employes_requis = 0
+    employes_tot = 0
+    duree_quart  = 0
     max_emp_par_equipe = 4
-    nb_quarts_par_jour = 3
-    equipes = {}
-    equipes_maximales = {'A': [['8-16'],[]],'B': [['8-16'],[]],'C': [['8-16'],[]], \
-                         'D': [['5-13'],[]],'E': [['5-13'],[]],'F': [['5-13'],[]], \
-                         'G': [['12-20'],[]],'H': [['12-20'],[]],'I': [['12-20'],[]]}
-    les_dates_de_la_semaine = semaine(week)
-    try:
-        conn = sqlite3.connect(db_file)
-        if conn is not None:
-            hpers_req = select_hpers(conn,week)
-            employes_dispos = select_count_emp_dispo(conn, week)
-            calcul_equipes(select_hpers(conn,week))
-            employes_requis = hpers_req/temps_quart
-            print("auj :" + str(auj))
-            print("sem : " + str(week))
-            print("employes requis ("+ str(hpers_req) + "/" + str(temps_quart) + ") =  " + str(hpers_req/temps_quart))
-            print("nb. equipes = emp_requis/max_par_eqp = " + str(employes_requis) + "/" + str(max_emp_par_equipe) + " = " + str("%2.2f") % (employes_requis/max_emp_par_equipe))
-#   //TODO autre detail: equipes ont un quart determiné et il faudra tenter de verifier quarts par defaut des employes en les placant dans les equipes
-#   //TODO le nb d'equipes et le dictionnaire doivent être automatiques
-#   //TODO vu les modifs à  la table previsions, modifier le traitement des nombres fondamentaux
-            count = 0
-            for key in equipes_maximales:
-                if count < round(employes_requis/max_emp_par_equipe):
-                    equipes[key] = equipes_maximales[key]
-                    count  = count + 1
+    nb_quarts_indivi = 3
+    nb_quart_en_eq = 0
+    equipes = dict()
+    equipes_maximales = {'A': [['8-16'], []], 'B': [['8-16'], []], 'C': [['8-16'], []], \
+                         'D': [['5-13'], []], 'E': [['5-13'], []], 'F': [['5-13'], []], \
+                         'G': [['12-20'], []], 'H': [['12-20'], []], 'I': [['12-20'], []]}
 
-#            print (str(equipes))
 
-            attribution_equipe(conn, equipes, auj)
-
-# la composition des equipes doit se faire par jour, à cause des non-dispos qui peuvent être une seule journée. //TODO attribution selon boucle par jour pour semaine en cours
-        else:
-            print("Error! cannot create the database connection.")
-
-    except Error as e:
+    def __init__(self, la_journee):
+        self.auj = datetime.fromisoformat(la_journee)        
+        self.week = str((self.auj).isocalendar()[1])
+        try:
+            self.create_connection(r"C:\Users\j\Documents\pythonProject\matrice_temps\letemps.db")
+            self.post_init()
+        except Exception as e:
             print(e)
-
-    finally:
-        if conn:
-            conn.close()
-
-def calcul_equipes(hpers):
-    print("---------")
-
-
-def select_hpers(conn, sem):
-    """
-    Query all rows in the tasks table
-    :param conn: the Connection object
-    :return:
-    """
-    cur = conn.cursor()
-    res = cur.execute("SELECT hpers FROM previsions_hpers where semaine = " + sem).fetchone()
-    return res[0]
-
-def select_count_emp_dispo(conn, sem):
-    """
-    Query all rows in the tasks table
-    :param conn: the Connection object
-    :return:
-    """
-    cur = conn.cursor()
-    res = cur.execute("select distinct count(id) from employes order by rang").fetchone()
-    return res[0]
-
-def check_conflit(ref, res_non_dispo, conn):
-#    print("res non dispo deb = " + str(res_non_dispo[0]) + "res non dispo fin = " + str(res_non_dispo[1]))
-    req_non_dispo_employe = "select t_exact_debut, t_exact_fin, type_non_dispo from emp_non_dispo where id_empl_fk = ?"
-    deb = res_non_dispo[0]
-    fin = res_non_dispo[1]
-    retourne = 'True'
-#    print(str(type(ref)) + str(ref))
-#    print(str(type(deb) )+ str(deb))
-#    print(str(type(fin)) + str(fin))
-    le_deb = datetime.fromisoformat(deb)
-    la_fin = datetime.fromisoformat(fin)
-    # for n in range(int((la_fin - le_deb).days) + 1):
-    #     print(le_deb + timedelta(n))
-    #
-    if (str((ref <= la_fin) & (ref >= le_deb))) == 'True':
-        retourne = (str((ref <= la_fin) & (ref >= le_deb)))
-        print("\n conflit de " + str(ref) + " pour date de" + str(le_deb) + " à " + str(la_fin))
-    else:
-        retourne= "False"
-    return retourne
-
-def ecrire_equipes_excel(equipes):
-    # Create an new Excel file and add a worksheet.
-    workbook = xlsxwriter.Workbook('demo.xlsx')
-    worksheet = workbook.add_worksheet()
-
-    # Widen the first column to make the text clearer.
-    worksheet.set_column('A:A', 20)
-
-    # Add a bold format to use to highlight cells.
-    bold = workbook.add_format({'bold': True})
-
-    # Write some simple text.
-    worksheet.write('A1', 'Equipes')
-
-    # Text with formatting.
-    col = 1
-    row = 0
-
-    for keys in equipes: #A-E
-        col = col + 1
-        for indx_eq in range(1, len(equipes[keys][1])+1): #4
-            worksheet.write(row, col, keys, bold)
-            worksheet.write((row + indx_eq), col, equipes[keys][1][indx_eq-1])
+            traceback.print_exc(file=sys.stdout)
 
 
 
-     # Insert an image.
-#    worksheet.insert_image('B5', 'logo.png')
 
-    workbook.close()
+    def post_init(self):
+        try:
+            if self.conn is not None:
+                string_previsions_config = "select previsions_hpers.hpers, previsions_hpers.heures_par_jour, \
+                    previsions_hpers.nb_max_par_eq, round(previsions_hpers.hpers / previsions_hpers.heures_par_jour,1) as nb_quart_eq," \
+                                           " round(round(previsions_hpers.hpers / previsions_hpers.heures_par_jour,1)/" \
+                                           "previsions_hpers.nb_max_par_eq,1) as nb_quarts from previsions_hpers  where annee = ? and semaine = ?"
+                cur_previsions = self.conn.cursor()
+                print("date de réf. :" + str(self.auj))
+                print("sem : " + str(self.week))
+                liste_prev = cur_previsions.execute(string_previsions_config, (self.auj.year, self.week)).fetchall()
+                self.hpers = liste_prev[0][0]
+                print("Prévisions pour " + str(self.hpers) + " h-pers")
+                self.duree_quart = liste_prev[0][1]
+                print("\t duree_quart: " + str(self.duree_quart))
+                self.nb_quarts_indivi = liste_prev[0][3] # prev hpers/heures par quart
+                print("\t nb_quart_indivi: " + str(self.nb_quarts_indivi))
+                self.max_emp_par_equipe = liste_prev[0][2]
+                print("\t max emp par eq: " + str(self.max_emp_par_equipe))
+                self.nb_quart_en_eq = liste_prev[0][4]
+                print("\t nb quarts en eq: " + str(self.nb_quart_en_eq))
+                self.employes_tot = self.select_count_emp_dispo()
+                print("\t employes_tot: " + str(self.select_count_emp_dispo()))
+
+                self.les_dates_de_la_semaine = self.semaine()
+
+                cpt_key = 0
+                for key in self.equipes_maximales:
+                    if cpt_key < round(self.nb_quart_en_eq,1):
+                        self.equipes[key] = self.equipes_maximales[key]
+                    cpt_key = cpt_key + 1
+
+                self.attribution_equipe()
+
+        except Exception as e:
+            print(e)
+            traceback.print_exc(file=sys.stdout)
 
 
-def attribution_equipe(conn, les_equipes, date):
-    all_emp = "SELECT distinct nom, prenom, debut, fin, id from employes order by rang"
+    def semaine(self):
+        calendar.setfirstweekday(6)
+        locale.setlocale(locale.LC_ALL, 'FR_ca')
+        les_jours = [['Lundi', ''], ['Mardi', ''], ['Mercredi', ''], ['Jeudi', ''], ['Vendredi', ''], ['Samedi', ''],['dimanche', '']]
+        lundi = self.auj + timedelta(days=-self.auj.weekday())
+        incr = self.auj.weekday()
+        for jours in les_jours:
+            jours[1] = (self.auj + timedelta(days=-incr)).strftime('%Y-%m-%d')
+            incr = incr - 1
+        print("\n" + str(les_jours))
+    
+    def create_connection(self, db_file): #//TODO reorganiser le code sasn rapport avec la connection (sortir de cette methode)
+        """ create a database connection to a SQLite database """
+        try:
+            self.conn = sqlite3.connect(db_file)
+            if self.conn is not None:
+                count = 0
+                for key in self.equipes_maximales:
+                    if count < round(self.employes_requis/self.max_emp_par_equipe):
+                        self.equipes[key] = self.equipes_maximales[key]
+                        count  = count + 1
+    
+    #            print (str(equipes))
+    
 
-    find_dispo_dates_and_type = "select emp_non_dispo.t_exact_debut,emp_non_dispo.t_exact_fin, emp_non_dispo.type_non_dispo, id_empl_fk from emp_non_dispo where id_empl_fk = '%s' order by id_empl_fk"
-
-    # Attention ici la fk sur dispo ne parche pas. ça prend plutot un fk de l'id emplo dasn la tables des non_dispos, car un emplo peut avoir plusieurs non_dispos.
-    #  De plus quand on valide la dispo, il faut corriger car la req retourne n non-dispos, on fait pas ça ici, TODO revoir tables
-
-    curseur_emp = conn.cursor()
-
-    curseur_dispo = conn.cursor()
-
-    curseur_emp.execute(all_emp)
-    rows = curseur_emp.fetchall()
-
-#    conn.set_trace_callback(print)
-
-    try:
-        for emp in rows:
-            curseur_dispo.execute(find_dispo_dates_and_type % str(emp[4]))
-            res = curseur_dispo.fetchall()
-            skip_emp = 'True'
-            if len(res) > 0:
-               for enr_dispo in res:
-                   conflit = check_conflit(date, enr_dispo, conn)
-                   if conflit == 'True':
-                      skip_emp = 'True'
-                      print('\n ************** ' + str(emp[1]).upper() + " " + str(emp[0]).upper() + " exclu " + conflit)
-                      break
-                   else:
-                       skip_emp = 'False'
-
-               if skip_emp == 'False':
-                   print(str(emp[4]) + " peut passer")
-                   affecte_equipes(les_equipes, emp)
+    
+    # la composition des equipes doit se faire par jour, à cause des non-dispos qui peuvent être une seule journée. //TODO attribution selon boucle par jour pour semaine en cours
             else:
-                affecte_equipes(les_equipes,emp)
+                print("Error! cannot create the database connection.")
+    
+        except Error as e:
+                print(e)
+    
 
-        ecrire_equipes_excel(les_equipes)
+    
+    def calcul_equipes(self):
+        print("---------")
+    
+    
+    def select_hpers(self):
+        """
+        Query all rows in the tasks table
+        :param conn: the Connection object
+        :return:
+        """
+        cur = self.conn.cursor()
+        res = cur.execute("SELECT hpers FROM previsions_hpers where semaine = " + self.week).fetchone()
+        return res[0]
+    
+    def select_count_emp_dispo(self):
+        """
+        Query all rows in the tasks table
+        :param conn: the Connection object
+        :return:
+        """
+        cur = self.conn.cursor()
+        res = cur.execute("select distinct count(id) from employes order by rang").fetchone()
+        return res[0]
+    
+    def check_conflit(self, ref, res_non_dispo, conn):
+        deb = res_non_dispo[0]
+        fin = res_non_dispo[1]
+        le_deb = datetime.fromisoformat(deb)
+        la_fin = datetime.fromisoformat(fin)
 
-    except Exception:
-        traceback.print_exc(file=sys.stdout)
-
-
-    print("\n" + str(les_equipes))
-
-
-def affecte_equipes(les_equipes, emp):
-    for nom_eq in les_equipes:
-#        print(str(nom_eq))
-        if len(les_equipes[nom_eq][1]) < 4:
-            les_equipes[nom_eq][1].append(emp[1][0] + ". " + emp[0])
-            break
+        if (str((ref <= la_fin) & (ref >= le_deb))) == 'True':
+            retourne = (str((ref <= la_fin) & (ref >= le_deb)))
+            print("\n conflit de " + str(ref) + " pour date de" + str(le_deb) + " à " + str(la_fin))
         else:
-            continue
+            retourne= "False"
+        return retourne
 
-# //TODO on affecte les équipes TQ hpers = hpers des prévisions - ou alors c'est une fonction "quarts" qui s'en occupe
-# par exemple : prev = 140 hpers, max_pers_eq = 4, temps_quart = 7.5 alors on a:
-# 140 / 7.5 = 18.7 jours/pers ; 18.7/4 = 4.7 (5) quart-équipes. À un quart par jour ça fait 5 jours. A 3 quarts pas jour
-#  ça fait 1.7 jour. La règle du nb de quarts par jour devrait être un chiffre dans la table des prévisions, puisque
-#  les chiffres sont logiquement reliés. //TODO nb_eq-quarts (prev ~ hpers), ordre assign.des créneaux-quarts, plages des créneaux-quarts
-#//TODO modelr la talbe des previsions pour refleter plusieurs regles de gestion
+    def attribution_equipe(self):
+        all_emp = "SELECT distinct nom, prenom, debut, fin, id from employes order by rang"
 
-if __name__ == '__main__':
-    create_connection(r"C:\Users\j\Documents\pythonProject\matrice_temps\letemps.db")
+        find_dispo_dates_and_type = "select emp_non_dispo.t_exact_debut,emp_non_dispo.t_exact_fin, emp_non_dispo.type_non_dispo, id_empl_fk from emp_non_dispo where id_empl_fk = '%s' order by id_empl_fk"
+
+        # Attention ici la fk sur dispo ne parche pas. ça prend plutot un fk de l'id emplo dasn la tables des non_dispos, car un emplo peut avoir plusieurs non_dispos.
+        #  De plus quand on valide la dispo, il faut corriger car la req retourne n non-dispos, on fait pas ça ici, TODO revoir tables
+
+        curseur_emp = self.conn.cursor()
+
+        curseur_dispo = self.conn.cursor()
+
+        curseur_emp.execute(all_emp)
+        rows = curseur_emp.fetchall()
+
+        #    self.conn.set_trace_callback(print)
+
+        try:
+            for emp in rows:
+                curseur_dispo.execute(find_dispo_dates_and_type % str(emp[4]))
+                res = curseur_dispo.fetchall()
+                #                print(" res de " + str(len(res)))
+                skip_emp = 'True'
+                if len(res) > 0:
+                    for enr_dispo in res:
+                        conflit = self.check_conflit(self.auj, enr_dispo, self.conn)
+                        if conflit == 'True':
+                            skip_emp = 'True'
+                            print('\n ************** ' + str(emp[1]).upper() + " " + str(
+                                emp[0]).upper() + " exclu " + conflit)
+                            break
+                        else:
+                            skip_emp = 'False'
+
+                    if skip_emp == 'False':
+                        print(str(emp[4]) + " peut passer")
+                        self.affecte_equipes(emp)
+                else:
+                    self.affecte_equipes(emp)
+
+            self.ecrire_equipes_excel()
+            print("\n" + str(self.equipes))
+
+        except Exception:
+            traceback.print_exc(file=sys.stdout)
+
+    def affecte_equipes(self, emp):
+        for nom_eq in self.equipes:
+            if len(self.equipes[nom_eq][1]) < self.max_emp_par_equipe:
+                self.equipes[nom_eq][1].append(emp[1][0] + ". " + emp[0])
+                break
+            else:
+                continue
+
+    def ecrire_equipes_excel(self):
+        # Create an new Excel file and add a worksheet.
+        workbook = xlsxwriter.Workbook('demo.xlsx')
+        worksheet = workbook.add_worksheet()
+    
+        # Widen the first column to make the text clearer.
+        worksheet.set_column('A:A', 20)
+    
+        # Add a bold format to use to highlight cells.
+        bold = workbook.add_format({'bold': True})
+    
+        # Write some simple text.
+        worksheet.write('A1', 'Equipes')
+    
+        # Text with formatting.
+        col = 1
+        row = 0
+    
+        for keys in self.equipes: #A-E
+            col = col + 1
+            for indx_eq in range(1, len(self.equipes[keys][1])+1): #4
+                worksheet.write(row, col, keys, bold)
+                worksheet.write((row + indx_eq), col, self.equipes[keys][1][indx_eq-1])
+    
+    
+    
+         # Insert an image.
+    #    worksheet.insert_image('B5', 'logo.png')
+    
+        workbook.close()
+    
+    
+
+    # //TODO on affecte les équipes TQ hpers = hpers des prévisions - ou alors c'est une fonction "quarts" qui s'en occupe
+    # par exemple : prev = 140 hpers, max_pers_eq = 4, self.duree_quart = 7.5 alors on a:
+    # 140 / 7.5 = 18.7 jours/pers ; 18.7/4 = 4.7 (5) quart-équipes. À un quart par jour ça fait 5 jours. A 3 quarts pas jour
+    #  ça fait 1.7 jour. La règle du nb de quarts par jour devrait être un chiffre dans la table des prévisions, puisque
+    #  les chiffres sont logiquement reliés. //TODO nb_eq-quarts (prev ~ hpers), ordre assign.des créneaux-quarts, plages des créneaux-quarts
+    #//TODO modelr la talbe des previsions pour refleter plusieurs regles de gestion
+
+
 
  # la logique equipes + hpers + quarts est en partie ici.
 
@@ -229,7 +265,7 @@ if __name__ == '__main__':
 
 # il faut déterminer le nb max d'employés dans un équipe -- une autre constante (K2).
 
-# Pour cette semaine on a besoin de (total_hpers/temps_quart) 50/7.5 = 6.6 personnes de quart (de 7.5 heures).
+# Pour cette semaine on a besoin de (total_hpers/self.duree_quart) 50/7.5 = 6.6 personnes de quart (de 7.5 heures).
 
 # Exemple plus nombreux avec 1000 hpers. On a 1000/7.5 = 133 quarts pour la semaine; on peut diviser par 5 jours = 26.6 personnes par jour.
 
@@ -271,11 +307,11 @@ if __name__ == '__main__':
 
 # bref, quand un employe est intégré, il faut lui appliquer une grille de non dispos et de quarts, selon la période (on lui assigne un quart + les vacances + les autres non-dispos.).
 
-#print(datetime.fromisoformat(auj2).isocalendar()[1])
+#print(datetime.fromisoformat(self.auj2).isocalendar()[1])
 # trouver le dimanche de la semaine sqlite SELECT date('2022-01-22','-6 day', 'weekday 0'); // 2022-01-16
 # la semaine de ce dimanche SELECT strftime('%W',date('2022-01-16','-6 day', 'weekday 0')); // 02
-# auj = datetime.today()
-# auj.strftime('%Y-%m-%d')
+# self.auj = datetime.today()
+# self.auj.strftime('%Y-%m-%d')
 # '2022-01-16' --> avoir la date seulement
 
 # si un jour des non_dispos de l'emp == journée de constitution de l'équipe, alors rejeter l'emp.
@@ -327,3 +363,9 @@ if __name__ == '__main__':
 #     res = cur.execute("SELECT distinct count('nom') from employes where non_dispo_fk is NULL").fetchone()
 #     print("dispos type 4 verifiées pour " + str(res[0]))
 
+#   //TODO autre detail: equipes ont un quart determiné et il faudra tenter de verifier quarts par defaut des employes en les placant dans les equipes
+#   //TODO le nb d'equipes et le dictionnaire doivent être automatiques
+#   //TODO vu les modifs à  la table previsions, modifier le traitement des nombres fondamentaux
+
+appli = horaire('2022-04-01 12:12')
+appli.conn.close()
