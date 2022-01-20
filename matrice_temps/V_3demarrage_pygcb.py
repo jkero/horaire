@@ -5,6 +5,7 @@ from sqlite3 import Error
 import xlsxwriter
 
 
+
 # pour demarrer la generation de l'horaire pour une période donnée, ça prend la saisie de valeurs de base.
 # nb employes
 # nb equipes
@@ -18,7 +19,7 @@ import xlsxwriter
 class horaire:
     auj = ''
     week= ''
-    les_dates_de_la_semaine = ''
+    les_jours = []
     conn = None
     hpers_req = 0
     employes_requis = 0
@@ -89,13 +90,13 @@ class horaire:
     def semaine(self):
         calendar.setfirstweekday(6)
         locale.setlocale(locale.LC_ALL, 'FR_ca')
-        les_jours = [['Lundi', ''], ['Mardi', ''], ['Mercredi', ''], ['Jeudi', ''], ['Vendredi', ''], ['Samedi', ''],['dimanche', '']]
+        self.les_jours = [['Lundi', ''], ['Mardi', ''], ['Mercredi', ''], ['Jeudi', ''], ['Vendredi', ''], ['Samedi', ''],['dimanche', '']]
         lundi = self.auj + timedelta(days=-self.auj.weekday())
         incr = self.auj.weekday()
-        for jours in les_jours:
+        for jours in self.les_jours:
             jours[1] = (self.auj + timedelta(days=-incr)).strftime('%Y-%m-%d')
             incr = incr - 1
-        print("\n" + str(les_jours))
+        print("\n" + str(self.les_jours))
     
     def create_connection(self, db_file): #//TODO reorganiser le code sasn rapport avec la connection (sortir de cette methode)
         """ create a database connection to a SQLite database """
@@ -222,17 +223,18 @@ class horaire:
 
     def ecrire_equipes_excel(self):
         # Create an new Excel file and add a worksheet.
-        workbook = xlsxwriter.Workbook('demo.xlsx')
-        worksheet = workbook.add_worksheet()
+        workbook = xlsxwriter.Workbook('horaire_A.xlsx')
+        worksheet = workbook.add_worksheet('equipes')
+
+        bold = workbook.add_format({'bold': True})
+        cell_format_red = workbook.add_format({'bold': True, 'font_color': 'red'})
+        cell_format_noir = workbook.add_format({'bold': True, 'font_color': 'black'})
     
         # Widen the first column to make the text clearer.
         worksheet.set_column('A:A', 20)
-    
-        # Add a bold format to use to highlight cells.
-        bold = workbook.add_format({'bold': True})
-    
+
         # Write some simple text.
-        worksheet.write('A1', 'Equipes')
+        worksheet.write('A1', 'Equipes', cell_format_red)
     
         # Text with formatting.
         col = 1
@@ -241,11 +243,27 @@ class horaire:
         for keys in self.equipes: #A-E
             col = col + 1
             for indx_eq in range(1, len(self.equipes[keys][1])+1): #4
-                worksheet.write(row, col, keys, bold)
+                worksheet.write(row, col, keys, cell_format_noir)
                 worksheet.write((row + indx_eq), col, self.equipes[keys][1][indx_eq-1])
-    
-    
-    
+
+#        worksheet = workbook.add_worksheet('semaine')
+#        worksheet.set_column('A:A', 20)
+
+        col = 1
+        #row = 0
+        row = len(self.equipes['A'][1]) + 2
+
+        worksheet.write(row, col, 'Semaine ' + self.week, cell_format_red)
+
+        for i in range (0, len(self.les_jours)):
+
+            worksheet.write(row, col + i, self.les_jours[i][0], cell_format_noir)
+
+            worksheet.write(row + 1, col + i, self.les_jours[i][1])
+
+            worksheet.set_column(row, col + i, 15)
+
+
          # Insert an image.
     #    worksheet.insert_image('B5', 'logo.png')
     
