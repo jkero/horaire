@@ -235,33 +235,31 @@ class horaire:
 
         # Write some simple text.
         worksheet.write('A1', 'Equipes', cell_format_red)
-    
-        # Text with formatting.
         col = 1
         row = 0
-    
+
         for keys in self.equipes: #A-E
             col = col + 1
             for indx_eq in range(1, len(self.equipes[keys][1])+1): #4
                 worksheet.write(row, col, keys, cell_format_noir)
                 worksheet.write((row + indx_eq), col, self.equipes[keys][1][indx_eq-1])
 
-#        worksheet = workbook.add_worksheet('semaine')
-#        worksheet.set_column('A:A', 20)
+        print(str(row) + " rangée " + str(len(self.equipes['A'][1]) + 2))
+        row = row + (len(self.equipes['A'][1]) + 3)
+        colo = 0
+        print(str(row))
+        print(str(colo))
 
-        col = 1
-        #row = 0
-        row = len(self.equipes['A'][1]) + 2
-
-        worksheet.write(row, col, 'Semaine ' + self.week, cell_format_red)
-
+        worksheet.write_string(row, colo, 'Semaine ' + str(self.week), cell_format_red) # colo passe pas ?
+        colo = colo + 1
         for i in range (0, len(self.les_jours)):
+            print('tets '+ str(colo+ i))
 
-            worksheet.write(row, col + i, self.les_jours[i][0], cell_format_noir)
+            worksheet.write(row, colo + i, self.les_jours[i][0], cell_format_noir)
 
-            worksheet.write(row + 1, col + i, self.les_jours[i][1])
+            worksheet.write(row + 1, colo + i, self.les_jours[i][1])
 
-            worksheet.set_column(row, col + i, 15)
+            worksheet.set_column(row, colo + i, 15)
 
 
          # Insert an image.
