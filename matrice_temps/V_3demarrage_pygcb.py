@@ -278,7 +278,19 @@ class horaire:
     #  les chiffres sont logiquement reliés. //TODO nb_eq-quarts (prev ~ hpers), ordre assign.des créneaux-quarts, plages des créneaux-quarts
     #//TODO modelr la talbe des previsions pour refleter plusieurs regles de gestion
 
-
+    #//TODO la production de l'horaire doit indiquer seulement les affectations nécessaires dans les quarts/créneaux horaires
+    #  faire la différence entre quart-eq et organisaiton du nombre de quarts par jour
+    #  comment répartir les équipes composées ?
+    #  comment placer le nombre maximal d'équipes à composer pour ensuite assigner les quarts dans l'horaire
+    # logique des répartiion hebdomadaire des heures/equipes
+    # par ex: 140 hpers donne 3 équipes. le 3 a été déterminé par 140 / ( 8 h/jr * 7 par eq)
+    # est-ce que je peux décider à l'avance du nombre d'équipes pour pouvoir les distribuer sur un nombre de quarts (aussi dans les prévisions).
+    # une equipe a un chef, le chef se rapporte au sup. de quart. Sur un quart il pourrait y avoir plusieurs équipes ?
+    # il doit y avoir une formule pour optimiser, à partir de h-pers anticipé les heures des emp, les nb eq, equipiers par eq, quarts par jour
+    # //TODO créer table des journées non dispo (congés statutaires, etc) pour éviter des assignations nulles
+    # la formule mentionnée ci-haut doit donner une répartition égale des heures sur la semaine ? Ou alors une concentration d'efforts,
+    #   par exemple les 3 quarts de 6 personnes peuvent être le même jour, voire dans le même créneau horaire, ou bien répartis en équipes de
+    # 2, ce qui ferait 9 quarts à répartir dans la semaine.
 
  # la logique equipes + hpers + quarts est en partie ici.
 
