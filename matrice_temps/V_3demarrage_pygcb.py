@@ -291,6 +291,12 @@ class horaire:
     # la formule mentionnée ci-haut doit donner une répartition égale des heures sur la semaine ? Ou alors une concentration d'efforts,
     #   par exemple les 3 quarts de 6 personnes peuvent être le même jour, voire dans le même créneau horaire, ou bien répartis en équipes de
     # 2, ce qui ferait 9 quarts à répartir dans la semaine.
+    # préparer des modèles d'horaires de quart qui peuvent correspondre à des règles de gestion.
+    #    genre m1: prioriser des équipes pleines, et minimum de créneaux-quarts (eq <> quart) 140 = 3eq * 6pers * 8h sur un seul quart
+    #          m2: prioriser eq minimales et maximiser jours de travail 140  = 9eq * 2pers * 8h sur ? jours (selon créneaux prévus)
+    #                                                                                        9eq/5jours = ~2 eq. par jour de travail?
+    #          m3: prioriser eq minimales et maximiser creneau-quart/jour 140  = 9eq * 2pers * 8h sur ? créneaux-quart (selon créneaux min et max prévus)
+    #                                                                                        9eq/5jours = ~2 eq. par jour de travail?
 
  # la logique equipes + hpers + quarts est en partie ici.
 
@@ -405,6 +411,6 @@ class horaire:
 #   //TODO autre detail: equipes ont un quart determiné et il faudra tenter de verifier quarts par defaut des employes en les placant dans les equipes
 #   //TODO le nb d'equipes et le dictionnaire doivent être automatiques
 #   //TODO vu les modifs à  la table previsions, modifier le traitement des nombres fondamentaux
-
+# //TODO validation des jours du modele v. les jours dans la semaine (un modele peut prendre plus de 4 ou 5 jours)
 appli = horaire('2022-04-01 12:12')
 appli.conn.close()
