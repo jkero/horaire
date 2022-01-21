@@ -31,7 +31,7 @@ row = row + 1
 col = 0
 # r4 col 0 : eq#
 r4 = ''
-for numeq in range(1, modele['nb_eq_par_cren']):
+for numeq in range(1, modele['nb_eq_par_cren'] + 1):
     r4 = r4 +  'eq' + str(numeq) + "\n" #equipes_test[numeq][0]
     row = row + 1
 print(r4 + "--- r:" + str(row) + " c:" + str(col))
@@ -42,8 +42,8 @@ templisteq = [3]
 row = row + 1
 for nomeq in equipes_test:
     if modele['nb_cen-disp']== 1:
-        col = col + 1
         templisteq[0] = col + 1
+        col = col + 3
     elif modele['nb_cen-disp'] == 2:
         templisteq[0] = col+2
         templisteq[1] = col+1
