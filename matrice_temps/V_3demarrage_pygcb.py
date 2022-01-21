@@ -34,6 +34,8 @@ class horaire:
                          'G': [['12-20'], []], 'H': [['12-20'], []], 'I': [['12-20'], []]}
     cpt_heures = 0
     valeur_repartition = 0
+    nom_modele = ''
+    config_modele = None
 
     def __init__(self, la_journee):
         self.auj = datetime.fromisoformat(la_journee)        
@@ -74,11 +76,11 @@ class horaire:
 
                 self.les_dates_de_la_semaine = self.semaine()
 
-                cpt_key = 0
-                for key in self.equipes_maximales:
-                    if cpt_key < round(self.nb_quart_en_eq,1):
-                        self.equipes[key] = self.equipes_maximales[key]
-                    cpt_key = cpt_key + 1
+                # cpt_key = 0
+                # for key in self.equipes_maximales:
+                #     if cpt_key < round(self.nb_quart_en_eq,1):
+                #         self.equipes[key] = self.equipes_maximales[key]
+                #     cpt_key = cpt_key + 1
 
                 self.attribution_equipe()
 
@@ -104,10 +106,10 @@ class horaire:
             self.conn = sqlite3.connect(db_file)
             if self.conn is not None:
                 count = 0
-                for key in self.equipes_maximales:
-                    if count < round(self.employes_requis/self.max_emp_par_equipe):
-                        self.equipes[key] = self.equipes_maximales[key]
-                        count  = count + 1
+                # for key in self.equipes_maximales:
+                #     if count < round(self.employes_requis/self.max_emp_par_equipe):
+                #         self.equipes[key] = self.equipes_maximales[key]
+                #         count  = count + 1
     
     #            print (str(equipes))
     
@@ -164,9 +166,6 @@ class horaire:
 
         find_dispo_dates_and_type = "select emp_non_dispo.t_exact_debut,emp_non_dispo.t_exact_fin, emp_non_dispo.type_non_dispo, id_empl_fk from emp_non_dispo where id_empl_fk = '%s' order by id_empl_fk"
 
-        # Attention ici la fk sur dispo ne parche pas. ça prend plutot un fk de l'id emplo dasn la tables des non_dispos, car un emplo peut avoir plusieurs non_dispos.
-        #  De plus quand on valide la dispo, il faut corriger car la req retourne n non-dispos, on fait pas ça ici, TODO revoir tables
-
         curseur_emp = self.conn.cursor()
 
         curseur_dispo = self.conn.cursor()
@@ -180,7 +179,7 @@ class horaire:
             for emp in rows:
                 curseur_dispo.execute(find_dispo_dates_and_type % str(emp[4]))
                 res = curseur_dispo.fetchall()
-                #                print(" res de " + str(len(res)))
+
                 skip_emp = 'True'
                 if len(res) > 0:
                     for enr_dispo in res:
@@ -195,9 +194,9 @@ class horaire:
 
                     if skip_emp == 'False':
                         print(str(emp[4]) + " peut passer")
-                        self.affecte_equipes(emp)
+                        self.affecte_equipes_modele(emp)
                 else:
-                    self.affecte_equipes(emp)
+                    self.affecte_equipes_modele(emp)
 
             self.ecrire_equipes_excel()
             print("\n" + str(self.equipes))
@@ -206,6 +205,9 @@ class horaire:
             traceback.print_exc(file=sys.stdout)
 
     def affecte_equipes(self, emp):
+        if self.equipes == {}:
+            self.initialise_dict_equipe(0)
+
         if self.nb_quart_en_eq - int(self.nb_quart_en_eq) > 0.00:
             self.valeur_repartition = int(self.nb_quarts_indivi/(self.nb_quart_en_eq + 0.5) +.5)
 
@@ -221,6 +223,72 @@ class horaire:
 # je prends nb_quart_indivi / int(nb_quart_en_eq + .5) j'ai un montant moyen par équipe, je l'arrondis à l'entier suivant.
 # ça donne le chiffre qui rmeplace le nb max par equipes
 
+    def affecte_equipes_modele(self, emp):
+        sql_modele_affect = "select p.hpers, p.heures_par_jour, round(p.hpers / p.heures_par_jour,1) as presences, m.nb_eq,m.nb_emp_par_eq as nb_par_eq, \
+                                round(round(p.hpers *1.0 / p.heures_par_jour,1)/m.nb_emp_par_eq,1) as nb_quarts_eq,\
+                                 m.nb_eq_par_creneau, m.nb_creneau_disp , \
+                                 round(round(cast(p.hpers as float) / p.heures_par_jour,2) / \
+                                (m.nb_emp_par_eq * m.nb_eq_par_creneau * m.nb_creneau_disp),2) as jours, m.nom \
+                                from previsions_hpers as p \
+                                inner join modele_assignation_hebdo as m \
+                                on p.modele = m.id \
+                                where p.semaine = 13" #+ str(self.week)
+
+        cur_modele = self.conn.cursor()
+        self.config_modele = cur_modele.execute(sql_modele_affect).fetchall()
+        # 1 = heures_par_jour
+        # 2 = presences
+        # 3 = nb_eq
+        # 4 = nb_quarts-eq
+        # 5 = nbeq_par_creneau
+        # 6 = nb creneau
+        # 7 = jours
+        # 8 = nom modele
+        self.nom_modele = self.config_modele[0][9]
+
+        if self.equipes == {}:
+            self.initialise_dict_equipe(self.config_modele[0][3])
+
+        for nom_eq in self.equipes:
+
+            if (len(self.equipes[nom_eq][1]) < self.config_modele[0][4]): # !! le nb des equipes vient du modele et initialise...
+                if (self.cpt_heures < self.hpers):
+                    self.equipes[nom_eq][1].append(emp[1][0] + ". " + emp[0])
+                    self.cpt_heures = self.cpt_heures + self.config_modele[0][1]
+                break
+            else:
+                continue
+
+
+
+        # for nom_eq in self.equipes:
+        #     print(str(len(self.equipes[nom_eq][1])) + " < " + str(config_modele[0][3]))
+        #     if (len(self.equipes[nom_eq][1]) < config_modele[0][3]) and (self.cpt_heures < self.hpers):
+        #         self.equipes[nom_eq][1].append(emp[1][0] + ". " + emp[0])
+        #         self.cpt_heures = self.cpt_heures + config_modele[0][1]
+        #         break
+        #     else:
+        #         continue
+
+    # equipes inegales si nb_quart_en_eq est fractionnaire le_nb - int(le_nb) <> 0.0000.
+    # alors il y a une répartition à faire 7/7/4 devient 6/6/6
+    # je prends nb_quart_indivi / int(nb_quart_en_eq + .5) j'ai un montant moyen par équipe, je l'arrondis à l'entier suivant.
+    # ça donne le chiffre qui rmeplace le nb max par equipes
+
+    def initialise_dict_equipe(self, nb_eq):
+        count = 0
+        for key in self.equipes_maximales:
+            if nb_eq > 0:
+                if count < round(nb_eq):
+                    self.equipes[key] = self.equipes_maximales[key]
+                    count  = count + 1
+            else:
+                if count < round(self.employes_requis/self.max_emp_par_equipe):
+                    self.equipes[key] = self.equipes_maximales[key]
+                    count  = count + 1
+
+
+
     def ecrire_equipes_excel(self):
         # Create an new Excel file and add a worksheet.
         workbook = xlsxwriter.Workbook('horaire_A.xlsx')
@@ -235,7 +303,7 @@ class horaire:
 
         # Write some simple text.
         worksheet.write('A1', 'Equipes', cell_format_red)
-        col = 1
+        col = 0
         row = 0
 
         for keys in self.equipes: #A-E
@@ -243,26 +311,47 @@ class horaire:
             for indx_eq in range(1, len(self.equipes[keys][1])+1): #4
                 worksheet.write(row, col, keys, cell_format_noir)
                 worksheet.write((row + indx_eq), col, self.equipes[keys][1][indx_eq-1])
+                worksheet.set_column(row, col + indx_eq, 15)
 
-        print(str(row) + " rangée " + str(len(self.equipes['A'][1]) + 2))
         row = row + (len(self.equipes['A'][1]) + 3)
         colo = 0
-        print(str(row))
-        print(str(colo))
 
         worksheet.write_string(row, colo, 'Semaine ' + str(self.week), cell_format_red) # colo passe pas ?
-        colo = colo + 1
+        colo = colo + 2 #//TODO si les colonnes sont doublees ne pas affecter le tableau du haut
         for i in range (0, len(self.les_jours)):
-            print('tets '+ str(colo+ i))
-
             worksheet.write(row, colo + i, self.les_jours[i][0], cell_format_noir)
-
             worksheet.write(row + 1, colo + i, self.les_jours[i][1])
-
             worksheet.set_column(row, colo + i, 15)
 
+        row = row + 2
 
-         # Insert an image.
+
+        for j in range(0, int(self.config_modele[0][5])): # calcul quart par eq indique le nb de presences totales/nb par eq. ça saute ume colonne/journée
+            for i in range(0, self.config_modele[0][6]): # je repete dans rangeee suivante si + de crenaux
+                for keys in self.equipes:
+                    worksheet.write(row + i, colo + j, keys)
+
+        # logique de presentation :  les colonnes des jours sont multipliees par nb_creneau_disp
+#       et écrites selon nb_eq_par_creneau (un creneau = une colonne appartenant a une journee)
+#        self.config_modele
+        # 0 = h-pers
+        # 1 = heures_par_jour
+        # 2 = presences
+        # 3 = nb_eq
+        # 4 = nb_par_eq
+        # 5 = nb_quart_eq (calcul)
+        # 6 = nb eq par creneau
+        # 7 = nb_cren_disp
+        # 8 = jours
+        # 9 = nom modele
+
+
+        row = row + (len(self.equipes['A'][1]) + 3) + 10
+
+        colo = 0
+        worksheet.write_string(row, colo, 'Modèle ' + str(self.nom_modele), cell_format_red)
+
+        # Insert an image.
     #    worksheet.insert_image('B5', 'logo.png')
     
         workbook.close()
@@ -411,4 +500,5 @@ class horaire:
 #   //TODO vu les modifs à  la table previsions, modifier le traitement des nombres fondamentaux
 # //TODO validation des jours du modele v. les jours dans la semaine (un modele peut prendre plus de 4 ou 5 jours)
 appli = horaire('2022-04-01 12:12')
+
 appli.conn.close()
