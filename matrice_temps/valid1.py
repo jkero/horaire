@@ -7,10 +7,10 @@ inc = 3
 r1 = ''
 r2 = ''
 r3 = ''
-nb_cren = 1#modele['nb_cren_disp']
+nb_cren = 3#modele['nb_cren_disp']
 nb_jour_sem = len(sem)
 nb_eq = len(equipes_test)
-eq_par_cren = 2#modele['nb_eq_par_cren']
+eq_par_cren = 1#modele['nb_eq_par_cren']
 nb_q_eq = int(modele['calc_nbquart-eq']+ .5)
 # ligne1
 eqs = list(equipes_test)
@@ -18,18 +18,22 @@ eqs2 = eqs[:]
 print("\ncreneaux disponibles par jour:" + str(nb_cren))
 print("max equipes par creneau:" + str(eq_par_cren))
 print("calc. equipes assign. total:" + str(nb_q_eq)+ "\n")
-
+tot_affec = 0
 for jour in range(0, nb_jour_sem):
     print(sem[jour][0])
     for cren in range(1, nb_cren+ 1):#cren_dispo
         print("\tcren " + str(cren))
         for eq in range(0, eq_par_cren):##eq par creneau #// TODO ne pas resetter equipes
-            if len(eqs) > 0:
-                print("\t\teq# " + str(eq) + " " + eqs.pop(0))  # //todo gestion des equipes deja assignees ?
+            if tot_affec < nb_q_eq:
+                if len(eqs) > 0:
+                    print("\t\teq# " + str(eq) + " " + eqs.pop(0))  # //todo gestion des equipes deja assignees ?
+                    tot_affec = tot_affec + 1
+                else:
+                    eqs = eqs2[:]
+                    print("\t\teq# " + str(eq) + " " + eqs.pop(0))  # //todo gestion des equipes deja assignees ?
+                    tot_affec = tot_affec + 1
             else:
-                eqs = eqs2[:]
-                continue
-
+                break
 
 
 
