@@ -7,26 +7,27 @@ inc = 3
 r1 = ''
 r2 = ''
 r3 = ''
-nb_cren = 2#modele['nb_cren_disp']
+nb_cren = modele['nb_cren_disp']
 nb_jour_sem = len(sem)
 nb_eq = len(equipes_test)
-ep_par_cren = modele['nb_eq_par_cren']
+eq_par_cren = modele['nb_eq_par_cren']
 nb_q_eq = int(modele['calc_nbquart-eq']+ .5)
 # ligne1
 eqs = list(equipes_test)
 for k in range(0, nb_jour_sem):
     if k < nb_q_eq:
-    #    print( 'cren ' + str(cren))
-        for j in range(0, nb_eq):
-    #        print('sem ' + str(key))
-            if True:
-                for cren in range(0, nb_cren):
-        #            print('eq' + str(j))
-                    if j < ep_par_cren and j < nb_cren:
-                       print('cren ' + str(cren) + " j sem " + str(sem[k]) + ' eq ' + str(eqs[j]))
-                    else:
-                        break
-            else:
-                break
-    else:
-        break
+        for e in equipes_test:
+        #    print( 'cren ' + str(cren))
+            for j in range(0, nb_cren):
+        #        print('sem ' + str(key))
+                if j < nb_q_eq:
+                    if j < eq_par_cren:
+                        if j < nb_cren:
+            #            print('eq' + str(j))
+                           print('cren ' + str(j) + " j sem " + str(sem[k]) + ' eq ' + e)
+                        else:
+                            continue
+                else:
+                    break
+        else:
+            break
