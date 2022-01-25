@@ -226,7 +226,7 @@ class horaire:
 # ça donne le chiffre qui rmeplace le nb max par equipes
 
     def affecte_equipes_modele(self, emp):
-        sql_modele_affect = "select p.hpers, p.heures_par_jour, round(p.hpers / p.heures_par_jour,1) as presences, m.nb_eq, m.nb_emp_par_eq as nb_par_eq, \
+        sql_modele_affect = "select p.semaine, p.hpers, p.heures_par_jour, round(p.hpers / p.heures_par_jour,1) as presences, m.nb_eq, m.nb_emp_par_eq as nb_par_eq, \
                                 round(round(p.hpers *1.0 / p.heures_par_jour,1)/m.nb_emp_par_eq,1) as nb_quarts_eq,\
                                  m.nb_eq_par_creneau, m.nb_creneau_disp , \
                                  round(round(cast(p.hpers as float) / p.heures_par_jour,2) / \
@@ -234,30 +234,34 @@ class horaire:
                                 from previsions_hpers as p \
                                 inner join modele_assignation_hebdo as m \
                                 on p.modele = m.id \
-                                where p.semaine = 11" #+ str(self.week)
+                                where p.semaine = 6" #+ str(self.week)
 
         cur_modele = self.conn.cursor()
         self.config_modele = cur_modele.execute(sql_modele_affect).fetchall()
-        # 1 = heures_par_jour
-        # 2 = presences
-        # 3 = nb_eq
-        # 4 = nb_quarts-eq
-        # 5 = nbeq_par_creneau
-        # 6 = nb creneau
-        # 7 = jours
-        # 8 = nom modele
+#        [0][v. liste suivante]
+        # 0 = num de semaine
+        # 1 = heures-personnes prévues
+        # 2 = durée d'une journée/quart de travail
+        # 3 = nb presences indivisuelles calculé
+        # 4 = nb équipes
+        # 5 = nb employés pas équipe
+        # 6 =  calcul du nb prévu de quarts en équipe
+        # 7 = nb équipes par créneau/quart
+        # 8 = nb de créneaux par jour
+        # 9 = calcul nb de jours requis
+        #10 = nom du modèlle
 
-        self.nom_modele = self.config_modele[0][9]
+        self.nom_modele = self.config_modele[0][10]
 
         if self.equipes == {}:
-            self.initialise_dict_equipe(self.config_modele[0][3])
+            self.initialise_dict_equipe(self.config_modele[0][4])
 
         for nom_eq in self.equipes:
 
-            if (len(self.equipes[nom_eq][1]) < self.config_modele[0][4]): # !! le nb des equipes vient du modele et initialise...
-                if (self.cpt_heures < self.hpers):
+            if (len(self.equipes[nom_eq][1]) < self.config_modele[0][5]): # !! le nb des equipes vient du modele et initialise...
+                if (self.cpt_heures < self.hpers): # pour les fractions d'équipe (il y a répartition plus loin)
                     self.equipes[nom_eq][1].append(emp[1][0] + ". " + emp[0])
-                    self.cpt_heures = self.cpt_heures + self.config_modele[0][1]
+                    self.cpt_heures = self.cpt_heures + self.config_modele[0][2]
                 break
             else:
                 continue
@@ -265,7 +269,7 @@ class horaire:
 
 
         # for nom_eq in self.equipes:
-        #     print(str(len(self.equipes[nom_eq][1])) + " < " + str(config_modele[0][3]))
+        #     print(str(len(self.equipes[nom_eq][1])) + " < " + str(config_modele[0][4]))
         #     if (len(self.equipes[nom_eq][1]) < config_modele[0][3]) and (self.cpt_heures < self.hpers):
         #         self.equipes[nom_eq][1].append(emp[1][0] + ". " + emp[0])
         #         self.cpt_heures = self.cpt_heures + config_modele[0][1]
@@ -329,8 +333,8 @@ class horaire:
         row = row + 2
 
 
-        for j in range(0, int(self.config_modele[0][5])): # calcul quart par eq indique le nb de presences totales/nb par eq. ça saute ume colonne/journée
-            for i in range(0, self.config_modele[0][6]): # je repete dans rangeee suivante si + de crenaux
+        for j in range(0, int(self.config_modele[0][6])): # calcul quart par eq indique le nb de presences totales/nb par eq. ça saute ume colonne/journée
+            for i in range(0, self.config_modele[0][7]): # je repete dans rangeee suivante si + de crenaux
                 for keys in self.equipes:
                     worksheet.write(row + i, colo + j, keys)
 
@@ -364,7 +368,7 @@ class horaire:
 
         bold = workbook.add_format({'bold': True})
         cell_format_red = workbook.add_format({'bold': True, 'font_color': 'red'})
-        cell_format_noir = workbook.add_format({'bold': True, 'font_color': 'black'})
+        cell_format_noir = workbook.add_format({'bold': True, 'font_color': 'black','text_wrap':'true','align':'center'})
 
         # Widen the first column to make the text clearer.
         worksheet.set_column('A:A', 20)
@@ -384,14 +388,10 @@ class horaire:
         row = row + (len(self.equipes['A'][1]) + 3)
         colo = 0
 
-        worksheet.write_string(row, colo, 'Semaine ' + str(self.week), cell_format_red) # colo passe pas ?
-        colo = colo + 2 #//TODO si les colonnes sont doublees ne pas affecter le tableau du haut
-        for i in range (0, len(self.les_jours)):
-            worksheet.write(row, colo + i, self.les_jours[i][0], cell_format_noir)
-            worksheet.write(row + 1, colo + i, self.les_jours[i][1])
-            worksheet.set_column(row, colo + i, 15)
+        worksheet.write_string(row, colo, 'Semaine ' + str(self.config_modele[0][0]), cell_format_red) # colo passe pas ?
+        colo = colo + 1 #//TODO si les colonnes sont doublees ne pas affecter le tableau du haut
 
-        row = row + 2
+
 
 
 #        for j in range(0, int(self.config_modele[0][5])): # calcul quart par eq indique le nb de presences totales/nb par eq. ça saute ume colonne/journée
@@ -410,43 +410,68 @@ class horaire:
         # 7 = jours
         # 8 = nom modele
         print(str(self.config_modele))
-        nb_cren = self.config_modele[0][6]
+        nb_cren = self.config_modele[0][8]
         nb_jour_sem = len(self.les_jours)
         nb_eq = len(self.equipes)
-        eq_par_cren = int(self.config_modele[0][5]+.5)
+        eq_par_cren = int(self.config_modele[0][7]+.5)
         calc_nb_quarts_requis= int(self.config_modele[0][6] + .5)
         print("date de réf. :" + str(self.auj))
-        print("sem : " + str(self.week))
-        print("Modele : " + str(self.hpers) + " h-pers")
+        print("sem : " + str(self.config_modele[0][0]))
+        print("Modele : " + str(self.config_modele[0][1]) + " h-pers")
         print("\t Calcul présences totales d'équipes: " + str(self.config_modele[0][6]))
-        print("\t Calcul présences individuelles: " + str(self.config_modele[0][2]))
-        print("\t Créneaux par jour: " + str(self.config_modele[0][7]))
-        print("\t Equipes par créneau: " + str(self.config_modele[0][6]))
+        print("\t Calcul présences individuelles: " + str(self.config_modele[0][3]))
+        print("\t Créneaux par jour: " + str(self.config_modele[0][8]))
+        print("\t Equipes par créneau: " + str(self.config_modele[0][7]))
+        print("\t Empl. par éq.: " + str(self.config_modele[0][5]))
 
         # ligne1
         eqs = list(self.equipes)
         eqs2 = eqs[:]
         tot_affec = 0
+        worksheet.write(row, colo, 'Horaire')
+        for i in range(1, 4):
+            worksheet.write(row, colo + i, 'Q'+ str(i))
+
+        for ix in range(0, len(self.les_jours)):
+            row = row + 1
+            worksheet.write(row, colo, str(self.les_jours[ix][0]) + "\n" + str(self.les_jours[ix][1]), cell_format_noir)
+#            worksheet.write(row, colo, "gogo")
+            # worksheet.write(row + 1, colo + i, self.les_jours[i][1])
+            worksheet.set_column(row, colo, 15)
+
+        row = row - 6
+        pop_string_eq =""
+
         for jour in range(0, nb_jour_sem):
             print(self.les_jours[jour][0])
-            for cren in range(1, nb_cren + 1):  # cren_dispo
+            cpt_cren = 0
+            for cren in range(1, nb_cren + 1):
+                cpt_cren = cpt_cren + 1
+                colo = colo +1# cren_dispo
                 print("\tcren " + str(cren))
-                for eq in range(0, eq_par_cren):  ##eq par creneau #// TODO ne pas resetter equipes
+                pop_string_eq = ""
+                for eq in range(0, eq_par_cren):
+                                       ##eq par creneau #// TODO ne pas resetter equipes
                     if tot_affec <  calc_nb_quarts_requis:
+#                        print('check ' + str(tot_affec) + " nb " + str(calc_nb_quarts_requis))
                         if len(eqs) > 0:
-                            worksheet.write(row + cren, colo + jour, keys)
+                            pop_string_eq = pop_string_eq + " " + eqs.pop(0)
+                            worksheet.write(row, colo, pop_string_eq.strip())
                             print(
-                                "\t\teq# " + str(eq) + " " + eqs.pop(0))  # //todo gestion des equipes deja assignees ?
+                                "\t\teq# " + str(eq) + " " + pop_string_eq)  # //todo gestion des equipes deja assignees ?
                             tot_affec = tot_affec + 1
                         else:
                             eqs = eqs2[:]
-                            worksheet.write_string(row + cren, colo + jour, keys)
+                            pop_string_eq = pop_string_eq + " " + eqs.pop(0)
+                            worksheet.write_string(row, colo, pop_string_eq.strip())
                             print(
-                                "\t\teq# " + str(eq) + " " + eqs.pop(0))  # //todo gestion des equipes deja assignees ?
+                                "\t\teq# " + str(eq) + " " + pop_string_eq.strip())  # //todo gestion des equipes deja assignees ?
                             tot_affec = tot_affec + 1
                     else:
                         break
-                    row = row + cren
+            colo = colo - cpt_cren
+            row = row + 1
+
 
         workbook.close()
     # //TODO on affecte les équipes TQ hpers = hpers des prévisions - ou alors c'est une fonction "quarts" qui s'en occupe
