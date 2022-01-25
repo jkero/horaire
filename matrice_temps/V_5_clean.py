@@ -459,10 +459,20 @@ class horaire:
                         else:
                             eqs = eqs2[:]
                             pop_string_eq = pop_string_eq + " " + eqs.pop(0)
-                            worksheet.write_string(row, colo, pop_string_eq.strip())
-                            print(
-                                "\t\teq# " + str(eq) + " xx " + pop_string_eq.strip())  # //todo gestion des equipes deja assignees ?
-                            tot_affec = tot_affec + 1
+                            if cren == nb_cren and len(eqs) == 0:
+                                print(
+                                    "\t\teq# " + str(eq) + " " + pop_string_eq)
+                                tot_affec = tot_affec + 1
+
+                                # si je suis au dernier creneau de la journee et len(eqp = 0)
+                        #         print('FFF')
+
+                            # else:
+                            #     pop_string_eq = pop_string_eq + " " + eqs.pop(0)
+                            #     worksheet.write_string(row, colo, pop_string_eq.strip())
+                            #     print(
+                            #      "\t\teq# " + str(eq) + " " + pop_string_eq.strip())  # //todo gestion des equipes deja assignees ?
+                            #     tot_affec = tot_affec + 1
                     else:
                         break
             colo = colo - cpt_cren
@@ -473,6 +483,7 @@ class horaire:
         workbook.close()
 
 appli = horaire('2022-04-01 12:12')
+#appli = horaire('2022-01-14 12:12')
 
 appli.conn.close()
 
