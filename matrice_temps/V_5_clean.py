@@ -438,28 +438,44 @@ class horaire:
 # // todo : algo qui répète une seule fois les equipes pour une journée donnée, et qui passe toutes les equipes
 #   avant de recommencer la liste
 
-        for jour in range(0, nb_jour_sem):
+        for jour in range(0, nb_jour_sem):                  #--- Pour chaque jour
             print(self.les_jours[jour][0])
-            cpt_cren = 0
-            for cren in range(1, nb_cren + 1):
+            cpt_cren = 0                                    # suivi de la position pour grille
+            for cren in range(1, nb_cren + 1):              #--- Pour chaque creneau
                 cpt_cren = cpt_cren + 1
                 colo = colo +1# cren_dispo
                 print("\tcren " + str(cren))
-                pop_string_eq = ""
-                for eq in range(0, eq_par_cren):
-                                       ##eq par creneau #// TODO ne pas resetter equipes
-                    if tot_affec <  calc_nb_quarts_requis:
+                pop_string_eq = ""                          #chaine pour concat equipes dans un seul creneau (c=1 epc>1)
+                for eq in range(0, eq_par_cren):            # Pour chaque equipe
+                    if tot_affec <  calc_nb_quarts_requis:  # on interrompt si le nb equipes arrive au nb_calculé
 #                        print('check ' + str(tot_affec) + " nb " + str(calc_nb_quarts_requis))
-                        if len(eqs) > 0:
+                        if len(eqs) > 0:                                       # liste eq non vide on affecte et retire une equipe
                             pop_string_eq = pop_string_eq + " " + eqs.pop(0)
                             worksheet.write(row, colo, pop_string_eq.strip())
                             print(
                                 "\t\teq# " + str(eq) + " " + pop_string_eq)  # //todo gestion des equipes deja assignees ?
-                            tot_affec = tot_affec + 1
-                        else:
-                            eqs = eqs2[:]
-                            pop_string_eq = pop_string_eq + " " + eqs.pop(0)
-                            if cren == nb_cren and len(eqs) == 0:
+                            tot_affec = tot_affec + 1                   #garde le compte des equipes affectees
+                        else:                           #la liste equipes est vide mais il reste du travail a couvrir
+                                                        # #il faut répéter la liste tout en évitant d'affecter la meme #equipe dans la même journee.
+                                                        #-- réalimenter la liste des equipes
+                                                        # -- affecter ou non l'equipe
+                                                        # si verifie_dans_la_journee() = False
+                                                        #     on affecte
+                                                        # sinon sauter creneau Et journée
+                                                        #   reprendre
+# commentaire sur la coherence du modele: avoir moins d'équipes que de creneaux par jour n'a pas de sens
+                                                        # faut-il un liste a 2 dim pour tracer eq/jour ?
+
+
+                            eqs = eqs2[:]                  #dans tous les cas on recycle la liste d'equipes
+
+
+                            if cren == nb_cren: # si on est au dernier creneau et que la liste est vide, laisser aller à la proch journee
+                                print("fin journee -creneau")
+                            else:                                  #sinon, verifier répétition eq. dans la journee.
+                                                                   #si le nb_eq < nb_creneau il y a repetition
+
+                                pop_string_eq = pop_string_eq + " " + eqs.pop(0)
                                 print(
                                     "\t\teq# " + str(eq) + " " + pop_string_eq)
                                 tot_affec = tot_affec + 1
