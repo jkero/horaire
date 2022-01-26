@@ -200,18 +200,19 @@ class horaire:
         curseur_emp = self.conn.cursor()
         curseur_emp.execute(all_emp)
         rows = curseur_emp.fetchall()
-        self.ajoute_empl_dans_eq(rows)
+        return rows
 
-    def ajoute_empl_dans_eq(self,rows):
-
+    def get_dispos(self,emp):
         find_dispo_dates_and_type = "select emp_non_dispo.t_exact_debut,emp_non_dispo.t_exact_fin, emp_non_dispo.type_non_dispo, id_empl_fk from emp_non_dispo where id_empl_fk = '%s' order by id_empl_fk"
-
         curseur_dispo = self.conn.cursor()
+        curseur_dispo.execute(find_dispo_dates_and_type % emp)
+        return curseur_dispo.fetchall()
+
+    def ajoute_empl_dans_eq(self, eq, date): #cette fonction a modifier pour l'appeler avec enr 1 employé
+        rows = self.get_employes()
         try:
             for emp in rows:
-                curseur_dispo.execute(find_dispo_dates_and_type % str(emp[4]))
-                res = curseur_dispo.fetchall()
-
+                res = self.get_dispos(str(emp[4]))
                 skip_emp = 'True'
                 if len(res) > 0:
                     for enr_dispo in res:
@@ -226,9 +227,12 @@ class horaire:
 
                     if skip_emp == 'False':
                         print(str(emp[4]) + " peut passer")
-                        self.affecte_equipes_modele(emp)
+                        self.renseigne_equipes(emp, eq)
+
+
                 else:
-                    self.affecte_equipes_modele(emp)
+                    self.renseigne_equipes(emp, eq)
+                    
 
             #self.ecrire_equipes_excel()
             self.ecriture_excel2()
@@ -237,45 +241,21 @@ class horaire:
         except Exception:
             traceback.print_exc(file=sys.stdout)
 
+    def assigne_empl_eq_jour(self, la_date, nom_eq):
+        print("----------------------------------------")
+        print("------valider date " + str(la_date) + " pour affec éq. " + nom_eq)
 
-    # def affecte_equipes(self, emp):
-    #     if self.equipes == {}:
-    #         self.initialise_dict_equipe(0)
-    #
-    #     if self.nb_quart_en_eq - int(self.nb_quart_en_eq) > 0.00:
-    #         print("! valeurs reparties")
-    #         self.valeur_repartition = int(self.nb_quarts_indivi/(self.nb_quart_en_eq + 0.5) +.5)
-    #
-    #     for nom_eq in self.equipes:
-    #         if (len(self.equipes[nom_eq][1]) < self.valeur_repartition) and (self.cpt_heures < self.hpers) :
-    #             self.equipes[nom_eq][1].append(emp[1][0] + ". " + emp[0])
-    #             self.cpt_heures = self.cpt_heures + self.duree_quart
-    #             break
-    #         else:
-    #             continue
-# equipes inegales si nb_quart_en_eq est fractionnaire le_nb - int(le_nb) <> 0.0000.
-# alors il y a une répartition à faire 7/7/4 devient 6/6/6
-# je prends nb_quart_indivi / int(nb_quart_en_eq + .5) j'ai un montant moyen par équipe, je l'arrondis à l'entier suivant.
-# ça donne le chiffre qui rmeplace le nb max par equipes
+        # appelle fonction_existante_de_valide(date, nom_eq)
+        self.ajoute_empl_dans_eq(nom_eq,la_date)
 
-    def affecte_equipes_modele(self, emp):
-        self.nom_modele = self.config_modele[0][10]
 
-        if self.equipes == {}:
-            self.initialise_dict_equipe(self.config_modele[0][4])
+    def renseigne_equipes(self,emp,nom_eq):
+        print("Gradon")
+        if (len(self.equipes[nom_eq][1]) < self.config_modele[0][5]): # !! le nb des equipes vient du modele et initialise...
+            if (self.cpt_heures < self.config_modele[0][1]):  # pas besoin de repartition, le nb_emp est décidé pour chaque equipe
+                self.equipes[nom_eq][1].append(emp[1][0] + ". " + emp[0])
+                self.cpt_heures = self.cpt_heures + self.config_modele[0][2]
 
-        self.renseigne_equipes(emp)
-
-    def renseigne_equipes(self,emp):
-        for nom_eq in self.equipes:
-
-            if (len(self.equipes[nom_eq][1]) < self.config_modele[0][5]): # !! le nb des equipes vient du modele et initialise...
-                if (self.cpt_heures < self.hpers): #  pas besoin de repartition, le nb_emp est décidé pour chaque equipe
-                    self.equipes[nom_eq][1].append(emp[1][0] + ". " + emp[0])
-                    self.cpt_heures = self.cpt_heures + self.config_modele[0][2]
-                break
-            else:
-                continue
 
     def initialise_dict_equipe(self, nb_eq):
         count = 0
@@ -370,10 +350,9 @@ class horaire:
             worksheet.set_column(row, colo, 15)
 
         row = row - 6
-        pop_string_eq =""
-# // todo : algo qui répète une seule fois les equipes pour une journée donnée, et qui passe toutes les equipes
-#   avant de recommencer la liste
+        pop_string_eq = ""
 
+        eq_courante = ''
         for jour in range(0, nb_jour_sem):                  #--- Pour chaque jour
             print(self.les_jours[jour][0])
             cpt_cren = 0                                    # suivi de la position pour grille
@@ -385,13 +364,14 @@ class horaire:
                 for eq in range(0, eq_par_cren):            # Pour chaque equipe
                     if tot_affec <  calc_nb_quarts_requis: # and tot_h_affec < mod_hpers:  # on interrompt si le nb equipes arrive au nb_calculé
 #                        print('check ' + str(tot_affec) + " nb " + str(calc_nb_quarts_requis))
-                        if len(eqs) > 0:                                       # liste eq non vide on affecte et retire une equipe
-                            pop_string_eq = pop_string_eq + " " + eqs.pop(0)
+                        if len(eqs) > 0:
+                            eq_courante = eqs.pop(0)  # liste eq non vide on affecte et retire une equipe
+                            pop_string_eq = pop_string_eq + " " + eq_courante
                             worksheet.write(row, colo, pop_string_eq.strip())
                             print(
                                 "\t\teq# " + str(eq) + " " + pop_string_eq)  # //todo gestion des equipes deja assignees ?
                             tot_affec = tot_affec + 1                   #garde le compte des equipes affectees
-                            #tot_h_affec = tot_h_affec + (empl_par_eq * tot_affec)
+                            self.assigne_empl_eq_jour(self.les_jours[jour][1],eq_courante)
                         else:                           #la liste equipes est vide mais il reste des h-travail a couvrir
                                                         # #il faut répéter la liste tout en évitant d'affecter la meme equipe dans la même journee.
                                                         #-- réalimenter la liste des equipes
@@ -413,11 +393,12 @@ class horaire:
                                                                     #   alors il faut interrompre et passer à jour suivant
                                                                     #   ou inversement ecrire si ce chiffre est plus grand ou egal que nb cren.
                                 eqs = eqs2[:]
-                                pop_string_eq = pop_string_eq + " " + eqs.pop(0)
+                                eq_courante = eqs.pop(0)
+                                pop_string_eq = pop_string_eq + " " + eq_courante
                                 print(
                                      "\t\t.eq# " + str(eq) + " " + pop_string_eq)
                                 tot_affec = tot_affec + 1
-                                #tot_h_affec = tot_h_affec + (empl_par_eq * tot_affec)
+                                self.assigne_empl_eq_jour(self.les_jours[jour][1],eq_courante)
                                 worksheet.write_string(row, colo, pop_string_eq.strip())
                             else:
                                 eqs = eqs2[:]
@@ -450,3 +431,22 @@ class horaire:
 appli = horaire('2022-04-01 12:12')
 
 appli.conn.close()
+    # def affecte_equipes(self, emp):
+    #     if self.equipes == {}:
+    #         self.initialise_dict_equipe(0)
+    #
+    #     if self.nb_quart_en_eq - int(self.nb_quart_en_eq) > 0.00:
+    #         print("! valeurs reparties")
+    #         self.valeur_repartition = int(self.nb_quarts_indivi/(self.nb_quart_en_eq + 0.5) +.5)
+    #
+    #     for nom_eq in self.equipes:
+    #         if (len(self.equipes[nom_eq][1]) < self.valeur_repartition) and (self.cpt_heures < self.hpers) :
+    #             self.equipes[nom_eq][1].append(emp[1][0] + ". " + emp[0])
+    #             self.cpt_heures = self.cpt_heures + self.duree_quart
+    #             break
+    #         else:
+    #             continue
+# equipes inegales si nb_quart_en_eq est fractionnaire le_nb - int(le_nb) <> 0.0000.
+# alors il y a une répartition à faire 7/7/4 devient 6/6/6
+# je prends nb_quart_indivi / int(nb_quart_en_eq + .5) j'ai un montant moyen par équipe, je l'arrondis à l'entier suivant.
+# ça donne le chiffre qui rmeplace le nb max par equipes
