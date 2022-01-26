@@ -259,7 +259,7 @@ class horaire:
         for nom_eq in self.equipes:
 
             if (len(self.equipes[nom_eq][1]) < self.config_modele[0][5]): # !! le nb des equipes vient du modele et initialise...
-                if (self.cpt_heures < self.hpers): # pour les fractions d'équipe (il y a répartition plus loin)
+                if (self.cpt_heures < self.hpers): #  pas besoin de repartition, le nb_emp est décidé pour chaque equipe
                     self.equipes[nom_eq][1].append(emp[1][0] + ". " + emp[0])
                     self.cpt_heures = self.cpt_heures + self.config_modele[0][2]
                 break
@@ -267,20 +267,6 @@ class horaire:
                 continue
 
 
-
-        # for nom_eq in self.equipes:
-        #     print(str(len(self.equipes[nom_eq][1])) + " < " + str(config_modele[0][4]))
-        #     if (len(self.equipes[nom_eq][1]) < config_modele[0][3]) and (self.cpt_heures < self.hpers):
-        #         self.equipes[nom_eq][1].append(emp[1][0] + ". " + emp[0])
-        #         self.cpt_heures = self.cpt_heures + config_modele[0][1]
-        #         break
-        #     else:
-        #         continue
-
-    # equipes inegales si nb_quart_en_eq est fractionnaire le_nb - int(le_nb) <> 0.0000.
-    # alors il y a une répartition à faire 7/7/4 devient 6/6/6
-    # je prends nb_quart_indivi / int(nb_quart_en_eq + .5) j'ai un montant moyen par équipe, je l'arrondis à l'entier suivant.
-    # ça donne le chiffre qui rmeplace le nb max par equipes
 
     def initialise_dict_equipe(self, nb_eq):
         count = 0
@@ -295,71 +281,6 @@ class horaire:
                     count  = count + 1
 
 
-
-    def ecrire_equipes_excel(self):
-        # Create an new Excel file and add a worksheet.
-        workbook = xlsxwriter.Workbook('horaire_A.xlsx')
-        worksheet = workbook.add_worksheet('equipes')
-
-        bold = workbook.add_format({'bold': True})
-        cell_format_red = workbook.add_format({'bold': True, 'font_color': 'red'})
-        cell_format_noir = workbook.add_format({'bold': True, 'font_color': 'black'})
-    
-        # Widen the first column to make the text clearer.
-        worksheet.set_column('A:A', 20)
-
-        # Write some simple text.
-        worksheet.write('A1', 'Equipes', cell_format_red)
-        col = 0
-        row = 0
-
-        for keys in self.equipes: #A-E
-            col = col + 1
-            for indx_eq in range(1, len(self.equipes[keys][1])+1): #4
-                worksheet.write(row, col, keys, cell_format_noir)
-                worksheet.write((row + indx_eq), col, self.equipes[keys][1][indx_eq-1])
-                worksheet.set_column(row, col + indx_eq, 15)
-
-        row = row + (len(self.equipes['A'][1]) + 3)
-        colo = 0
-
-        worksheet.write_string(row, colo, 'Semaine ' + str(self.week), cell_format_red) # colo passe pas ?
-        colo = colo + 2 #//TODO si les colonnes sont doublees ne pas affecter le tableau du haut
-        for i in range (0, len(self.les_jours)):
-            worksheet.write(row, colo + i, self.les_jours[i][0], cell_format_noir)
-            worksheet.write(row + 1, colo + i, self.les_jours[i][1])
-            worksheet.set_column(row, colo + i, 15)
-
-        row = row + 2
-
-
-        for j in range(0, int(self.config_modele[0][6])): # calcul quart par eq indique le nb de presences totales/nb par eq. ça saute ume colonne/journée
-            for i in range(0, self.config_modele[0][7]): # je repete dans rangeee suivante si + de crenaux
-                for keys in self.equipes:
-                    worksheet.write(row + i, colo + j, keys)
-
-        # logique de presentation :  les colonnes des jours sont multipliees par nb_creneau_disp
-#       et écrites selon nb_eq_par_creneau (un creneau = une colonne appartenant a une journee)
-#        self.config_modele
-        # 1 = heures_par_jour
-        # 2 = presences
-        # 3 = nb_eq
-        # 4 = nb_quarts-eq
-        # 5 = nbeq_par_creneau
-        # 6 = nb creneau
-        # 7 = jours
-        # 8 = nom modele
-
-
-        row = row + (len(self.equipes['A'][1]) + 3) + 10
-
-        colo = 0
-        worksheet.write_string(row, colo, 'Modèle ' + str(self.nom_modele), cell_format_red)
-
-        # Insert an image.
-    #    worksheet.insert_image('B5', 'logo.png')
-    
-        workbook.close()
     
     def ecriture_excel2(self):
         # Create an new Excel file and add a worksheet.
@@ -368,7 +289,7 @@ class horaire:
 
         bold = workbook.add_format({'bold': True})
         cell_format_red = workbook.add_format({'bold': True, 'font_color': 'red'})
-        cell_format_noir = workbook.add_format({'bold': True, 'font_color': 'black','text_wrap':'true','align':'center'})
+        cell_format_noir = workbook.add_format({'bold': True, 'font_color': 'black','text_wrap':'true','align':'center','valign':'top'})
 
         # Widen the first column to make the text clearer.
         worksheet.set_column('A:A', 20)
@@ -405,25 +326,28 @@ class horaire:
         # 10 = nom du modèlle
 
         print(str(self.config_modele))
+        mod_hpers = self.config_modele[0][1]
         nb_cren = self.config_modele[0][8]
         nb_jour_sem = len(self.les_jours)
         nb_eq = len(self.equipes)
         eq_par_cren = int(self.config_modele[0][7]+.5)
-        calc_nb_quarts_requis= int(self.config_modele[0][6] + .5)
+        calc_nb_quarts_requis= round(self.config_modele[0][6])
+        empl_par_eq = self.config_modele[0][5]
         print("date de réf. :" + str(self.auj))
         print("sem : " + str(self.config_modele[0][0]))
-        print("Modele : " + str(self.config_modele[0][10]) + " h-pers = " + str(self.config_modele[0][1]))
+        print("Modele : " + str(self.config_modele[0][10]) + " h-pers = " + str(mod_hpers))
         print("\t Calcul présences totales d'équipes: " + str(calc_nb_quarts_requis))
         print("\t Calcul présences individuelles: " + str(self.config_modele[0][3]))
         print("\t Créneaux par jour: " + str(nb_cren))
         print("\t Equipes par créneau: " + str(eq_par_cren))
         print("\t Nombre d'équipes: " + str(nb_eq))
-        print("\t Empl. par éq.: " + str(self.config_modele[0][5]))
+        print("\t Empl. par éq.: " + str(empl_par_eq))
 
         # ligne1
         eqs = list(self.equipes)
         eqs2 = eqs[:]
         tot_affec = 0
+        tot_h_affec = 0
         worksheet.write(row, colo, 'Horaire')
         for i in range(1, 4):
             worksheet.write(row, colo + i, 'Q'+ str(i))
@@ -448,7 +372,7 @@ class horaire:
                 print("\tcren " + str(cren))
                 pop_string_eq = ""                          #chaine pour concat equipes dans un seul creneau (c=1 epc>1)
                 for eq in range(0, eq_par_cren):            # Pour chaque equipe
-                    if tot_affec <  calc_nb_quarts_requis:  # on interrompt si le nb equipes arrive au nb_calculé
+                    if tot_affec <  calc_nb_quarts_requis and tot_h_affec < mod_hpers:  # on interrompt si le nb equipes arrive au nb_calculé
 #                        print('check ' + str(tot_affec) + " nb " + str(calc_nb_quarts_requis))
                         if len(eqs) > 0:                                       # liste eq non vide on affecte et retire une equipe
                             pop_string_eq = pop_string_eq + " " + eqs.pop(0)
@@ -456,6 +380,7 @@ class horaire:
                             print(
                                 "\t\teq# " + str(eq) + " " + pop_string_eq)  # //todo gestion des equipes deja assignees ?
                             tot_affec = tot_affec + 1                   #garde le compte des equipes affectees
+                            tot_h_affec = tot_h_affec + (empl_par_eq * tot_affec)
                         else:                           #la liste equipes est vide mais il reste du travail a couvrir
                                                         # #il faut répéter la liste tout en évitant d'affecter la meme #equipe dans la même journee.
                                                         #-- réalimenter la liste des equipes
@@ -471,16 +396,17 @@ class horaire:
                             eqs = eqs2[:]                  #dans tous les cas on recycle la liste d'equipes
 
 
-                            if len(eqs2)/eq_par_cren >  nb_cren:       # si on est au dernier creneau et que la liste est vide
+                            if len(eqs2)/eq_par_cren >=  nb_cren:       # si on est au dernier creneau et que la liste est vide
                             # elif:                                  # verifier répétition eq. dans la journee.
                             #                                        #  si la liste d'equipe est vide avant d'avoir fini le creneau
                                                                     #  c'est que le total des equipes divisé par eq_par_créneau est plus petit que cren disp
                                                                     # alors il faut interrompre et passer à jour suivant
-                                                                    # ou ecrire si ce chiffre est plus grand que nb cren.
+                                                                    # ou inversement ecrire si ce chiffre est plus grand ou egal que nb cren.
                                 pop_string_eq = pop_string_eq + " " + eqs.pop(0)
                                 print(
                                      "\t\t.eq# " + str(eq) + " " + pop_string_eq)
                                 tot_affec = tot_affec + 1
+                                tot_h_affec = tot_h_affec + (empl_par_eq * tot_affec)
 
                                 # si je suis au dernier creneau de la journee et len(eqp = 0)
                         #         print('FFF')
@@ -495,15 +421,113 @@ class horaire:
                         break
             colo = colo - cpt_cren
             row = row + 1
-            col = col -1
+
+        colo = colo - 1
         worksheet.write_string(row + 2, colo, "Modele : " + str(self.config_modele[0][10]) + " h-pers = " + str(self.config_modele[0][1]), cell_format_red)
+        row = row + 3
+        la_longue_string_modele = ""
+        la_longue_string_modele= la_longue_string_modele + " date de réf. :" + str(self.auj) + " \n"
+        la_longue_string_modele = la_longue_string_modele + " sem : " + str(self.config_modele[0][0]) + "\n"
+        la_longue_string_modele = la_longue_string_modele + " Modele : " + str(self.config_modele[0][10]) + " h-pers = " + str(self.config_modele[0][1]) + "\n"
+        la_longue_string_modele = la_longue_string_modele + " Calcul présences totales d'équipes: " + str(calc_nb_quarts_requis) + "\n"
+        la_longue_string_modele = la_longue_string_modele + " Calcul présences individuelles: " + str(self.config_modele[0][3]) + "\n"
+        la_longue_string_modele = la_longue_string_modele + " Créneaux par jour: " + str(nb_cren) + "\n"
+        la_longue_string_modele = la_longue_string_modele + " Equipes par créneau: " + str(eq_par_cren) + "\n"
+        la_longue_string_modele = la_longue_string_modele + " Nombre d'équipes: " + str(nb_eq) + "\n"
+        la_longue_string_modele = la_longue_string_modele + " Empl. par éq.: " + str(self.config_modele[0][5]) + "\n"
+        la_longue_string_modele = la_longue_string_modele + " Durée quart.: " + str(self.config_modele[0][2]) + "\n"
+        worksheet.write_string(row, colo, la_longue_string_modele, cell_format_noir)
+        worksheet.set_column(row, colo, 20)
+        print(str(row) + ":" + str(colo))
 
         workbook.close()
 
-appli = horaire('2022-04-01 12:12')
-#appli = horaire('2022-01-29 12:12')
+#appli = horaire('2022-04-01 12:12')
+appli = horaire('2022-01-07 12:12')
 #appli = horaire('2022-03-01 12:12')
 
 appli.conn.close()
 
 #// TODO
+
+
+
+#     def ecrire_equipes_excel(self):
+#         # Create an new Excel file and add a worksheet.
+#         workbook = xlsxwriter.Workbook('horaire_A.xlsx')
+#         worksheet = workbook.add_worksheet('equipes')
+#
+#         bold = workbook.add_format({'bold': True})
+#         cell_format_red = workbook.add_format({'bold': True, 'font_color': 'red'})
+#         cell_format_noir = workbook.add_format({'bold': True, 'font_color': 'black'})
+#
+#         # Widen the first column to make the text clearer.
+#         worksheet.set_column('A:A', 20)
+#
+#         # Write some simple text.
+#         worksheet.write('A1', 'Equipes', cell_format_red)
+#         col = 0
+#         row = 0
+#
+#         for keys in self.equipes: #A-E
+#             col = col + 1
+#             for indx_eq in range(1, len(self.equipes[keys][1])+1): #4
+#                 worksheet.write(row, col, keys, cell_format_noir)
+#                 worksheet.write((row + indx_eq), col, self.equipes[keys][1][indx_eq-1])
+#                 worksheet.set_column(row, col + indx_eq, 15)
+#
+#         row = row + (len(self.equipes['A'][1]) + 3)
+#         colo = 0
+#
+#         worksheet.write_string(row, colo, 'Semaine ' + str(self.week), cell_format_red) # colo passe pas ?
+#         colo = colo + 2 #//TODO si les colonnes sont doublees ne pas affecter le tableau du haut
+#         for i in range (0, len(self.les_jours)):
+#             worksheet.write(row, colo + i, self.les_jours[i][0], cell_format_noir)
+#             worksheet.write(row + 1, colo + i, self.les_jours[i][1])
+#             worksheet.set_column(row, colo + i, 15)
+#
+#         row = row + 2
+#
+#
+#         for j in range(0, int(self.config_modele[0][6])): # calcul quart par eq indique le nb de presences totales/nb par eq. ça saute ume colonne/journée
+#             for i in range(0, self.config_modele[0][7]): # je repete dans rangeee suivante si + de crenaux
+#                 for keys in self.equipes:
+#                     worksheet.write(row + i, colo + j, keys)
+#
+#         # logique de presentation :  les colonnes des jours sont multipliees par nb_creneau_disp
+# #       et écrites selon nb_eq_par_creneau (un creneau = une colonne appartenant a une journee)
+# #        self.config_modele
+#         # 1 = heures_par_jour
+#         # 2 = presences
+#         # 3 = nb_eq
+#         # 4 = nb_quarts-eq
+#         # 5 = nbeq_par_creneau
+#         # 6 = nb creneau
+#         # 7 = jours
+#         # 8 = nom modele
+#
+#
+#         row = row + (len(self.equipes['A'][1]) + 3) + 10
+#
+#         colo = 0
+#         worksheet.write_string(row, colo, 'Modèle ' + str(self.nom_modele), cell_format_red)
+#
+#         # Insert an image.
+#     #    worksheet.insert_image('B5', 'logo.png')
+#
+#         workbook.close()
+
+
+# for nom_eq in self.equipes:
+#     print(str(len(self.equipes[nom_eq][1])) + " < " + str(config_modele[0][4]))
+#     if (len(self.equipes[nom_eq][1]) < config_modele[0][3]) and (self.cpt_heures < self.hpers):
+#         self.equipes[nom_eq][1].append(emp[1][0] + ". " + emp[0])
+#         self.cpt_heures = self.cpt_heures + config_modele[0][1]
+#         break
+#     else:
+#         continue
+
+# equipes inegales si nb_quart_en_eq est fractionnaire le_nb - int(le_nb) <> 0.0000.
+# alors il y a une répartition à faire 7/7/4 devient 6/6/6
+# je prends nb_quart_indivi / int(nb_quart_en_eq + .5) j'ai un montant moyen par équipe, je l'arrondis à l'entier suivant.
+# ça donne le chiffre qui rmeplace le nb max par equipes
