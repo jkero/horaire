@@ -417,6 +417,7 @@ class horaire:
         print("\t Calcul présences individuelles: " + str(self.config_modele[0][3]))
         print("\t Créneaux par jour: " + str(nb_cren))
         print("\t Equipes par créneau: " + str(eq_par_cren))
+        print("\t Nombre d'équipes: " + str(nb_eq))
         print("\t Empl. par éq.: " + str(self.config_modele[0][5]))
 
         # ligne1
@@ -470,14 +471,15 @@ class horaire:
                             eqs = eqs2[:]                  #dans tous les cas on recycle la liste d'equipes
 
 
-                            if cren == nb_cren: # si on est au dernier creneau et que la liste est vide, laisser aller à la proch journee
-                                print("fin journee -creneau")
-                            else:                                  #sinon, verifier répétition eq. dans la journee.
-                                                                   #si le nb_eq < nb_creneau il y a repetition
-
+                            if len(eqs2)/eq_par_cren >  nb_cren:       # si on est au dernier creneau et que la liste est vide
+                            # elif:                                  # verifier répétition eq. dans la journee.
+                            #                                        #  si la liste d'equipe est vide avant d'avoir fini le creneau
+                                                                    #  c'est que le total des equipes divisé par eq_par_créneau est plus petit que cren disp
+                                                                    # alors il faut interrompre et passer à jour suivant
+                                                                    # ou ecrire si ce chiffre est plus grand que nb cren.
                                 pop_string_eq = pop_string_eq + " " + eqs.pop(0)
                                 print(
-                                    "\t\teq# " + str(eq) + " " + pop_string_eq)
+                                     "\t\t.eq# " + str(eq) + " " + pop_string_eq)
                                 tot_affec = tot_affec + 1
 
                                 # si je suis au dernier creneau de la journee et len(eqp = 0)
@@ -485,7 +487,7 @@ class horaire:
 
                             # else:
                             #     pop_string_eq = pop_string_eq + " " + eqs.pop(0)
-                            #     worksheet.write_string(row, colo, pop_string_eq.strip())
+                                worksheet.write_string(row, colo, pop_string_eq.strip())
                             #     print(
                             #      "\t\teq# " + str(eq) + " " + pop_string_eq.strip())  # //todo gestion des equipes deja assignees ?
                             #     tot_affec = tot_affec + 1
@@ -499,7 +501,8 @@ class horaire:
         workbook.close()
 
 appli = horaire('2022-04-01 12:12')
-#appli = horaire('2022-01-14 12:12')
+#appli = horaire('2022-01-29 12:12')
+#appli = horaire('2022-03-01 12:12')
 
 appli.conn.close()
 
