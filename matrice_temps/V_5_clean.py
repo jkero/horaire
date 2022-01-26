@@ -58,21 +58,21 @@ class horaire:
                                            " round(round(previsions_hpers.hpers / previsions_hpers.heures_par_jour,1)/" \
                                            "previsions_hpers.nb_max_par_eq,1) as nb_quarts from previsions_hpers  where annee = ? and semaine = ?"
                 cur_previsions = self.conn.cursor()
-                print("date de réf. :" + str(self.auj))
-                print("sem : " + str(self.week))
-                liste_prev = cur_previsions.execute(string_previsions_config, (self.auj.year, self.week)).fetchall()
-                self.hpers = liste_prev[0][0]
-                print("Prévisions pour " + str(self.hpers) + " h-pers")
-                self.duree_quart = liste_prev[0][1]
-                print("\t duree_quart: " + str(self.duree_quart))
-                self.nb_quarts_indivi = liste_prev[0][3] # prev hpers/heures par quart
-                print("\t nb_quart_indivi: " + str(self.nb_quarts_indivi))
-                self.max_emp_par_equipe = liste_prev[0][2]
-                print("\t max emp par eq: " + str(self.max_emp_par_equipe))
-                self.nb_quart_en_eq = liste_prev[0][4]
-                print("\t nb quarts en eq: " + str(self.nb_quart_en_eq))
-                self.employes_tot = self.select_count_emp_dispo()
-                print("\t employes_tot: " + str(self.select_count_emp_dispo()))
+                # print("date de réf. :" + str(self.auj))
+                # print("sem : " + str(self.week))
+                # liste_prev = cur_previsions.execute(string_previsions_config, (self.auj.year, self.week)).fetchall()
+                # self.hpers = liste_prev[0][0]
+                # print("Prévisions pour " + str(self.hpers) + " h-pers")
+                # self.duree_quart = liste_prev[0][1]
+                # print("\t duree_quart: " + str(self.duree_quart))
+                # self.nb_quarts_indivi = liste_prev[0][3] # prev hpers/heures par quart
+                # print("\t nb_quart_indivi: " + str(self.nb_quarts_indivi))
+                # self.max_emp_par_equipe = liste_prev[0][2]
+                # print("\t max emp par eq: " + str(self.max_emp_par_equipe))
+                # self.nb_quart_en_eq = liste_prev[0][4]
+                # print("\t nb quarts en eq: " + str(self.nb_quart_en_eq))
+                # self.employes_tot = self.select_count_emp_dispo()
+                # print("\t employes_tot: " + str(self.select_count_emp_dispo()))
 
                 self.les_dates_de_la_semaine = self.semaine()
 
@@ -87,6 +87,7 @@ class horaire:
                 nb_eq = self.config_modele[0][4]
 
                 self.initialise_dict_equipe(nb_eq)
+
                 self.ecriture_excel2()
 
         except Exception as e:
@@ -152,34 +153,10 @@ class horaire:
     
         except Error as e:
                 print(e)
-    
 
-    
-    def calcul_equipes(self):
-        print("---------")
-    
-    
-    def select_hpers(self):
-        """
-        Query all rows in the tasks table
-        :param conn: the Connection object
-        :return:
-        """
-        cur = self.conn.cursor()
-        res = cur.execute("SELECT hpers FROM previsions_hpers where semaine = " + self.week).fetchone()
-        return res[0]
-    
-    def select_count_emp_dispo(self):
-        """
-        Query all rows in the tasks table
-        :param conn: the Connection object
-        :return:
-        """
-        cur = self.conn.cursor()
-        res = cur.execute("select distinct count(id) from employes order by rang").fetchone()
-        return res[0]
-    
+
     def check_conflit(self, ref, res_non_dispo, conn):
+        print('XXXXXXXXXXX Conflit check')
         deb = res_non_dispo[0]
         fin = res_non_dispo[1]
         le_deb = datetime.fromisoformat(deb)
@@ -199,23 +176,33 @@ class horaire:
         all_emp = "SELECT distinct nom, prenom, debut, fin, id from employes order by rang"
         curseur_emp = self.conn.cursor()
         curseur_emp.execute(all_emp)
-        rows = curseur_emp.fetchall()
-        return rows
+        les_emp  = curseur_emp.fetchall()
+        return les_emp
 
     def get_dispos(self,emp):
         find_dispo_dates_and_type = "select emp_non_dispo.t_exact_debut,emp_non_dispo.t_exact_fin, emp_non_dispo.type_non_dispo, id_empl_fk from emp_non_dispo where id_empl_fk = '%s' order by id_empl_fk"
         curseur_dispo = self.conn.cursor()
         curseur_dispo.execute(find_dispo_dates_and_type % emp)
-        return curseur_dispo.fetchall()
+        d = curseur_dispo.fetchall()
+        print("dispos " + str(emp) + " l=" + str(len(d)))
+
+        print(type(d))
+        if len(curseur_dispo.fetchall()) > 0:
+            print(type(d))
+            print(str(d[0]))
+        return d
 
     def ajoute_empl_dans_eq(self, eq, date): #cette fonction a modifier pour l'appeler avec enr 1 employé
-        rows = self.get_employes()
+        res = None
+        cpt_emp_dans_eq = 0
+        lesemp  = self.get_employes()
         try:
-            for emp in rows:
+            for emp in lesemp:
                 res = self.get_dispos(str(emp[4]))
                 skip_emp = 'True'
-                if len(res) > 0:
+                if len(res) > 0 and cpt_emp_dans_eq < self.config_modele[0][5]: #interrompre si on a le compte d'empl dasn l'equipe
                     for enr_dispo in res:
+
                         conflit = self.check_conflit(self.auj, enr_dispo, self.conn)
                         if conflit == 'True':
                             skip_emp = 'True'
@@ -228,14 +215,16 @@ class horaire:
                     if skip_emp == 'False':
                         print(str(emp[4]) + " peut passer")
                         self.renseigne_equipes(emp, eq)
+                        cpt_emp_dans_eq = cpt_emp_dans_eq + 1
 
 
                 else:
                     self.renseigne_equipes(emp, eq)
-                    
+                    cpt_emp_dans_eq = cpt_emp_dans_eq + 1
+
 
             #self.ecrire_equipes_excel()
-            self.ecriture_excel2()
+  #          self.ecriture_excel2()
             print("\n" + str(self.equipes))
 
         except Exception:
@@ -250,12 +239,13 @@ class horaire:
 
 
     def renseigne_equipes(self,emp,nom_eq):
-        print("Gradon")
-        if (len(self.equipes[nom_eq][1]) < self.config_modele[0][5]): # !! le nb des equipes vient du modele et initialise...
-            if (self.cpt_heures < self.config_modele[0][1]):  # pas besoin de repartition, le nb_emp est décidé pour chaque equipe
+        print("heures= " + str(self.cpt_heures) + ", Gradon " + str(emp))
+        if (len(self.equipes[nom_eq][1]) < self.config_modele[0][5]):   # !! le nb des equipes vient du modele et initialise...
+                                                                        # pas besoin de repartition, le nb_emp est décidé pour chaque equipe
                 self.equipes[nom_eq][1].append(emp[1][0] + ". " + emp[0])
-                self.cpt_heures = self.cpt_heures + self.config_modele[0][2]
 
+#// TODO popper une liste d'employes si les equipes sont vides ici ou en amont ?
+#    aussi si la liste pour une equipe donnée est pleine valider que chaque employé n'est pas en conflit pour la date (elle change donc on vérifie)
 
     def initialise_dict_equipe(self, nb_eq):
         count = 0
