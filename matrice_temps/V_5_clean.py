@@ -82,12 +82,43 @@ class horaire:
                 #         self.equipes[key] = self.equipes_maximales[key]
                 #     cpt_key = cpt_key + 1
 
-                self.attribution_equipe()
+                self.init_valeurs_modele()
+
+                nb_eq = self.config_modele[0][4]
+
+                self.initialise_dict_equipe(nb_eq)
+                self.ecriture_excel2()
 
         except Exception as e:
             print(e)
             traceback.print_exc(file=sys.stdout)
 
+    def init_valeurs_modele(self):
+        sql_modele_affect = "select p.semaine, p.hpers, p.heures_par_jour, round(p.hpers / p.heures_par_jour,1) as presences, m.nb_eq, m.nb_emp_par_eq as nb_par_eq, \
+                                        round(round(p.hpers *1.0 / p.heures_par_jour,1)/m.nb_emp_par_eq,1) as nb_quarts_eq,\
+                                         m.nb_eq_par_creneau, m.nb_creneau_disp , \
+                                         round(round(cast(p.hpers as float) / p.heures_par_jour,2) / \
+                                        (m.nb_emp_par_eq * m.nb_eq_par_creneau * m.nb_creneau_disp),2) as jours, m.nom \
+                                        from previsions_hpers as p \
+                                        inner join modele_assignation_hebdo as m \
+                                        on p.modele = m.id \
+                                        where p.semaine = " + str(self.week)
+
+        cur_modele = self.conn.cursor()
+        self.config_modele = cur_modele.execute(sql_modele_affect).fetchall()
+
+    #        [0][v. liste suivante]
+    # 0 = num de semaine
+    # 1 = heures-personnes prévues
+    # 2 = durée d'une journée/quart de travail
+    # 3 = nb presences indivisuelles calculé
+    # 4 = nb équipes
+    # 5 = nb employés pas équipe
+    # 6 =  calcul du nb prévu de quarts en équipe
+    # 7 = nb équipes par créneau/quart
+    # 8 = nb de créneaux par jour
+    # 9 = calcul nb de jours requis
+    # 10 = nom du modèlle
 
     def semaine(self):
         calendar.setfirstweekday(6)
@@ -161,20 +192,21 @@ class horaire:
             retourne= "False"
         return retourne
 
-    def attribution_equipe(self):
+# //todo ATTRIBUTION EQUIPE et les validations dispos devraient se faire une fois que la grille est constituée ou en même temps. Quand on connait la journée
+# la date exacte d'une apparition d'équipe dans la grille on peut y affecter les employés seulement à ce moment, avec les vérifs ad hoc par apparition.
+
+    def get_employes(self):
         all_emp = "SELECT distinct nom, prenom, debut, fin, id from employes order by rang"
+        curseur_emp = self.conn.cursor()
+        curseur_emp.execute(all_emp)
+        rows = curseur_emp.fetchall()
+        self.ajoute_empl_dans_eq(rows)
+
+    def ajoute_empl_dans_eq(self,rows):
 
         find_dispo_dates_and_type = "select emp_non_dispo.t_exact_debut,emp_non_dispo.t_exact_fin, emp_non_dispo.type_non_dispo, id_empl_fk from emp_non_dispo where id_empl_fk = '%s' order by id_empl_fk"
 
-        curseur_emp = self.conn.cursor()
-
         curseur_dispo = self.conn.cursor()
-
-        curseur_emp.execute(all_emp)
-        rows = curseur_emp.fetchall()
-
-        #    self.conn.set_trace_callback(print)
-
         try:
             for emp in rows:
                 curseur_dispo.execute(find_dispo_dates_and_type % str(emp[4]))
@@ -205,57 +237,36 @@ class horaire:
         except Exception:
             traceback.print_exc(file=sys.stdout)
 
-    def affecte_equipes(self, emp):
-        if self.equipes == {}:
-            self.initialise_dict_equipe(0)
 
-        if self.nb_quart_en_eq - int(self.nb_quart_en_eq) > 0.00:
-            print("! valeurs reparties")
-            self.valeur_repartition = int(self.nb_quarts_indivi/(self.nb_quart_en_eq + 0.5) +.5)
-
-        for nom_eq in self.equipes:
-            if (len(self.equipes[nom_eq][1]) < self.valeur_repartition) and (self.cpt_heures < self.hpers) :
-                self.equipes[nom_eq][1].append(emp[1][0] + ". " + emp[0])
-                self.cpt_heures = self.cpt_heures + self.duree_quart
-                break
-            else:
-                continue
+    # def affecte_equipes(self, emp):
+    #     if self.equipes == {}:
+    #         self.initialise_dict_equipe(0)
+    #
+    #     if self.nb_quart_en_eq - int(self.nb_quart_en_eq) > 0.00:
+    #         print("! valeurs reparties")
+    #         self.valeur_repartition = int(self.nb_quarts_indivi/(self.nb_quart_en_eq + 0.5) +.5)
+    #
+    #     for nom_eq in self.equipes:
+    #         if (len(self.equipes[nom_eq][1]) < self.valeur_repartition) and (self.cpt_heures < self.hpers) :
+    #             self.equipes[nom_eq][1].append(emp[1][0] + ". " + emp[0])
+    #             self.cpt_heures = self.cpt_heures + self.duree_quart
+    #             break
+    #         else:
+    #             continue
 # equipes inegales si nb_quart_en_eq est fractionnaire le_nb - int(le_nb) <> 0.0000.
 # alors il y a une répartition à faire 7/7/4 devient 6/6/6
 # je prends nb_quart_indivi / int(nb_quart_en_eq + .5) j'ai un montant moyen par équipe, je l'arrondis à l'entier suivant.
 # ça donne le chiffre qui rmeplace le nb max par equipes
 
     def affecte_equipes_modele(self, emp):
-        sql_modele_affect = "select p.semaine, p.hpers, p.heures_par_jour, round(p.hpers / p.heures_par_jour,1) as presences, m.nb_eq, m.nb_emp_par_eq as nb_par_eq, \
-                                round(round(p.hpers *1.0 / p.heures_par_jour,1)/m.nb_emp_par_eq,1) as nb_quarts_eq,\
-                                 m.nb_eq_par_creneau, m.nb_creneau_disp , \
-                                 round(round(cast(p.hpers as float) / p.heures_par_jour,2) / \
-                                (m.nb_emp_par_eq * m.nb_eq_par_creneau * m.nb_creneau_disp),2) as jours, m.nom \
-                                from previsions_hpers as p \
-                                inner join modele_assignation_hebdo as m \
-                                on p.modele = m.id \
-                                where p.semaine = " + str(self.week)
-
-        cur_modele = self.conn.cursor()
-        self.config_modele = cur_modele.execute(sql_modele_affect).fetchall()
-#        [0][v. liste suivante]
-        # 0 = num de semaine
-        # 1 = heures-personnes prévues
-        # 2 = durée d'une journée/quart de travail
-        # 3 = nb presences indivisuelles calculé
-        # 4 = nb équipes
-        # 5 = nb employés pas équipe
-        # 6 =  calcul du nb prévu de quarts en équipe
-        # 7 = nb équipes par créneau/quart
-        # 8 = nb de créneaux par jour
-        # 9 = calcul nb de jours requis
-        #10 = nom du modèlle
-
         self.nom_modele = self.config_modele[0][10]
 
         if self.equipes == {}:
             self.initialise_dict_equipe(self.config_modele[0][4])
 
+        self.renseigne_equipes(emp)
+
+    def renseigne_equipes(self,emp):
         for nom_eq in self.equipes:
 
             if (len(self.equipes[nom_eq][1]) < self.config_modele[0][5]): # !! le nb des equipes vient du modele et initialise...
@@ -265,8 +276,6 @@ class horaire:
                 break
             else:
                 continue
-
-
 
     def initialise_dict_equipe(self, nb_eq):
         count = 0
@@ -280,6 +289,7 @@ class horaire:
                     self.equipes[key] = self.equipes_maximales[key]
                     count  = count + 1
 
+ # equipes sans employes affectes       print(" sans emp"+ str(self.equipes))
 
     
     def ecriture_excel2(self):
@@ -342,6 +352,7 @@ class horaire:
         print("\t Equipes par créneau: " + str(eq_par_cren))
         print("\t Nombre d'équipes: " + str(nb_eq))
         print("\t Empl. par éq.: " + str(empl_par_eq))
+        print("\t Durée quart: " + str(self.config_modele[0][2]))
 
         # ligne1
         eqs = list(self.equipes)
@@ -372,7 +383,7 @@ class horaire:
                 print("\tcren " + str(cren))
                 pop_string_eq = ""                          #chaine pour concat equipes dans un seul creneau (c=1 epc>1)
                 for eq in range(0, eq_par_cren):            # Pour chaque equipe
-                    if tot_affec <  calc_nb_quarts_requis and tot_h_affec < mod_hpers:  # on interrompt si le nb equipes arrive au nb_calculé
+                    if tot_affec <  calc_nb_quarts_requis: # and tot_h_affec < mod_hpers:  # on interrompt si le nb equipes arrive au nb_calculé
 #                        print('check ' + str(tot_affec) + " nb " + str(calc_nb_quarts_requis))
                         if len(eqs) > 0:                                       # liste eq non vide on affecte et retire une equipe
                             pop_string_eq = pop_string_eq + " " + eqs.pop(0)
@@ -380,7 +391,7 @@ class horaire:
                             print(
                                 "\t\teq# " + str(eq) + " " + pop_string_eq)  # //todo gestion des equipes deja assignees ?
                             tot_affec = tot_affec + 1                   #garde le compte des equipes affectees
-                            tot_h_affec = tot_h_affec + (empl_par_eq * tot_affec)
+                            #tot_h_affec = tot_h_affec + (empl_par_eq * tot_affec)
                         else:                           #la liste equipes est vide mais il reste des h-travail a couvrir
                                                         # #il faut répéter la liste tout en évitant d'affecter la meme equipe dans la même journee.
                                                         #-- réalimenter la liste des equipes
@@ -393,7 +404,7 @@ class horaire:
                                                         # commentaire sur la coherence du modele: avoir moins d'équipes que de creneaux par jour n'a pas de sens
 
 
-                            eqs = eqs2[:]                  #dans tous les cas on recycle la liste d'equipes
+                                            #dans tous les cas on recycle la liste d'equipes
 
                             if len(eqs2)/eq_par_cren >=  nb_cren:   # si on est au dernier creneau et que la liste est vide
                                                                     # verifier répétition eq. dans la journee :
@@ -401,12 +412,16 @@ class horaire:
                                                                     #      c'est que le total des equipes divisé par eq_par_créneau est plus petit que cren disp
                                                                     #   alors il faut interrompre et passer à jour suivant
                                                                     #   ou inversement ecrire si ce chiffre est plus grand ou egal que nb cren.
+                                eqs = eqs2[:]
                                 pop_string_eq = pop_string_eq + " " + eqs.pop(0)
                                 print(
                                      "\t\t.eq# " + str(eq) + " " + pop_string_eq)
                                 tot_affec = tot_affec + 1
-                                tot_h_affec = tot_h_affec + (empl_par_eq * tot_affec)
+                                #tot_h_affec = tot_h_affec + (empl_par_eq * tot_affec)
                                 worksheet.write_string(row, colo, pop_string_eq.strip())
+                            else:
+                                eqs = eqs2[:]
+                                break
 
                     else:
                         break
@@ -417,24 +432,21 @@ class horaire:
         worksheet.write_string(row + 2, colo, "Modele : " + str(self.config_modele[0][10]) + " h-pers = " + str(self.config_modele[0][1]), cell_format_red)
         row = row + 3
         la_longue_string_modele = ""
-        la_longue_string_modele= la_longue_string_modele + " date de réf. :" + str(self.auj) + " \n"
-        la_longue_string_modele = la_longue_string_modele + " sem : " + str(self.config_modele[0][0]) + "\n"
-        la_longue_string_modele = la_longue_string_modele + " Modele : " + str(self.config_modele[0][10]) + " h-pers = " + str(self.config_modele[0][1]) + "\n"
-        la_longue_string_modele = la_longue_string_modele + " Calcul présences totales d'équipes: " + str(calc_nb_quarts_requis) + "\n"
-        la_longue_string_modele = la_longue_string_modele + " Calcul présences individuelles: " + str(self.config_modele[0][3]) + "\n"
+        la_longue_string_modele = la_longue_string_modele + " Calcul pr. équipes: " + str(calc_nb_quarts_requis) + "\n"
+        la_longue_string_modele = la_longue_string_modele + " Calcul prés individuelles: " + str(self.config_modele[0][3]) + "\n"
         la_longue_string_modele = la_longue_string_modele + " Créneaux par jour: " + str(nb_cren) + "\n"
         la_longue_string_modele = la_longue_string_modele + " Equipes par créneau: " + str(eq_par_cren) + "\n"
         la_longue_string_modele = la_longue_string_modele + " Nombre d'équipes: " + str(nb_eq) + "\n"
         la_longue_string_modele = la_longue_string_modele + " Empl. par éq.: " + str(self.config_modele[0][5]) + "\n"
         la_longue_string_modele = la_longue_string_modele + " Durée quart.: " + str(self.config_modele[0][2]) + "\n"
         worksheet.write_string(row, colo, la_longue_string_modele, cell_format_noir)
-        worksheet.set_column(row, colo, 20)
+        worksheet.set_column(row, colo, 23)
         print(str(row) + ":" + str(colo))
 
         workbook.close()
 
-appli = horaire('2022-04-08 12:12')
-#appli = horaire('2022-01-07 12:12')
-#appli = horaire('2022-03-01 12:12')
+#appli = horaire('2022-04-08 12:12')
+#appli = horaire('2022-03-14 12:12')
+appli = horaire('2022-04-01 12:12')
 
 appli.conn.close()
