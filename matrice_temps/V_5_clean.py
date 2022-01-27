@@ -1,9 +1,12 @@
+import calendar
+import locale
 import sqlite3
-import sys, traceback, calendar, locale
+import sys
+import traceback
 from datetime import datetime, timedelta
 from sqlite3 import Error
-import xlsxwriter
 
+import xlsxwriter
 
 
 # pour demarrer la generation de l'horaire pour une période donnée, ça prend la saisie de valeurs de base.
@@ -32,22 +35,29 @@ class horaire:
     equipes_maximales = {'A': [['8-16'], []], 'B': [['8-16'], []], 'C': [['8-16'], []], \
                          'D': [['5-13'], []], 'E': [['5-13'], []], 'F': [['5-13'], []], \
                          'G': [['12-20'], []], 'H': [['12-20'], []], 'I': [['12-20'], []]}
+    calendrier_equipes = dict() #pour inscrire toutes les equipes par dates
+    #                              = par exemple {
+    #le_dico = {
+    #    'A': [['2022-04-01', ['momo', 'famo', 'Bozo']], ['2022-04-02', ['momo', 'flamo', 'Bozo']]],
+    #    'B': [['2022-04-01', ['koko', 'klamo', 'kozo']], ['2022-04-02', ['koko', 'klamo', 'lozo']]]
+    #}
+    #ETC.                               aussi if le_dico['A'][0][1] == le_dico['A'][1][1], etc
+    les_cles = list()
     cpt_heures = 0
     valeur_repartition = 0
     nom_modele = ''
     config_modele = None
 
+
     def __init__(self, la_journee):
         self.auj = datetime.fromisoformat(la_journee)        
-        self.week = str((self.auj).isocalendar()[1])
+        self.week = str(self.auj.isocalendar()[1])
         try:
             self.create_connection(r"C:\Users\j\Documents\pythonProject\matrice_temps\letemps.db")
             self.post_init()
         except Exception as e:
             print(e)
             traceback.print_exc(file=sys.stdout)
-
-
 
 
     def post_init(self):
@@ -87,6 +97,8 @@ class horaire:
                 nb_eq = self.config_modele[0][4]
 
                 self.initialise_dict_equipe(nb_eq)
+
+                self.liste_emp_assignes = self.get_employes()
 
                 self.ecriture_excel2()
 
@@ -142,35 +154,27 @@ class horaire:
                 #     if count < round(self.employes_requis/self.max_emp_par_equipe):
                 #         self.equipes[key] = self.equipes_maximales[key]
                 #         count  = count + 1
-    
-    #            print (str(equipes))
-    
-
-    
-    # la composition des equipes doit se faire par jour, à cause des non-dispos qui peuvent être une seule journée. //TODO attribution selon boucle par jour pour semaine en cours
             else:
-                print("Error! cannot create the database connection.")
+               print("Error! cannot create the database connection.")
     
         except Error as e:
                 print(e)
 
 
-    def check_conflit(self, ref, res_non_dispo, conn):
-        print('XXXXXXXXXXX Conflit check')
-        deb = res_non_dispo[0]
-        fin = res_non_dispo[1]
-        le_deb = datetime.fromisoformat(deb)
-        la_fin = datetime.fromisoformat(fin)
-
-        if (str((ref <= la_fin) & (ref >= le_deb))) == 'True':
-            retourne = (str((ref <= la_fin) & (ref >= le_deb)))
-            print("\n conflit de " + str(ref) + " pour date de" + str(le_deb) + " à " + str(la_fin))
-        else:
-            retourne= "False"
+    def check_conflit(self, ref, les_non_dispo):
+        retourne = 'True'
+        for enr in les_non_dispo:
+            deb = enr[0]
+            fin = enr[1]
+            le_deb = datetime.fromisoformat(deb)
+            la_fin = datetime.fromisoformat(fin)
+            if str((ref <= la_fin) & (ref >= le_deb)) == 'True':
+                retourne = 'True'
+                print("\n conflit de " + str(ref) + " pour date de" + str(le_deb) + " à " + str(la_fin))
+                break
+            else:
+                retourne= "False"
         return retourne
-
-# //todo ATTRIBUTION EQUIPE et les validations dispos devraient se faire une fois que la grille est constituée ou en même temps. Quand on connait la journée
-# la date exacte d'une apparition d'équipe dans la grille on peut y affecter les employés seulement à ce moment, avec les vérifs ad hoc par apparition.
 
     def get_employes(self):
         all_emp = "SELECT distinct nom, prenom, debut, fin, id from employes order by rang"
@@ -184,13 +188,58 @@ class horaire:
         curseur_dispo = self.conn.cursor()
         curseur_dispo.execute(find_dispo_dates_and_type % emp)
         d = curseur_dispo.fetchall()
-        print("dispos " + str(emp) + " l=" + str(len(d)))
-
-        print(type(d))
-        if len(curseur_dispo.fetchall()) > 0:
-            print(type(d))
-            print(str(d[0]))
         return d
+
+    # fournir une liste poppable? d'employes-non-assignés
+    # verifier que les equipes existent
+    #pour chaque employe de la liste
+    #
+    #    si eq est vide
+    #        TQ nb_emp_par_eq n'est pas atteint
+    #            emp-courant = liste_emp(pop)
+    #            effectuer validation(emp-courant , date)
+    #               si valide
+    #                   renseigner eq(pop(emp-courant))
+    #                   break
+    #               sinon
+    #                   continuer
+    #    sinon (pas vide) #une équipe est rappelee a une date différente de la semaine
+    #       pour ch. emp de l'équipe
+    #           valider dispos
+    #           si non-dispo
+    #               remplacer(emp_a, liste_emp(pop)) # attention aux doublons = liste poppable
+    #
+
+    def ajout_valide_dans_eq(self, eq, ladate): #cette fonction a modifier pour l'appeler avec enr 1 employé
+        conflit = ''
+        res = None
+        emp_courant = ''
+
+        dateiso = datetime.fromisoformat(ladate)
+        emps_rejetes = []
+        for ix in range(0, len(self.calendrier_equipes[eq])):
+            if self.calendrier_equipes[eq][ix][0] == ladate:
+
+                 if len(self.calendrier_equipes[eq][0][1]) != 0: #premier enr de l'equipe
+                     self.calendrier_equipes[eq][ix][1] = self.calendrier_equipes[eq][ix -1][1]
+                     #on doit revalider les emp pour cette date
+                     for emp in self.calendrier_equipes[eq][ix][1]:
+                 else:# ch de date
+                     while len(self.calendrier_equipes[eq][ix][1]) < self.config_modele[0][5]:
+                         emp_courant = self.liste_emp_assignes.pop(0)
+                         res = self.get_dispos(emp_courant[4])
+                         conflit = self.check_conflit(dateiso, res)
+                         if not conflit == 'True':
+                             print('************** OUI conflit ' + str(emp_courant[4]))
+                             emps_rejetes.append(emp_courant)
+                         else:
+                             self.calendrier_equipes[eq][ix][1].append(
+                                 emp_courant[1][0] + ". " + emp_courant[0] + " (" + str(emp_courant[4]) + ")")
+                    #remettre le conflit consommé sans assignation dasn la liste pour prochaines dates
+                     for i in emps_rejetes:
+                        self.liste_emp_assignes.insert(0,i)
+
+
 
     def ajoute_empl_dans_eq(self, eq, date): #cette fonction a modifier pour l'appeler avec enr 1 employé
         res = None
@@ -222,20 +271,15 @@ class horaire:
                     self.renseigne_equipes(emp, eq)
                     cpt_emp_dans_eq = cpt_emp_dans_eq + 1
 
-
-            #self.ecrire_equipes_excel()
-  #          self.ecriture_excel2()
             print("\n" + str(self.equipes))
 
         except Exception:
             traceback.print_exc(file=sys.stdout)
 
-    def assigne_empl_eq_jour(self, la_date, nom_eq):
-        print("----------------------------------------")
-        print("------valider date " + str(la_date) + " pour affec éq. " + nom_eq)
 
+    def assigne_empl_eq_jour(self, la_date, nom_eq):
         # appelle fonction_existante_de_valide(date, nom_eq)
-        self.ajoute_empl_dans_eq(nom_eq,la_date)
+        self.ajout_valide_dans_eq(nom_eq,la_date)
 
 
     def renseigne_equipes(self,emp,nom_eq):
@@ -248,19 +292,17 @@ class horaire:
 #    aussi si la liste pour une equipe donnée est pleine valider que chaque employé n'est pas en conflit pour la date (elle change donc on vérifie)
 
     def initialise_dict_equipe(self, nb_eq):
-        count = 0
-        for key in self.equipes_maximales:
-            if nb_eq > 0:
-                if count < round(nb_eq):
-                    self.equipes[key] = self.equipes_maximales[key]
-                    count  = count + 1
-            else:
-                if count < round(self.employes_requis/self.max_emp_par_equipe):
-                    self.equipes[key] = self.equipes_maximales[key]
-                    count  = count + 1
+        self.les_cles = list(self.equipes_maximales.keys())[:nb_eq]
+        self.calendrier_equipes = dict.fromkeys(self.les_cles)
+        print(self.calendrier_equipes)
+        for i in self.les_cles:
+            self.calendrier_equipes[i] = []
+            for j in range(0, len(self.les_jours)):
+                self.calendrier_equipes[i].append([self.les_jours[j][1],[]])
+
 
  # equipes sans employes affectes       print(" sans emp"+ str(self.equipes))
-
+        print(self.calendrier_equipes)
     
     def ecriture_excel2(self):
         # Create an new Excel file and add a worksheet.
@@ -286,7 +328,8 @@ class horaire:
                 worksheet.write((row + indx_eq), col, self.equipes[keys][1][indx_eq - 1])
                 worksheet.set_column(row, col + indx_eq, 15)
 
-        row = row + (len(self.equipes['A'][1]) + 3)
+#        row = row + (len(self.equipes['A'][1]) + 3)
+        row = row + self.config_modele[0][5]
         colo = 0
 
         worksheet.write_string(row, colo, 'Semaine ' + str(self.config_modele[0][0]), cell_format_red) # colo passe pas ?
@@ -325,7 +368,7 @@ class horaire:
         print("\t Durée quart: " + str(self.config_modele[0][2]))
 
         # ligne1
-        eqs = list(self.equipes)
+        eqs = self.les_cles
         eqs2 = eqs[:]
         tot_affec = 0
         tot_h_affec = 0
@@ -413,13 +456,15 @@ class horaire:
         worksheet.write_string(row, colo, la_longue_string_modele, cell_format_noir)
         worksheet.set_column(row, colo, 23)
         print(str(row) + ":" + str(colo))
+        row = row + 2
+        date_prod = datetime.today().strftime("%Y-%m-%d %H:%M")
 
         workbook.close()
 
 #appli = horaire('2022-04-08 12:12')
 #appli = horaire('2022-03-14 12:12')
 appli = horaire('2022-04-01 12:12')
-
+print(str(appli.calendrier_equipes))
 appli.conn.close()
     # def affecte_equipes(self, emp):
     #     if self.equipes == {}:
@@ -440,3 +485,55 @@ appli.conn.close()
 # alors il y a une répartition à faire 7/7/4 devient 6/6/6
 # je prends nb_quart_indivi / int(nb_quart_en_eq + .5) j'ai un montant moyen par équipe, je l'arrondis à l'entier suivant.
 # ça donne le chiffre qui rmeplace le nb max par equipes
+
+#             if self.calendrier_equipes[eq]
+
+
+            # while len(self.calendrier_equipes[eq][1]) < self.config_modele[0][5]:
+            #     emp_courant = self.liste_emp_assignes.pop(0)
+            #     res = self.get_dispos(emp_courant[4])
+            #     conflit = self.check_conflit(dateiso, res)
+            #     if not conflit == 'True':
+            #         print('OUI conflit ' + str(emp_courant[4]))
+            #     else:
+            #         self.calendrier_equipes[eq][1].append(emp_courant[1][0] + ". " + emp_courant[0])
+
+
+    # le_dico = {
+    #    'A': [['2022-04-01', ['momo', 'famo', 'Bozo']], ['2022-04-02', ['momo', 'flamo', 'Bozo']]],
+    #    'B': [['2022-04-01', ['koko', 'klamo', 'kozo']], ['2022-04-02', ['koko', 'klamo', 'lozo']]]
+    # }
+    # ETC.                               aussi if le_dico['A'][0][1] == le_dico['A'][1][1], etc
+
+    #une fois validé il faut garder toutes les équipes de la semaine et les imprimer (si elles varient)
+
+    # try:
+    #         for emp in lesemp:
+    #             res = self.get_dispos(str(emp[4]))
+    #             skip_emp = 'True'
+    #             if len(res) > 0 and cpt_emp_dans_eq < self.config_modele[0][5]: #interrompre si on a le compte d'empl dasn l'equipe
+    #                 for enr_dispo in res:
+    #
+    #                     conflit = self.check_conflit(self.auj, enr_dispo, self.conn)
+    #                     if conflit == 'True':
+    #                         skip_emp = 'True'
+    #                         print('\n ************** ' + str(emp[1]).upper() + " " + str(
+    #                             emp[0]).upper() + " exclu " + conflit)
+    #                         break
+    #                     else:
+    #                         skip_emp = 'False'
+    #
+    #                 if skip_emp == 'False':
+    #                     print(str(emp[4]) + " peut passer")
+    #                     self.renseigne_equipes(emp, eq)
+    #                     cpt_emp_dans_eq = cpt_emp_dans_eq + 1
+    #
+    #
+    #             else:
+    #                 self.renseigne_equipes(emp, eq)
+    #                 cpt_emp_dans_eq = cpt_emp_dans_eq + 1
+    #
+    #         print("\n" + str(self.equipes))
+    #
+    #     except Exception:
+    #         traceback.print_exc(file=sys.stdout)
