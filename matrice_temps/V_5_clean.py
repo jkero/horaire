@@ -232,14 +232,15 @@ class horaire:
                         res = self.get_dispos(emp_courant[4])
                         conflit = self.check_conflit(datetime.fromisoformat(key), res)
                         if conflit:
-                            continue #print("bobo avec" + str(emp_courant[4]))
+                            print("bobo avec" + str(emp_courant[4]) + " "  + str(datetime.fromisoformat(key)))
+                            continue
                         else:
                             self.calendrier_equipes[key][ix][1].append(
                                 emp_courant[1][0] + ". " + emp_courant[0] + " (" + str(emp_courant[4]) + ")")
-                            #print("Ok avec" + str(emp_courant[4]))
+                            print("Ok avec" + str(emp_courant[4])+ " "  + str(datetime.fromisoformat(key)))
 
                 self.liste_emp_a_assigner = self.get_employes()
-                print(str(self.calendrier_equipes))            # pour chaque emp dispo
+ #               print(str(self.calendrier_equipes))            # pour chaque emp dispo
         except Exception:
             traceback.print_exc(file=sys.stdout)
 
@@ -330,7 +331,7 @@ class horaire:
 
 
     def renseigne_equipes(self,emp,nom_eq):
-        print("heures= " + str(self.cpt_heures) + ", Gradon " + str(emp))
+#        print("heures= " + str(self.cpt_heures) + ", Gradon " + str(emp))
         if (len(self.equipes[nom_eq][1]) < self.config_modele[0][5]):   # !! le nb des equipes vient du modele et initialise...
                                                                         # pas besoin de repartition, le nb_emp est décidé pour chaque equipe
                 self.equipes[nom_eq][1].append(emp[1][0] + ". " + emp[0])
@@ -340,11 +341,11 @@ class horaire:
 
     def initialise_calendrier_equipes(self, nb_eq):
         self.les_cles = list(self.equipes_maximales.keys())[:nb_eq]
-        print("les cles " + str(self.les_cles))
+#        print("les cles " + str(self.les_cles))
         lesdates = [self.les_jours[i][1] for i in range(0, len(self.les_jours))] # obtenir juste les dates
 
         self.calendrier_equipes = dict.fromkeys(lesdates)
-        print(self.calendrier_equipes)
+#        print(self.calendrier_equipes)
 
         for k in self.calendrier_equipes:
             self.calendrier_equipes[k] =[]
@@ -353,7 +354,7 @@ class horaire:
                 self.calendrier_equipes[k].append([[self.les_cles[i]],[]])
 
  # equipes sans employes affectes       print(" sans emp"+ str(self.equipes))
-        print(self.calendrier_equipes)
+#        print(self.calendrier_equipes)
        # exit(1)
     def ecriture_excel2(self):
         # Create an new Excel file and add a worksheet.
@@ -379,7 +380,7 @@ class horaire:
                 row = row +1
                 for j in range(0, len(self.calendrier_equipes[keys][indx])):
  #                   print(str(self.calendrier_equipes[keys][indx][1]))
-                    worksheet.write(row,col,str(self.calendrier_equipes[keys][indx][0][0])) #nom eq
+                    worksheet.write(row,col,str(self.calendrier_equipes[keys][indx][0][0]),cell_format_noir) #nom eq
                     for r in range(0, len(self.calendrier_equipes[keys][indx][1])): #nb eq
                         #print("@@ "+str(self.calendrier_equipes[keys][indx][1][r]))
                         # for ind in range (0, len(self.calendrier_equipes[keys][indx][1][r])):
@@ -390,9 +391,9 @@ class horaire:
         row = row + self.config_modele[0][5]
 
 # ---------------------------------------------------------------------------------------
+        row = 1
+
         worksheet2 = workbook.add_worksheet('calendrier')
-        #        row = row + (len(self.equipes['A'][1]) + 3)
-        row = row + self.config_modele[0][5]
         colo = 0
 
         worksheet2.write_string(row, colo, 'Semaine ' + str(self.config_modele[0][0]), cell_format_red) # colo passe pas ?
@@ -450,12 +451,12 @@ class horaire:
 
         eq_courante = ''
         for jour in range(0, nb_jour_sem):                  #--- Pour chaque jour
-            print(self.les_jours[jour][0])
+#            print(self.les_jours[jour][0])
             cpt_cren = 0                                    # suivi de la position pour grille
             for cren in range(1, nb_cren + 1):              #--- Pour chaque creneau
                 cpt_cren = cpt_cren + 1
                 colo = colo +1# cren_dispo
-                print("\tcren " + str(cren))
+#                print("\tcren " + str(cren))
                 pop_string_eq = ""                          #chaine pour concat equipes dans un seul creneau (c=1 epc>1)
                 for eq in range(0, eq_par_cren):            # Pour chaque equipe
                     if tot_affec <  calc_nb_quarts_requis: # and tot_h_affec < mod_hpers:  # on interrompt si le nb equipes arrive au nb_calculé
@@ -464,8 +465,8 @@ class horaire:
                             eq_courante = eqs.pop(0)  # liste eq non vide on affecte et retire une equipe
                             pop_string_eq = pop_string_eq + " " + eq_courante
                             worksheet2.write(row, colo, pop_string_eq.strip())
-                            print(
-                                "\t\teq# " + str(eq) + " " + pop_string_eq)  # //todo gestion des equipes deja assignees ?
+#                            print(
+#                                "\t\teq# " + str(eq) + " " + pop_string_eq)  # //todo gestion des equipes deja assignees ?
                             tot_affec = tot_affec + 1                   #garde le compte des equipes affectees
  #  decouple                          self.assigne_empl_eq_jour(self.les_jours[jour][1],eq_courante)
                         else:                           #la liste equipes est vide mais il reste des h-travail a couvrir
@@ -491,8 +492,8 @@ class horaire:
                                 eqs = eqs2[:]
                                 eq_courante = eqs.pop(0)
                                 pop_string_eq = pop_string_eq + " " + eq_courante
-                                print(
-                                     "\t\t.eq# " + str(eq) + " " + pop_string_eq)
+#                                print(
+#                                     "\t\t.eq# " + str(eq) + " " + pop_string_eq)
                                 tot_affec = tot_affec + 1
 #  decouple                               self.assigne_empl_eq_jour(self.les_jours[jour][1],eq_courante)
                                 worksheet2.write_string(row, colo, pop_string_eq.strip())
@@ -518,7 +519,7 @@ class horaire:
         la_longue_string_modele = la_longue_string_modele + " Durée quart.: " + str(self.config_modele[0][2]) + "\n"
         worksheet2.write_string(row, colo, la_longue_string_modele, cell_format_noir)
         worksheet2.set_column(row, colo, 23)
-        print(str(row) + ":" + str(colo))
+#        print(str(row) + ":" + str(colo))
         row = row + 2
         date_prod = datetime.today().strftime("%Y-%m-%d %H:%M")
 
