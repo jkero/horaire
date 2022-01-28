@@ -98,11 +98,13 @@ class horaire:
 
                 nb_eq = self.config_modele[0][4]
 
-                self.initialise_dict_equipe(nb_eq)
+                self.initialise_calendrier_equipes(nb_eq)
 
                 self.liste_emp_a_assigner = self.get_employes()
 
                 self.liste_emp_assignes
+
+                self.ajout_valide_dans_eq()
 
                 self.ecriture_excel2()
 
@@ -221,23 +223,27 @@ class horaire:
         res = None
         emp_courant = ''
         dateiso = ''
-        for key in self.calendrier_equipes:                         # par eq
-            for ix in range(0, len(self.calendrier_equipes[key])):  # par date
+        try:
+            for key in self.calendrier_equipes:                         # par date
+                for ix in range(0, len(self.calendrier_equipes[key])):  # par eq
 
-                while len(self.calendrier_equipes[key][ix][1]) < self.config_modele[0][5]:
-                    emp_courant = self.liste_emp_a_assigner.pop(0)
-                    res = self.get_dispos(emp_courant[4])
-                    conflit = self.check_conflit(datetime.fromisoformat(self.calendrier_equipes[key][ix][0]), res)
-                    if conflit:
-                        print("bobo avec" + str(emp_courant[4]))
-                    else:
-                        self.calendrier_equipes[key][ix][1].append(
-                            emp_courant[1][0] + ". " + emp_courant[0] + " (" + str(emp_courant[4]) + ")")
-                        print("Ok avec" + str(emp_courant[4]))
-                            # pour chaque emp dispo
+                    while len(self.calendrier_equipes[key][ix][1]) < self.config_modele[0][5]:
+                        emp_courant = self.liste_emp_a_assigner.pop(0)
+                        res = self.get_dispos(emp_courant[4])
+                        conflit = self.check_conflit(datetime.fromisoformat(key), res)
+                        if conflit:
+                            continue #print("bobo avec" + str(emp_courant[4]))
+                        else:
+                            self.calendrier_equipes[key][ix][1].append(
+                                emp_courant[1][0] + ". " + emp_courant[0] + " (" + str(emp_courant[4]) + ")")
+                            #print("Ok avec" + str(emp_courant[4]))
 
+                self.liste_emp_a_assigner = self.get_employes()
+                print(str(self.calendrier_equipes))            # pour chaque emp dispo
+        except Exception:
+            traceback.print_exc(file=sys.stdout)
 
-
+# a chaque changement de date, reset la liste empl.
 
 
 
@@ -320,7 +326,7 @@ class horaire:
 
     def assigne_empl_eq_jour(self, la_date, nom_eq):
         # appelle fonction_existante_de_valide(date, nom_eq)
-        self.ajout_valide_dans_eq(nom_eq,la_date)
+        self.ajout_valide_dans_eq()
 
 
     def renseigne_equipes(self,emp,nom_eq):
@@ -332,19 +338,23 @@ class horaire:
 #// TODO popper une liste d'employes si les equipes sont vides ici ou en amont ?
 #    aussi si la liste pour une equipe donnée est pleine valider que chaque employé n'est pas en conflit pour la date (elle change donc on vérifie)
 
-    def initialise_dict_equipe(self, nb_eq):
+    def initialise_calendrier_equipes(self, nb_eq):
         self.les_cles = list(self.equipes_maximales.keys())[:nb_eq]
-        self.calendrier_equipes = dict.fromkeys(self.les_cles)
-        print(self.calendrier_equipes)
-        for i in self.les_cles:
-            self.calendrier_equipes[i] = []
-            for j in range(0, len(self.les_jours)):
-                self.calendrier_equipes[i].append([self.les_jours[j][1],[]])
+        print("les cles " + str(self.les_cles))
+        lesdates = [self.les_jours[i][1] for i in range(0, len(self.les_jours))] # obtenir juste les dates
 
+        self.calendrier_equipes = dict.fromkeys(lesdates)
+        print(self.calendrier_equipes)
+
+        for k in self.calendrier_equipes:
+            self.calendrier_equipes[k] =[]
+            for i in range(0, len(self.les_cles)):
+
+                self.calendrier_equipes[k].append([[self.les_cles[i]],[]])
 
  # equipes sans employes affectes       print(" sans emp"+ str(self.equipes))
         print(self.calendrier_equipes)
-    
+       # exit(1)
     def ecriture_excel2(self):
         # Create an new Excel file and add a worksheet.
         workbook = xlsxwriter.Workbook('horaire_B.xlsx')
@@ -362,19 +372,30 @@ class horaire:
         col = 0
         row = 0
 #-------------------- a revoir une fois les equipes affectees sera sur autre feuille, plus grosse grille-------------
-        for keys in self.equipes:  # A-E
-            col = col + 1
-            for indx_eq in range(1, len(self.equipes[keys][1]) + 1):  # 4
-                worksheet.write(row, col, keys, cell_format_noir)
-                worksheet.write((row + indx_eq), col, self.equipes[keys][1][indx_eq - 1])
-                worksheet.set_column(row, col + indx_eq, 15)
-# ---------------------------------------------------------------------------------------
+        for keys in self.calendrier_equipes:  # dates
+            row = row + 1
+            worksheet.write(row, col, keys, cell_format_noir)
+            for indx in range(0, len(self.calendrier_equipes[keys])):  # nb eq
+                row = row +1
+                for j in range(0, len(self.calendrier_equipes[keys][indx])):
+ #                   print(str(self.calendrier_equipes[keys][indx][1]))
+                    worksheet.write(row,col,str(self.calendrier_equipes[keys][indx][0][0])) #nom eq
+                    for r in range(0, len(self.calendrier_equipes[keys][indx][1])): #nb eq
+                        #print("@@ "+str(self.calendrier_equipes[keys][indx][1][r]))
+                        # for ind in range (0, len(self.calendrier_equipes[keys][indx][1][r])):
+                        # print(str(self.calendrier_equipes[keys][indx][1][r]))
+                        worksheet.write(row, col+ r + 1 ,str(self.calendrier_equipes[keys][indx][1][r]))
+                        #     worksheet.set_column(row, col + indx, 15)
+            worksheet.set_column(row, col, 15)
+        row = row + self.config_modele[0][5]
 
+# ---------------------------------------------------------------------------------------
+        worksheet2 = workbook.add_worksheet('calendrier')
         #        row = row + (len(self.equipes['A'][1]) + 3)
         row = row + self.config_modele[0][5]
         colo = 0
 
-        worksheet.write_string(row, colo, 'Semaine ' + str(self.config_modele[0][0]), cell_format_red) # colo passe pas ?
+        worksheet2.write_string(row, colo, 'Semaine ' + str(self.config_modele[0][0]), cell_format_red) # colo passe pas ?
         colo = colo + 1
 
         #  config_modele [0][v. liste suivante]
@@ -414,15 +435,15 @@ class horaire:
         eqs2 = eqs[:]
         tot_affec = 0
         tot_h_affec = 0
-        worksheet.write(row, colo, 'Horaire')
+        worksheet2.write(row, colo, 'Horaire')
         for i in range(1, 4):
-            worksheet.write(row, colo + i, 'Q'+ str(i))
+            worksheet2.write(row, colo + i, 'Q'+ str(i))
 
         for ix in range(0, len(self.les_jours)):
             row = row + 1
-            worksheet.write(row, colo, str(self.les_jours[ix][0]) + "\n" + str(self.les_jours[ix][1]), cell_format_noir)
+            worksheet2.write(row, colo, str(self.les_jours[ix][0]) + "\n" + str(self.les_jours[ix][1]), cell_format_noir)
 
-            worksheet.set_column(row, colo, 15)
+            worksheet2.set_column(row, colo, 15)
 
         row = row - 6
         pop_string_eq = ""
@@ -442,7 +463,7 @@ class horaire:
                         if len(eqs) > 0:
                             eq_courante = eqs.pop(0)  # liste eq non vide on affecte et retire une equipe
                             pop_string_eq = pop_string_eq + " " + eq_courante
-                            worksheet.write(row, colo, pop_string_eq.strip())
+                            worksheet2.write(row, colo, pop_string_eq.strip())
                             print(
                                 "\t\teq# " + str(eq) + " " + pop_string_eq)  # //todo gestion des equipes deja assignees ?
                             tot_affec = tot_affec + 1                   #garde le compte des equipes affectees
@@ -474,7 +495,7 @@ class horaire:
                                      "\t\t.eq# " + str(eq) + " " + pop_string_eq)
                                 tot_affec = tot_affec + 1
 #  decouple                               self.assigne_empl_eq_jour(self.les_jours[jour][1],eq_courante)
-                                worksheet.write_string(row, colo, pop_string_eq.strip())
+                                worksheet2.write_string(row, colo, pop_string_eq.strip())
                             else:
                                 eqs = eqs2[:]
                                 break
@@ -485,7 +506,7 @@ class horaire:
             row = row + 1
 
         colo = colo - 1
-        worksheet.write_string(row + 2, colo, "Modele : " + str(self.config_modele[0][10]) + " h-pers = " + str(self.config_modele[0][1]), cell_format_red)
+        worksheet2.write_string(row + 2, colo, "Modele : " + str(self.config_modele[0][10]) + " h-pers = " + str(self.config_modele[0][1]), cell_format_red)
         row = row + 3
         la_longue_string_modele = ""
         la_longue_string_modele = la_longue_string_modele + " Calcul pr. équipes: " + str(calc_nb_quarts_requis) + "\n"
@@ -495,8 +516,8 @@ class horaire:
         la_longue_string_modele = la_longue_string_modele + " Nombre d'équipes: " + str(nb_eq) + "\n"
         la_longue_string_modele = la_longue_string_modele + " Empl. par éq.: " + str(self.config_modele[0][5]) + "\n"
         la_longue_string_modele = la_longue_string_modele + " Durée quart.: " + str(self.config_modele[0][2]) + "\n"
-        worksheet.write_string(row, colo, la_longue_string_modele, cell_format_noir)
-        worksheet.set_column(row, colo, 23)
+        worksheet2.write_string(row, colo, la_longue_string_modele, cell_format_noir)
+        worksheet2.set_column(row, colo, 23)
         print(str(row) + ":" + str(colo))
         row = row + 2
         date_prod = datetime.today().strftime("%Y-%m-%d %H:%M")
@@ -506,7 +527,7 @@ class horaire:
 #appli = horaire('2022-04-08 12:12')
 #appli = horaire('2022-03-14 12:12')
 appli = horaire('2022-04-01 12:12')
-appli.ajout_valide_dans_eq()
+
 print(str(appli.calendrier_equipes))
 appli.conn.close()
     # def affecte_equipes(self, emp):
