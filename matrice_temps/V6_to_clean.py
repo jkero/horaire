@@ -7,18 +7,6 @@ from datetime import datetime, timedelta
 from sqlite3 import Error
 
 import xlsxwriter
-
-
-# pour demarrer la generation de l'horaire pour une période donnée, ça prend la saisie de valeurs de base.
-# nb employes
-# nb equipes
-# prévisions heures/personnes pour la période v. table previsions_hpers
-# self.auj= datetime.today()
-# self.auj2 = "2022-01-03 01:00"
-# dt_string = self.auj.strftime("%Y-%m-%d %H:%M")
-# print("date = " + dt_string)
-# print("semaine " + str((self.auj).isocalendar()[1]))
-
 class horaire:
     auj = ''
     week= ''
@@ -50,7 +38,6 @@ class horaire:
     nom_modele = ''
     config_modele = None
 
-
     def __init__(self, la_journee):
         self.auj = datetime.fromisoformat(la_journee)        
         self.week = str(self.auj.isocalendar()[1])
@@ -70,29 +57,8 @@ class horaire:
                                            " round(round(previsions_hpers.hpers / previsions_hpers.heures_par_jour,1)/" \
                                            "previsions_hpers.nb_max_par_eq,1) as nb_quarts from previsions_hpers  where annee = ? and semaine = ?"
                 cur_previsions = self.conn.cursor()
-                # print("date de réf. :" + str(self.auj))
-                # print("sem : " + str(self.week))
-                # liste_prev = cur_previsions.execute(string_previsions_config, (self.auj.year, self.week)).fetchall()
-                # self.hpers = liste_prev[0][0]
-                # print("Prévisions pour " + str(self.hpers) + " h-pers")
-                # self.duree_quart = liste_prev[0][1]
-                # print("\t duree_quart: " + str(self.duree_quart))
-                # self.nb_quarts_indivi = liste_prev[0][3] # prev hpers/heures par quart
-                # print("\t nb_quart_indivi: " + str(self.nb_quarts_indivi))
-                # self.max_emp_par_equipe = liste_prev[0][2]
-                # print("\t max emp par eq: " + str(self.max_emp_par_equipe))
-                # self.nb_quart_en_eq = liste_prev[0][4]
-                # print("\t nb quarts en eq: " + str(self.nb_quart_en_eq))
-                # self.employes_tot = self.select_count_emp_dispo()
-                # print("\t employes_tot: " + str(self.select_count_emp_dispo()))
 
                 self.les_dates_de_la_semaine = self.semaine()
-
-                # cpt_key = 0
-                # for key in self.equipes_maximales:
-                #     if cpt_key < round(self.nb_quart_en_eq,1):
-                #         self.equipes[key] = self.equipes_maximales[key]
-                #     cpt_key = cpt_key + 1
 
                 self.init_valeurs_modele()
 
@@ -126,19 +92,6 @@ class horaire:
         cur_modele = self.conn.cursor()
         self.config_modele = cur_modele.execute(sql_modele_affect).fetchall()
 
-    #        [0][v. liste suivante]
-    # 0 = num de semaine
-    # 1 = heures-personnes prévues
-    # 2 = durée d'une journée/quart de travail
-    # 3 = nb presences indivisuelles calculé
-    # 4 = nb équipes
-    # 5 = nb employés pas équipe
-    # 6 =  calcul du nb prévu de quarts en équipe
-    # 7 = nb équipes par créneau/quart
-    # 8 = nb de créneaux par jour
-    # 9 = calcul nb de jours requis
-    # 10 = nom du modèlle
-
     def semaine(self):
         calendar.setfirstweekday(6)
         locale.setlocale(locale.LC_ALL, 'FR_ca')
@@ -151,15 +104,10 @@ class horaire:
         print("\n" + str(self.les_jours))
     
     def create_connection(self, db_file): #//TODO reorganiser le code sasn rapport avec la connection (sortir de cette methode)
-        """ create a database connection to a SQLite database """
         try:
             self.conn = sqlite3.connect(db_file)
             if self.conn is not None:
                 count = 0
-                # for key in self.equipes_maximales:
-                #     if count < round(self.employes_requis/self.max_emp_par_equipe):
-                #         self.equipes[key] = self.equipes_maximales[key]
-                #         count  = count + 1
             else:
                print("Error! cannot create the database connection.")
     
@@ -175,13 +123,10 @@ class horaire:
             le_deb = datetime.fromisoformat(deb)
             la_fin = datetime.fromisoformat(fin)
             boule = (le_deb <= ref) and (la_fin >= ref)
-#            print (type(boule))
             if boule:
                 retourne = boule
-#                print ("concon " + str((le_deb <= ref) and (la_fin >= ref)))
                 break
             else:
- #               print("pascon " + str((le_deb <= ref) and (la_fin >= ref)))
                 retourne = boule
         return retourne
 
@@ -199,25 +144,6 @@ class horaire:
         d = curseur_dispo.fetchall()
         return d
 
-    # fournir une liste poppable? d'employes-non-assignés
-    # verifier que les equipes existent
-    #pour chaque employe de la liste
-    #
-    #    si eq est vide
-    #        TQ nb_emp_par_eq n'est pas atteint
-    #            emp-courant = liste_emp(pop)
-    #            effectuer validation(emp-courant , date)
-    #               si valide
-    #                   renseigner eq(pop(emp-courant))
-    #                   break
-    #               sinon
-    #                   continuer
-    #    sinon (pas vide) #une équipe est rappelee a une date différente de la semaine
-    #       pour ch. emp de l'équipe
-    #           valider dispos
-    #           si non-dispo
-    #               remplacer(emp_a, liste_emp(pop)) # attention aux doublons = liste poppable
-    #
     def ajout_valide_dans_eq(self):  # cette fonction
         conflit = bool()
         res = None
@@ -240,22 +166,18 @@ class horaire:
                             print("Ok avec" + str(emp_courant[4])+ " "  + str(datetime.fromisoformat(key)))
 
                 self.liste_emp_a_assigner = self.get_employes()
- #               print(str(self.calendrier_equipes))            # pour chaque emp dispo
         except Exception:
             traceback.print_exc(file=sys.stdout)
 
 
     def assigne_empl_eq_jour(self, la_date, nom_eq):
-        # appelle fonction_existante_de_valide(date, nom_eq)
         self.ajout_valide_dans_eq()
 
     def initialise_calendrier_equipes(self, nb_eq):
         self.les_cles = list(self.equipes_maximales.keys())[:nb_eq]
-#        print("les cles " + str(self.les_cles))
         lesdates = [self.les_jours[i][1] for i in range(0, len(self.les_jours))] # obtenir juste les dates
 
         self.calendrier_equipes = dict.fromkeys(lesdates)
-#        print(self.calendrier_equipes)
 
         for k in self.calendrier_equipes:
             self.calendrier_equipes[k] =[]
@@ -270,21 +192,25 @@ class horaire:
         bold = workbook.add_format({'bold': True})
         cell_format_red = workbook.add_format({'bold': True, 'font_color': 'red'})
         cell_format_noir = workbook.add_format({'bold': True, 'font_color': 'black','text_wrap':'true','align':'center','valign':'top'})
+        cell_format_vert = workbook.add_format({'bold': True, 'font_color': 'green','align':'center','valign':'center'})
         worksheet.set_column('A:A', 20)
 
         worksheet.write('A1', 'Equipes', cell_format_red)
         col = 0
         row = 0
+        cpt_eq = 0
         for keys in self.calendrier_equipes:  # dates
             row = row + 1
             worksheet.write(row, col, keys, cell_format_noir)
-            for indx in range(0, len(self.calendrier_equipes[keys])):  # nb eq
-                row = row +1
-                for j in range(0, len(self.calendrier_equipes[keys][indx])):
-                    worksheet.write(row,col,str(self.calendrier_equipes[keys][indx][0][0]),cell_format_noir) #nom eq
-                    for r in range(0, len(self.calendrier_equipes[keys][indx][1])): #nb eq
-                        worksheet.write(row, col+ r + 1 ,str(self.calendrier_equipes[keys][indx][1][r]))
-            worksheet.set_column(row, col, 15)
+            if cpt_eq < round(self.config_modele[0][6]):
+                for indx in range(0, len(self.calendrier_equipes[keys])):  # nb eq
+                    row = row +1
+                    for j in range(0, len(self.calendrier_equipes[keys][indx])):
+                        worksheet.write(row,col,str(self.calendrier_equipes[keys][indx][0][0]),cell_format_noir) #nom eq
+                        for r in range(0, len(self.calendrier_equipes[keys][indx][1])): #nb eq
+                            worksheet.write(row, col+ r + 1 ,str(self.calendrier_equipes[keys][indx][1][r]))
+                    cpt_eq = cpt_eq + 1
+                worksheet.set_column(row, col, 15)
         row = row + self.config_modele[0][5]
         date_prod = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
         worksheet.write_string(row, col+1, "Émis le " + date_prod, cell_format_red)
@@ -317,15 +243,14 @@ class horaire:
         print("\t Empl. par éq.: " + str(empl_par_eq))
         print("\t Durée quart: " + str(self.config_modele[0][2]))
 
-        # ligne1
         eqs = self.les_cles
         eqs2 = eqs[:]
-        tot_affec = 0
+        tot_affec = 0 #suivi du nb eq affectées
         tot_h_affec = 0
         worksheet2.write(row, colo, 'Horaire')
 
         for i in range(1, 4):
-            worksheet2.write(row, colo + i, 'Q'+ str(i))
+            worksheet2.write(row, colo + i, 'Q'+ str(i), cell_format_noir)
 
         for ix in range(0, len(self.les_jours)):
             row = row + 1
@@ -333,36 +258,39 @@ class horaire:
             worksheet2.set_column(row, colo, 15)
         row = row - 6
         pop_string_eq = ""
-
         eq_courante = ''
-        for jour in range(0, nb_jour_sem):                  #--- Pour chaque jour
-            cpt_cren = 0                                    # suivi de la position pour grille
-            for cren in range(1, nb_cren + 1):              #--- Pour chaque creneau
+        for jour in range(0, nb_jour_sem):  # --- Pour chaque jour
+            cpt_cren = 0  # suivi de la position pour grille
+            for cren in range(1, nb_cren + 1):  # --- Pour chaque creneau
                 cpt_cren = cpt_cren + 1
-                colo = colo +1# cren_dispo
-                pop_string_eq = ""                          #chaine pour concat equipes dans un seul creneau (c=1 epc>1)
-                for eq in range(0, eq_par_cren):            # Pour chaque equipe
-                    if tot_affec <  calc_nb_quarts_requis: # and tot_h_affec < mod_hpers:  # on interrompt si le nb equipes arrive au nb_calculé
+                colo = colo + 1  # cren_dispo
+                pop_string_eq = ""  # chaine pour concat equipes dans un seul creneau (c=1 epc>1)
+                for eq in range(0, eq_par_cren):  # Pour chaque equipe
+                    if tot_affec < calc_nb_quarts_requis:  # and tot_h_affec < mod_hpers:  # on interrompt si le nb equipes arrive au nb_calculé
                         if len(eqs) > 0:
                             eq_courante = eqs.pop(0)  # liste eq non vide on affecte et retire une equipe
                             pop_string_eq = pop_string_eq + " " + eq_courante
-                            worksheet2.write(row, colo, pop_string_eq.strip())
+                            worksheet2.write(row, colo, pop_string_eq.strip(),cell_format_vert)
                             tot_affec = tot_affec + 1
+                            print(str(tot_affec))
                         else:
-                            if len(eqs2)/eq_par_cren >=  nb_cren:
+                            if len(eqs2) / eq_par_cren >= nb_cren:
                                 eqs = eqs2[:]
                                 eq_courante = eqs.pop(0)
                                 pop_string_eq = pop_string_eq + " " + eq_courante
                                 tot_affec = tot_affec + 1
-                                worksheet2.write_string(row, colo, pop_string_eq.strip())
+                                print(str(tot_affec))
+                                worksheet2.write_string(row, colo, pop_string_eq.strip(), cell_format_vert)
                             else:
                                 eqs = eqs2[:]
                                 break
-
                     else:
                         break
+
             colo = colo - cpt_cren
             row = row + 1
+
+
 
         colo = colo - 1
         worksheet2.write_string(row + 2, colo, "Modele : " + str(self.config_modele[0][10]) + " h-pers = " + str(self.config_modele[0][1]), cell_format_red)
@@ -382,7 +310,7 @@ class horaire:
         worksheet2.write_string(row, colo+1, "Émis le " + date_prod, cell_format_red)
         workbook.close()
 
-appli = horaire('2022-03-15 12:12')
+appli = horaire('2022-02-15 12:12')
 
 print(str(appli.calendrier_equipes))
 appli.conn.close()
