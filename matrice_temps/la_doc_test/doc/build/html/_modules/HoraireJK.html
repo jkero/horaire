@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HoraireJK &mdash; Horaire 8888 222 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> Horaire 8888
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">horaire</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Horaire 8888</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="index.html">Module code</a> &raquo;</li>
+      <li>HoraireJK</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for HoraireJK</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">calendar</span>
+<span class="kn">import</span> <span class="nn">locale</span>
+<span class="kn">import</span> <span class="nn">sqlite3</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span>
+<span class="kn">from</span> <span class="nn">sqlite3</span> <span class="kn">import</span> <span class="n">Error</span>
+
+<span class="kn">import</span> <span class="nn">xlsxwriter</span>
+
+<div class="viewcode-block" id="horaire"><a class="viewcode-back" href="../fonctions.html#HoraireJK.horaire">[docs]</a><span class="k">class</span> <span class="nc">horaire</span><span class="p">:</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    C&#39;est une application qui veut aider à la décision pour composer des équipes et des quarts</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">auj</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">week</span><span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">les_jours</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="sd">&quot;&quot;&quot;Utile pour les initialisations futures et le fichier excel.&quot;&quot;&quot;</span>
+    <span class="n">conn</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">hpers_req</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">employes_requis</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">employes_tot</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">duree_quart</span>  <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">max_emp_par_equipe</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">nb_quarts_indivi</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">nb_quart_en_eq</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">equipes</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="n">equipes_maximales</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;A&#39;</span><span class="p">:</span> <span class="p">[[</span><span class="s1">&#39;8-16&#39;</span><span class="p">],</span> <span class="p">[]],</span> <span class="s1">&#39;B&#39;</span><span class="p">:</span> <span class="p">[[</span><span class="s1">&#39;8-16&#39;</span><span class="p">],</span> <span class="p">[]],</span> <span class="s1">&#39;C&#39;</span><span class="p">:</span> <span class="p">[[</span><span class="s1">&#39;8-16&#39;</span><span class="p">],</span> <span class="p">[]],</span> \
+                         <span class="s1">&#39;D&#39;</span><span class="p">:</span> <span class="p">[[</span><span class="s1">&#39;5-13&#39;</span><span class="p">],</span> <span class="p">[]],</span> <span class="s1">&#39;E&#39;</span><span class="p">:</span> <span class="p">[[</span><span class="s1">&#39;5-13&#39;</span><span class="p">],</span> <span class="p">[]],</span> <span class="s1">&#39;F&#39;</span><span class="p">:</span> <span class="p">[[</span><span class="s1">&#39;5-13&#39;</span><span class="p">],</span> <span class="p">[]],</span> \
+                         <span class="s1">&#39;G&#39;</span><span class="p">:</span> <span class="p">[[</span><span class="s1">&#39;12-20&#39;</span><span class="p">],</span> <span class="p">[]],</span> <span class="s1">&#39;H&#39;</span><span class="p">:</span> <span class="p">[[</span><span class="s1">&#39;12-20&#39;</span><span class="p">],</span> <span class="p">[]],</span> <span class="s1">&#39;I&#39;</span><span class="p">:</span> <span class="p">[[</span><span class="s1">&#39;12-20&#39;</span><span class="p">],</span> <span class="p">[]]}</span>
+    <span class="sd">&quot;&quot;&quot;Besoin de ce dirctionnaire codé en dur pour les initialisations futures&quot;&quot;&quot;</span>
+    <span class="n">calendrier_equipes</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span> <span class="c1">#pour inscrire toutes les equipes par dates</span>
+    <span class="c1">#                              = par exemple {</span>
+    <span class="c1">#le_dico = {</span>
+    <span class="c1">#    &#39;A&#39;: [[&#39;2022-04-01&#39;, [&#39;momo&#39;, &#39;famo&#39;, &#39;Bozo&#39;]], [&#39;2022-04-02&#39;, [&#39;momo&#39;, &#39;flamo&#39;, &#39;Bozo&#39;]]],</span>
+    <span class="c1">#    &#39;B&#39;: [[&#39;2022-04-01&#39;, [&#39;koko&#39;, &#39;klamo&#39;, &#39;kozo&#39;]], [&#39;2022-04-02&#39;, [&#39;koko&#39;, &#39;klamo&#39;, &#39;lozo&#39;]]]</span>
+    <span class="c1">#}</span>
+    <span class="c1">#ETC.                               aussi if le_dico[&#39;A&#39;][0][1] == le_dico[&#39;A&#39;][1][1], etc</span>
+    <span class="n">les_cles</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="n">liste_emp_a_assigner</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="sd">&quot;&quot;&quot;Cette liste est utile pour &#39;popper&#39; les employés assignés et continuer à utiliser la même liste&quot;&quot;&quot;</span>
+    <span class="n">liste_emp_assignes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="n">cpt_heures</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">valeur_repartition</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">nom_modele</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">config_modele</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">la_journee</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Créer la connection sur la BD et lancer les initialisations&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">auj</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">la_journee</span><span class="p">)</span>        
+        <span class="bp">self</span><span class="o">.</span><span class="n">week</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">auj</span><span class="o">.</span><span class="n">isocalendar</span><span class="p">()[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">create_connection</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;.\letemps.db&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">post_init</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="horaire.post_init"><a class="viewcode-back" href="../fonctions.html#HoraireJK.horaire.post_init">[docs]</a>    <span class="k">def</span> <span class="nf">post_init</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Initialiser les données stockées dans sqlite</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">conn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">string_previsions_config</span> <span class="o">=</span> <span class="s2">&quot;select previsions_hpers.hpers, previsions_hpers.heures_par_jour, </span><span class="se">\</span>
+<span class="s2">                    previsions_hpers.nb_max_par_eq, round(previsions_hpers.hpers / previsions_hpers.heures_par_jour,1) as nb_quart_eq,&quot;</span> \
+                                           <span class="s2">&quot; round(round(previsions_hpers.hpers / previsions_hpers.heures_par_jour,1)/&quot;</span> \
+                                           <span class="s2">&quot;previsions_hpers.nb_max_par_eq,1) as nb_quarts from previsions_hpers  where annee = ? and semaine = ?&quot;</span>
+                <span class="n">cur_previsions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">les_dates_de_la_semaine</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">semaine</span><span class="p">()</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">init_valeurs_modele</span><span class="p">()</span>
+
+                <span class="n">nb_eq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_modele</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">4</span><span class="p">]</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">initialise_calendrier_equipes</span><span class="p">(</span><span class="n">nb_eq</span><span class="p">)</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">liste_emp_a_assigner</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_employes</span><span class="p">()</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">liste_emp_assignes</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">ajout_valide_dans_eq</span><span class="p">()</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">ecriture_excel2</span><span class="p">()</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="horaire.init_valeurs_modele"><a class="viewcode-back" href="../fonctions.html#HoraireJK.horaire.init_valeurs_modele">[docs]</a>    <span class="k">def</span> <span class="nf">init_valeurs_modele</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Au lieu de renseigner manuellement les paramètres de l&#39;application, offrir des modèles pré-configurés. Il y en a quelques uns dans la BD et ils sont associés à des semaines de travail. Un gestionnaire pourrait regarder les heures-personnes prévues pour une semaine donnée et décider du modèle ou même ajouter un modèle à la DB et l&#39;associer à une semaine en particulier.&quot;&quot;&quot;</span>
+        <span class="n">sql_modele_affect</span> <span class="o">=</span> <span class="s2">&quot;select p.semaine, p.hpers, p.heures_par_jour, round(p.hpers / p.heures_par_jour,1) as presences, m.nb_eq, m.nb_emp_par_eq as nb_par_eq, </span><span class="se">\</span>
+<span class="s2">                                        round(round(p.hpers *1.0 / p.heures_par_jour,1)/m.nb_emp_par_eq,1) as nb_quarts_eq,</span><span class="se">\</span>
+<span class="s2">                                         m.nb_eq_par_creneau, m.nb_creneau_disp , </span><span class="se">\</span>
+<span class="s2">                                         round(round(cast(p.hpers as float) / p.heures_par_jour,2) / </span><span class="se">\</span>
+<span class="s2">                                        (m.nb_emp_par_eq * m.nb_eq_par_creneau * m.nb_creneau_disp),2) as jours, m.nom </span><span class="se">\</span>
+<span class="s2">                                        from previsions_hpers as p </span><span class="se">\</span>
+<span class="s2">                                        inner join modele_assignation_hebdo as m </span><span class="se">\</span>
+<span class="s2">                                        on p.modele = m.id </span><span class="se">\</span>
+<span class="s2">                                        where p.semaine = &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">week</span><span class="p">)</span>
+
+        <span class="n">cur_modele</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config_modele</span> <span class="o">=</span> <span class="n">cur_modele</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql_modele_affect</span><span class="p">)</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="horaire.semaine"><a class="viewcode-back" href="../fonctions.html#HoraireJK.horaire.semaine">[docs]</a>    <span class="k">def</span> <span class="nf">semaine</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Créer une liste de jours et de dates pour la semaine à générer, selon la date fournier à l&#39;app.&quot;&quot;&quot;</span>
+        <span class="n">calendar</span><span class="o">.</span><span class="n">setfirstweekday</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+        <span class="n">locale</span><span class="o">.</span><span class="n">setlocale</span><span class="p">(</span><span class="n">locale</span><span class="o">.</span><span class="n">LC_ALL</span><span class="p">,</span> <span class="s1">&#39;FR_ca&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">les_jours</span> <span class="o">=</span> <span class="p">[[</span><span class="s1">&#39;Lundi&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;Mardi&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;Mercredi&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;Jeudi&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;Vendredi&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;Samedi&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">],[</span><span class="s1">&#39;dimanche&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">]]</span>
+        <span class="n">lundi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">auj</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=-</span><span class="bp">self</span><span class="o">.</span><span class="n">auj</span><span class="o">.</span><span class="n">weekday</span><span class="p">())</span>
+        <span class="n">incr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">auj</span><span class="o">.</span><span class="n">weekday</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">jours</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">les_jours</span><span class="p">:</span>
+            <span class="n">jours</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">auj</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=-</span><span class="n">incr</span><span class="p">))</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">incr</span> <span class="o">=</span> <span class="n">incr</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">les_jours</span><span class="p">))</span></div>
+    
+<div class="viewcode-block" id="horaire.create_connection"><a class="viewcode-back" href="../fonctions.html#HoraireJK.horaire.create_connection">[docs]</a>    <span class="k">def</span> <span class="nf">create_connection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db_file</span><span class="p">):</span> <span class="c1">#//TODO reorganiser le code sasn rapport avec la connection (sortir de cette methode)</span>
+        <span class="sd">&quot;&quot;&quot;Connecter avec DB sqlite (7 tables).&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">conn</span> <span class="o">=</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">db_file</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">conn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">else</span><span class="p">:</span>
+               <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error! cannot create the database connection.&quot;</span><span class="p">)</span>
+    
+        <span class="k">except</span> <span class="n">Error</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="horaire.check_conflit"><a class="viewcode-back" href="../fonctions.html#HoraireJK.horaire.check_conflit">[docs]</a>    <span class="k">def</span> <span class="nf">check_conflit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ref</span><span class="p">,</span> <span class="n">les_non_dispo</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Vérifie les conflits de dates dans la table des non-dispo et journée courante.&quot;&quot;&quot;</span>
+        <span class="n">retourne</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">enr</span> <span class="ow">in</span> <span class="n">les_non_dispo</span><span class="p">:</span>
+            <span class="n">deb</span> <span class="o">=</span> <span class="n">enr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">fin</span> <span class="o">=</span> <span class="n">enr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">le_deb</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">deb</span><span class="p">)</span>
+            <span class="n">la_fin</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">fin</span><span class="p">)</span>
+            <span class="n">boule</span> <span class="o">=</span> <span class="p">(</span><span class="n">le_deb</span> <span class="o">&lt;=</span> <span class="n">ref</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">la_fin</span> <span class="o">&gt;=</span> <span class="n">ref</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">boule</span><span class="p">:</span>
+                <span class="n">retourne</span> <span class="o">=</span> <span class="n">boule</span>
+                <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">retourne</span> <span class="o">=</span> <span class="n">boule</span>
+        <span class="k">return</span> <span class="n">retourne</span></div>
+
+<div class="viewcode-block" id="horaire.get_employes"><a class="viewcode-back" href="../fonctions.html#HoraireJK.horaire.get_employes">[docs]</a>    <span class="k">def</span> <span class="nf">get_employes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Obtenir la liste complète des employés (table sqlite) avant de les valider &quot;&quot;&quot;</span>
+        <span class="n">all_emp</span> <span class="o">=</span> <span class="s2">&quot;SELECT distinct nom, prenom, debut, fin, id from employes order by rang&quot;</span>
+        <span class="n">curseur_emp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">curseur_emp</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">all_emp</span><span class="p">)</span>
+        <span class="n">les_emp</span>  <span class="o">=</span> <span class="n">curseur_emp</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">les_emp</span></div>
+
+<div class="viewcode-block" id="horaire.get_dispos"><a class="viewcode-back" href="../fonctions.html#HoraireJK.horaire.get_dispos">[docs]</a>    <span class="k">def</span> <span class="nf">get_dispos</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">emp</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Obtenir une liste des non-dipos (table sqlite) pour un employé donné&quot;&quot;&quot;</span>
+        <span class="n">find_dispo_dates_and_type</span> <span class="o">=</span> <span class="s2">&quot;select emp_non_dispo.t_exact_debut,emp_non_dispo.t_exact_fin, emp_non_dispo.type_non_dispo, id_empl_fk from emp_non_dispo where id_empl_fk = &#39;</span><span class="si">%s</span><span class="s2">&#39; order by id_empl_fk&quot;</span>
+        <span class="n">curseur_dispo</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">curseur_dispo</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">find_dispo_dates_and_type</span> <span class="o">%</span> <span class="n">emp</span><span class="p">)</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">curseur_dispo</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">d</span></div>
+
+<div class="viewcode-block" id="horaire.ajout_valide_dans_eq"><a class="viewcode-back" href="../fonctions.html#HoraireJK.horaire.ajout_valide_dans_eq">[docs]</a>    <span class="k">def</span> <span class="nf">ajout_valide_dans_eq</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># cette fonction</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Ajoute les membres aux équipes définies précédemment. Évite les répétitions et vérifie les non-dispos. Maintient les équipes d&#39;un jour à l&#39;autre.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">conflit</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">()</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">emp_courant</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="n">dateiso</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">calendrier_equipes</span><span class="p">:</span>                         <span class="c1"># par date</span>
+                <span class="k">for</span> <span class="n">ix</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calendrier_equipes</span><span class="p">[</span><span class="n">key</span><span class="p">])):</span>  <span class="c1"># par eq</span>
+
+                    <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calendrier_equipes</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="n">ix</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_modele</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">5</span><span class="p">]:</span>
+                        <span class="n">emp_courant</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">liste_emp_a_assigner</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                        <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dispos</span><span class="p">(</span><span class="n">emp_courant</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span>
+                        <span class="n">conflit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_conflit</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">key</span><span class="p">),</span> <span class="n">res</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">conflit</span><span class="p">:</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;bobo avec&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">emp_courant</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span>  <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">key</span><span class="p">)))</span>
+                            <span class="k">continue</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">calendrier_equipes</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="n">ix</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                                <span class="n">emp_courant</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;. &quot;</span> <span class="o">+</span> <span class="n">emp_courant</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot; (&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">emp_courant</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot;)&quot;</span><span class="p">)</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Ok avec&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">emp_courant</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span><span class="o">+</span> <span class="s2">&quot; &quot;</span>  <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">key</span><span class="p">)))</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">liste_emp_a_assigner</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_employes</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="horaire.assigne_empl_eq_jour"><a class="viewcode-back" href="../fonctions.html#HoraireJK.horaire.assigne_empl_eq_jour">[docs]</a>    <span class="k">def</span> <span class="nf">assigne_empl_eq_jour</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">la_date</span><span class="p">,</span> <span class="n">nom_eq</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Appelle fonction d,ajout des emp dasn les equipes et leur validation&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ajout_valide_dans_eq</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="horaire.initialise_calendrier_equipes"><a class="viewcode-back" href="../fonctions.html#HoraireJK.horaire.initialise_calendrier_equipes">[docs]</a>    <span class="k">def</span> <span class="nf">initialise_calendrier_equipes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nb_eq</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialiser le calendrier pour pouvoir le renseigner plus tard avec les références sur les clés&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">les_cles</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">equipes_maximales</span><span class="o">.</span><span class="n">keys</span><span class="p">())[:</span><span class="n">nb_eq</span><span class="p">]</span>
+        <span class="n">lesdates</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">les_jours</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">les_jours</span><span class="p">))]</span> <span class="c1"># obtenir juste les dates</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">calendrier_equipes</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">lesdates</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">calendrier_equipes</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calendrier_equipes</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span><span class="p">[]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">les_cles</span><span class="p">)):</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">calendrier_equipes</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">([[</span><span class="bp">self</span><span class="o">.</span><span class="n">les_cles</span><span class="p">[</span><span class="n">i</span><span class="p">]],[]])</span></div>
+
+<div class="viewcode-block" id="horaire.ecriture_excel2"><a class="viewcode-back" href="../fonctions.html#HoraireJK.horaire.ecriture_excel2">[docs]</a>    <span class="k">def</span> <span class="nf">ecriture_excel2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Écriture dans fichier excel via xlsxwriter. 2 worksheets: une pour le calendrier des équipes, l&#39;autre pour les membres des équipes. Gère les répétitions pour les jours, créneaux, nb d&#39;équipes, etc.&quot;&quot;&quot;</span>
+        <span class="n">workbook</span> <span class="o">=</span> <span class="n">xlsxwriter</span><span class="o">.</span><span class="n">Workbook</span><span class="p">(</span><span class="s1">&#39;../horaire_B.xlsx&#39;</span><span class="p">)</span>
+        <span class="n">worksheet</span> <span class="o">=</span> <span class="n">workbook</span><span class="o">.</span><span class="n">add_worksheet</span><span class="p">(</span><span class="s1">&#39;equipes&#39;</span><span class="p">)</span>
+
+        <span class="n">bold</span> <span class="o">=</span> <span class="n">workbook</span><span class="o">.</span><span class="n">add_format</span><span class="p">({</span><span class="s1">&#39;bold&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">})</span>
+        <span class="n">cell_format_red</span> <span class="o">=</span> <span class="n">workbook</span><span class="o">.</span><span class="n">add_format</span><span class="p">({</span><span class="s1">&#39;bold&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;font_color&#39;</span><span class="p">:</span> <span class="s1">&#39;red&#39;</span><span class="p">})</span>
+        <span class="n">cell_format_noir</span> <span class="o">=</span> <span class="n">workbook</span><span class="o">.</span><span class="n">add_format</span><span class="p">({</span><span class="s1">&#39;bold&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;font_color&#39;</span><span class="p">:</span> <span class="s1">&#39;black&#39;</span><span class="p">,</span><span class="s1">&#39;text_wrap&#39;</span><span class="p">:</span><span class="s1">&#39;true&#39;</span><span class="p">,</span><span class="s1">&#39;align&#39;</span><span class="p">:</span><span class="s1">&#39;center&#39;</span><span class="p">,</span><span class="s1">&#39;valign&#39;</span><span class="p">:</span><span class="s1">&#39;top&#39;</span><span class="p">})</span>
+        <span class="n">cell_format_vert</span> <span class="o">=</span> <span class="n">workbook</span><span class="o">.</span><span class="n">add_format</span><span class="p">({</span><span class="s1">&#39;bold&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;font_color&#39;</span><span class="p">:</span> <span class="s1">&#39;green&#39;</span><span class="p">,</span><span class="s1">&#39;align&#39;</span><span class="p">:</span><span class="s1">&#39;center&#39;</span><span class="p">,</span><span class="s1">&#39;valign&#39;</span><span class="p">:</span><span class="s1">&#39;center&#39;</span><span class="p">})</span>
+        <span class="n">worksheet</span><span class="o">.</span><span class="n">set_column</span><span class="p">(</span><span class="s1">&#39;A:A&#39;</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
+
+        <span class="n">worksheet</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;A1&#39;</span><span class="p">,</span> <span class="s1">&#39;Equipes&#39;</span><span class="p">,</span> <span class="n">cell_format_red</span><span class="p">)</span>
+        <span class="n">col</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">row</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">cpt_eq</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">keys</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">calendrier_equipes</span><span class="p">:</span>  <span class="c1"># dates</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="n">row</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="n">worksheet</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">keys</span><span class="p">,</span> <span class="n">cell_format_noir</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">cpt_eq</span> <span class="o">&lt;</span> <span class="nb">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config_modele</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">6</span><span class="p">]):</span>
+                <span class="k">for</span> <span class="n">indx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calendrier_equipes</span><span class="p">[</span><span class="n">keys</span><span class="p">])):</span>  <span class="c1"># nb eq</span>
+                    <span class="n">row</span> <span class="o">=</span> <span class="n">row</span> <span class="o">+</span><span class="mi">1</span>
+                    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calendrier_equipes</span><span class="p">[</span><span class="n">keys</span><span class="p">][</span><span class="n">indx</span><span class="p">])):</span>
+                        <span class="n">worksheet</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">row</span><span class="p">,</span><span class="n">col</span><span class="p">,</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calendrier_equipes</span><span class="p">[</span><span class="n">keys</span><span class="p">][</span><span class="n">indx</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]),</span><span class="n">cell_format_noir</span><span class="p">)</span> <span class="c1">#nom eq</span>
+                        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calendrier_equipes</span><span class="p">[</span><span class="n">keys</span><span class="p">][</span><span class="n">indx</span><span class="p">][</span><span class="mi">1</span><span class="p">])):</span> <span class="c1">#nb eq</span>
+                            <span class="n">worksheet</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="o">+</span> <span class="n">r</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">,</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">calendrier_equipes</span><span class="p">[</span><span class="n">keys</span><span class="p">][</span><span class="n">indx</span><span class="p">][</span><span class="mi">1</span><span class="p">][</span><span class="n">r</span><span class="p">]))</span>
+                    <span class="n">cpt_eq</span> <span class="o">=</span> <span class="n">cpt_eq</span> <span class="o">+</span> <span class="mi">1</span>
+                <span class="n">worksheet</span><span class="o">.</span><span class="n">set_column</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="mi">15</span><span class="p">)</span>
+        <span class="n">row</span> <span class="o">=</span> <span class="n">row</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_modele</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">5</span><span class="p">]</span>
+        <span class="n">date_prod</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S&quot;</span><span class="p">)</span>
+        <span class="n">worksheet</span><span class="o">.</span><span class="n">write_string</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;Émis le &quot;</span> <span class="o">+</span> <span class="n">date_prod</span><span class="p">,</span> <span class="n">cell_format_red</span><span class="p">)</span>
+
+<span class="c1"># --------------autre feuille excel -------------------------------------------------------------------------</span>
+        <span class="n">row</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="n">worksheet2</span> <span class="o">=</span> <span class="n">workbook</span><span class="o">.</span><span class="n">add_worksheet</span><span class="p">(</span><span class="s1">&#39;calendrier&#39;</span><span class="p">)</span>
+        <span class="n">colo</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">worksheet2</span><span class="o">.</span><span class="n">write_string</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">colo</span><span class="p">,</span> <span class="s1">&#39;Semaine &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config_modele</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]),</span> <span class="n">cell_format_red</span><span class="p">)</span> <span class="c1"># colo passe pas ?</span>
+        <span class="n">colo</span> <span class="o">=</span> <span class="n">colo</span> <span class="o">+</span> <span class="mi">1</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config_modele</span><span class="p">))</span>
+        <span class="n">mod_hpers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_modele</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">nb_cren</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_modele</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">8</span><span class="p">]</span>
+        <span class="n">nb_jour_sem</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">les_jours</span><span class="p">)</span>
+        <span class="n">nb_eq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_modele</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">4</span><span class="p">]</span>
+        <span class="n">eq_par_cren</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config_modele</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">7</span><span class="p">]</span><span class="o">+.</span><span class="mi">5</span><span class="p">)</span>
+        <span class="n">calc_nb_quarts_requis</span><span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config_modele</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">6</span><span class="p">])</span>
+        <span class="n">empl_par_eq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_modele</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">5</span><span class="p">]</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;date de réf. :&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">auj</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;sem : &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config_modele</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Modele : &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config_modele</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">10</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot; h-pers = &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">mod_hpers</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2"> Calcul présences totales d&#39;équipes: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">calc_nb_quarts_requis</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2"> Calcul présences individuelles: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config_modele</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">3</span><span class="p">]))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2"> Créneaux par jour: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">nb_cren</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2"> Equipes par créneau: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">eq_par_cren</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2"> Nombre d&#39;équipes: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">nb_eq</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2"> Empl. par éq.: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">empl_par_eq</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2"> Durée quart: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config_modele</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">]))</span>
+
+        <span class="n">eqs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">les_cles</span>
+        <span class="n">eqs2</span> <span class="o">=</span> <span class="n">eqs</span><span class="p">[:]</span>
+        <span class="n">tot_affec</span> <span class="o">=</span> <span class="mi">0</span> <span class="c1">#suivi du nb eq affectées</span>
+        <span class="n">tot_h_affec</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">worksheet2</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">colo</span><span class="p">,</span> <span class="s1">&#39;Horaire&#39;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">):</span>
+            <span class="n">worksheet2</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">colo</span> <span class="o">+</span> <span class="n">i</span><span class="p">,</span> <span class="s1">&#39;Q&#39;</span><span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="n">cell_format_noir</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">ix</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">les_jours</span><span class="p">)):</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="n">row</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="n">worksheet2</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">colo</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">les_jours</span><span class="p">[</span><span class="n">ix</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">les_jours</span><span class="p">[</span><span class="n">ix</span><span class="p">][</span><span class="mi">1</span><span class="p">]),</span> <span class="n">cell_format_noir</span><span class="p">)</span>
+            <span class="n">worksheet2</span><span class="o">.</span><span class="n">set_column</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">colo</span><span class="p">,</span> <span class="mi">15</span><span class="p">)</span>
+        <span class="n">row</span> <span class="o">=</span> <span class="n">row</span> <span class="o">-</span> <span class="mi">6</span>
+        <span class="n">pop_string_eq</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">eq_courante</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">jour</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nb_jour_sem</span><span class="p">):</span>  <span class="c1"># --- Pour chaque jour</span>
+            <span class="n">cpt_cren</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># suivi de la position pour grille</span>
+            <span class="k">for</span> <span class="n">cren</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">nb_cren</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>  <span class="c1"># --- Pour chaque creneau</span>
+                <span class="n">cpt_cren</span> <span class="o">=</span> <span class="n">cpt_cren</span> <span class="o">+</span> <span class="mi">1</span>
+                <span class="n">colo</span> <span class="o">=</span> <span class="n">colo</span> <span class="o">+</span> <span class="mi">1</span>  <span class="c1"># cren_dispo</span>
+                <span class="n">pop_string_eq</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>  <span class="c1"># chaine pour concat equipes dans un seul creneau (c=1 epc&gt;1)</span>
+                <span class="k">for</span> <span class="n">eq</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">eq_par_cren</span><span class="p">):</span>  <span class="c1"># Pour chaque equipe</span>
+                    <span class="k">if</span> <span class="n">tot_affec</span> <span class="o">&lt;</span> <span class="n">calc_nb_quarts_requis</span><span class="p">:</span>  <span class="c1"># and tot_h_affec &lt; mod_hpers:  # on interrompt si le nb equipes arrive au nb_calculé</span>
+                        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">eqs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="n">eq_courante</span> <span class="o">=</span> <span class="n">eqs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># liste eq non vide on affecte et retire une equipe</span>
+                            <span class="n">pop_string_eq</span> <span class="o">=</span> <span class="n">pop_string_eq</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="n">eq_courante</span>
+                            <span class="n">worksheet2</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">colo</span><span class="p">,</span> <span class="n">pop_string_eq</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span><span class="n">cell_format_vert</span><span class="p">)</span>
+                            <span class="n">tot_affec</span> <span class="o">=</span> <span class="n">tot_affec</span> <span class="o">+</span> <span class="mi">1</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">tot_affec</span><span class="p">))</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">eqs2</span><span class="p">)</span> <span class="o">/</span> <span class="n">eq_par_cren</span> <span class="o">&gt;=</span> <span class="n">nb_cren</span><span class="p">:</span>
+                                <span class="n">eqs</span> <span class="o">=</span> <span class="n">eqs2</span><span class="p">[:]</span>
+                                <span class="n">eq_courante</span> <span class="o">=</span> <span class="n">eqs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                                <span class="n">pop_string_eq</span> <span class="o">=</span> <span class="n">pop_string_eq</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="n">eq_courante</span>
+                                <span class="n">tot_affec</span> <span class="o">=</span> <span class="n">tot_affec</span> <span class="o">+</span> <span class="mi">1</span>
+                                <span class="nb">print</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">tot_affec</span><span class="p">))</span>
+                                <span class="n">worksheet2</span><span class="o">.</span><span class="n">write_string</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">colo</span><span class="p">,</span> <span class="n">pop_string_eq</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span> <span class="n">cell_format_vert</span><span class="p">)</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="n">eqs</span> <span class="o">=</span> <span class="n">eqs2</span><span class="p">[:]</span>
+                                <span class="k">break</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">break</span>
+
+            <span class="n">colo</span> <span class="o">=</span> <span class="n">colo</span> <span class="o">-</span> <span class="n">cpt_cren</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="n">row</span> <span class="o">+</span> <span class="mi">1</span>
+
+
+
+        <span class="n">colo</span> <span class="o">=</span> <span class="n">colo</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">worksheet2</span><span class="o">.</span><span class="n">write_string</span><span class="p">(</span><span class="n">row</span> <span class="o">+</span> <span class="mi">2</span><span class="p">,</span> <span class="n">colo</span><span class="p">,</span> <span class="s2">&quot;Modele : &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config_modele</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">10</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot; h-pers = &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config_modele</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]),</span> <span class="n">cell_format_red</span><span class="p">)</span>
+        <span class="n">row</span> <span class="o">=</span> <span class="n">row</span> <span class="o">+</span> <span class="mi">3</span>
+        <span class="n">la_longue_string_modele</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">la_longue_string_modele</span> <span class="o">=</span> <span class="n">la_longue_string_modele</span> <span class="o">+</span> <span class="s2">&quot; Calcul pr. équipes: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">calc_nb_quarts_requis</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">la_longue_string_modele</span> <span class="o">=</span> <span class="n">la_longue_string_modele</span> <span class="o">+</span> <span class="s2">&quot; Calcul prés individuelles: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config_modele</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">3</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">la_longue_string_modele</span> <span class="o">=</span> <span class="n">la_longue_string_modele</span> <span class="o">+</span> <span class="s2">&quot; Créneaux par jour: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">nb_cren</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">la_longue_string_modele</span> <span class="o">=</span> <span class="n">la_longue_string_modele</span> <span class="o">+</span> <span class="s2">&quot; Equipes par créneau: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">eq_par_cren</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">la_longue_string_modele</span> <span class="o">=</span> <span class="n">la_longue_string_modele</span> <span class="o">+</span> <span class="s2">&quot; Nombre d&#39;équipes: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">nb_eq</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">la_longue_string_modele</span> <span class="o">=</span> <span class="n">la_longue_string_modele</span> <span class="o">+</span> <span class="s2">&quot; Empl. par éq.: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config_modele</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">5</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">la_longue_string_modele</span> <span class="o">=</span> <span class="n">la_longue_string_modele</span> <span class="o">+</span> <span class="s2">&quot; Durée quart.: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config_modele</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">worksheet2</span><span class="o">.</span><span class="n">write_string</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">colo</span><span class="p">,</span> <span class="n">la_longue_string_modele</span><span class="p">,</span> <span class="n">cell_format_noir</span><span class="p">)</span>
+        <span class="n">worksheet2</span><span class="o">.</span><span class="n">set_column</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">colo</span><span class="p">,</span> <span class="mi">23</span><span class="p">)</span>
+        <span class="n">row</span> <span class="o">=</span> <span class="n">row</span> <span class="o">+</span> <span class="mi">2</span>
+        <span class="n">date_prod</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S&quot;</span><span class="p">)</span>
+        <span class="n">worksheet2</span><span class="o">.</span><span class="n">write_string</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">colo</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;Émis le &quot;</span> <span class="o">+</span> <span class="n">date_prod</span><span class="p">,</span> <span class="n">cell_format_red</span><span class="p">)</span>
+        <span class="n">workbook</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div></div>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">appli</span> <span class="o">=</span> <span class="n">horaire</span><span class="p">(</span><span class="s1">&#39;2022-04-01 12:12&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">appli</span><span class="o">.</span><span class="n">calendrier_equipes</span><span class="p">))</span>
+    <span class="n">appli</span><span class="o">.</span><span class="n">conn</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+<span class="c1">#  config_modele [0][v. liste suivante]</span>
+<span class="c1"># 0 = num de semaine</span>
+<span class="c1"># 1 = heures-personnes prévues</span>
+<span class="c1"># 2 = durée d&#39;une journée/quart de travail</span>
+<span class="c1"># 3 = nb presences indivisuelles calculé</span>
+<span class="c1"># 4 = nb équipes</span>
+<span class="c1"># 5 = nb employés pas équipe</span>
+<span class="c1"># 6 =  calcul du nb prévu de quarts en équipe</span>
+<span class="c1"># 7 = nb équipes par créneau/quart</span>
+<span class="c1"># 8 = nb de créneaux par jour</span>
+<span class="c1"># 9 = calcul nb de jours requis</span>
+<span class="c1"># 10 = nom du modèlle</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, jk9999.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fonctions &mdash; Horaire 8888 222 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="HoraireJK module" href="HoraireJK.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> Horaire 8888
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">horaire</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="HoraireJK.html">HoraireJK module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Fonctions</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Horaire 8888</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="modules.html">horaire</a> &raquo;</li>
+      <li>Fonctions</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/fonctions.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="fonctions">
+<h1>Fonctions<a class="headerlink" href="#fonctions" title="Permalink to this headline"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="HoraireJK.horaire">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">HoraireJK.</span></span><span class="sig-name descname"><span class="pre">horaire</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">la_journee</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/HoraireJK.html#horaire"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#HoraireJK.horaire" title="Permalink to this definition"></a></dt>
+<dd><p>C’est une application qui veut aider à la décision pour composer des équipes et des quarts</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="HoraireJK.horaire.ajout_valide_dans_eq">
+<span class="sig-name descname"><span class="pre">ajout_valide_dans_eq</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/HoraireJK.html#horaire.ajout_valide_dans_eq"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#HoraireJK.horaire.ajout_valide_dans_eq" title="Permalink to this definition"></a></dt>
+<dd><p>Ajoute les membres aux équipes définies précédemment. Évite les répétitions et vérifie les non-dispos. Maintient les équipes d’un jour à l’autre.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="HoraireJK.horaire.assigne_empl_eq_jour">
+<span class="sig-name descname"><span class="pre">assigne_empl_eq_jour</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">la_date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nom_eq</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/HoraireJK.html#horaire.assigne_empl_eq_jour"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#HoraireJK.horaire.assigne_empl_eq_jour" title="Permalink to this definition"></a></dt>
+<dd><p>Appelle fonction d,ajout des emp dasn les equipes et leur validation</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="HoraireJK.horaire.check_conflit">
+<span class="sig-name descname"><span class="pre">check_conflit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ref</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">les_non_dispo</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/HoraireJK.html#horaire.check_conflit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#HoraireJK.horaire.check_conflit" title="Permalink to this definition"></a></dt>
+<dd><p>Vérifie les conflits de dates dans la table des non-dispo et journée courante.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="HoraireJK.horaire.create_connection">
+<span class="sig-name descname"><span class="pre">create_connection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/HoraireJK.html#horaire.create_connection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#HoraireJK.horaire.create_connection" title="Permalink to this definition"></a></dt>
+<dd><p>Connecter avec DB sqlite (7 tables).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="HoraireJK.horaire.ecriture_excel2">
+<span class="sig-name descname"><span class="pre">ecriture_excel2</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/HoraireJK.html#horaire.ecriture_excel2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#HoraireJK.horaire.ecriture_excel2" title="Permalink to this definition"></a></dt>
+<dd><p>Écriture dans fichier excel via xlsxwriter. 2 worksheets: une pour le calendrier des équipes, l’autre pour les membres des équipes. Gère les répétitions pour les jours, créneaux, nb d’équipes, etc.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="HoraireJK.horaire.equipes_maximales">
+<span class="sig-name descname"><span class="pre">equipes_maximales</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'A':</span> <span class="pre">[['8-16'],</span> <span class="pre">[]],</span> <span class="pre">'B':</span> <span class="pre">[['8-16'],</span> <span class="pre">[]],</span> <span class="pre">'C':</span> <span class="pre">[['8-16'],</span> <span class="pre">[]],</span> <span class="pre">'D':</span> <span class="pre">[['5-13'],</span> <span class="pre">[]],</span> <span class="pre">'E':</span> <span class="pre">[['5-13'],</span> <span class="pre">[]],</span> <span class="pre">'F':</span> <span class="pre">[['5-13'],</span> <span class="pre">[]],</span> <span class="pre">'G':</span> <span class="pre">[['12-20'],</span> <span class="pre">[]],</span> <span class="pre">'H':</span> <span class="pre">[['12-20'],</span> <span class="pre">[]],</span> <span class="pre">'I':</span> <span class="pre">[['12-20'],</span> <span class="pre">[]]}</span></em><a class="headerlink" href="#HoraireJK.horaire.equipes_maximales" title="Permalink to this definition"></a></dt>
+<dd><p>Besoin de ce dirctionnaire codé en dur pour les initialisations futures</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="HoraireJK.horaire.get_dispos">
+<span class="sig-name descname"><span class="pre">get_dispos</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">emp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/HoraireJK.html#horaire.get_dispos"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#HoraireJK.horaire.get_dispos" title="Permalink to this definition"></a></dt>
+<dd><p>Obtenir une liste des non-dipos (table sqlite) pour un employé donné</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="HoraireJK.horaire.get_employes">
+<span class="sig-name descname"><span class="pre">get_employes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/HoraireJK.html#horaire.get_employes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#HoraireJK.horaire.get_employes" title="Permalink to this definition"></a></dt>
+<dd><p>Obtenir la liste complète des employés (table sqlite) avant de les valider</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="HoraireJK.horaire.init_valeurs_modele">
+<span class="sig-name descname"><span class="pre">init_valeurs_modele</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/HoraireJK.html#horaire.init_valeurs_modele"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#HoraireJK.horaire.init_valeurs_modele" title="Permalink to this definition"></a></dt>
+<dd><p>Au lieu de renseigner manuellement les paramètres de l’application, offrir des modèles pré-configurés. Il y en a quelques uns dans la BD et ils sont associés à des semaines de travail. Un gestionnaire pourrait regarder les heures-personnes prévues pour une semaine donnée et décider du modèle ou même ajouter un modèle à la DB et l’associer à une semaine en particulier.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="HoraireJK.horaire.initialise_calendrier_equipes">
+<span class="sig-name descname"><span class="pre">initialise_calendrier_equipes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nb_eq</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/HoraireJK.html#horaire.initialise_calendrier_equipes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#HoraireJK.horaire.initialise_calendrier_equipes" title="Permalink to this definition"></a></dt>
+<dd><p>Initialiser le calendrier pour pouvoir le renseigner plus tard avec les références sur les clés</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="HoraireJK.horaire.les_jours">
+<span class="sig-name descname"><span class="pre">les_jours</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#HoraireJK.horaire.les_jours" title="Permalink to this definition"></a></dt>
+<dd><p>Utile pour les initialisations futures et le fichier excel.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="HoraireJK.horaire.liste_emp_a_assigner">
+<span class="sig-name descname"><span class="pre">liste_emp_a_assigner</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#HoraireJK.horaire.liste_emp_a_assigner" title="Permalink to this definition"></a></dt>
+<dd><p>Cette liste est utile pour ‘popper’ les employés assignés et continuer à utiliser la même liste</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="HoraireJK.horaire.post_init">
+<span class="sig-name descname"><span class="pre">post_init</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/HoraireJK.html#horaire.post_init"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#HoraireJK.horaire.post_init" title="Permalink to this definition"></a></dt>
+<dd><p>Initialiser les données stockées dans sqlite</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="HoraireJK.horaire.semaine">
+<span class="sig-name descname"><span class="pre">semaine</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/HoraireJK.html#horaire.semaine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#HoraireJK.horaire.semaine" title="Permalink to this definition"></a></dt>
+<dd><p>Créer une liste de jours et de dates pour la semaine à générer, selon la date fournier à l’app.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="HoraireJK.html" class="btn btn-neutral float-left" title="HoraireJK module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, jk9999.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -7,10 +7,16 @@ from datetime import datetime, timedelta
 from sqlite3 import Error
 
 import xlsxwriter
+
 class horaire:
+    '''
+    C'est une application qui veut aider à la décision pour composer des équipes et des quarts
+
+    '''
     auj = ''
     week= ''
     les_jours = []
+    """Utile pour les initialisations futures et le fichier excel."""
     conn = None
     hpers_req = 0
     employes_requis = 0
@@ -23,6 +29,7 @@ class horaire:
     equipes_maximales = {'A': [['8-16'], []], 'B': [['8-16'], []], 'C': [['8-16'], []], \
                          'D': [['5-13'], []], 'E': [['5-13'], []], 'F': [['5-13'], []], \
                          'G': [['12-20'], []], 'H': [['12-20'], []], 'I': [['12-20'], []]}
+    """Besoin de ce dirctionnaire codé en dur pour les initialisations futures"""
     calendrier_equipes = dict() #pour inscrire toutes les equipes par dates
     #                              = par exemple {
     #le_dico = {
@@ -32,6 +39,7 @@ class horaire:
     #ETC.                               aussi if le_dico['A'][0][1] == le_dico['A'][1][1], etc
     les_cles = list()
     liste_emp_a_assigner = list()
+    """Cette liste est utile pour 'popper' les employés assignés et continuer à utiliser la même liste"""
     liste_emp_assignes = list()
     cpt_heures = 0
     valeur_repartition = 0
@@ -39,10 +47,11 @@ class horaire:
     config_modele = None
 
     def __init__(self, la_journee):
+        """Créer la connection sur la BD et lancer les initialisations"""
         self.auj = datetime.fromisoformat(la_journee)        
         self.week = str(self.auj.isocalendar()[1])
         try:
-            self.create_connection(r"C:\Users\j\Documents\pythonProject\matrice_temps\letemps.db")
+            self.create_connection(r".\letemps.db")
             self.post_init()
         except Exception as e:
             print(e)
@@ -50,6 +59,10 @@ class horaire:
 
 
     def post_init(self):
+        '''
+        Initialiser les données stockées dans sqlite
+        '''
+
         try:
             if self.conn is not None:
                 string_previsions_config = "select previsions_hpers.hpers, previsions_hpers.heures_par_jour, \
@@ -79,6 +92,7 @@ class horaire:
             traceback.print_exc(file=sys.stdout)
 
     def init_valeurs_modele(self):
+        """Au lieu de renseigner manuellement les paramètres de l'application, offrir des modèles pré-configurés. Il y en a quelques uns dans la BD et ils sont associés à des semaines de travail. Un gestionnaire pourrait regarder les heures-personnes prévues pour une semaine donnée et décider du modèle ou même ajouter un modèle à la DB et l'associer à une semaine en particulier."""
         sql_modele_affect = "select p.semaine, p.hpers, p.heures_par_jour, round(p.hpers / p.heures_par_jour,1) as presences, m.nb_eq, m.nb_emp_par_eq as nb_par_eq, \
                                         round(round(p.hpers *1.0 / p.heures_par_jour,1)/m.nb_emp_par_eq,1) as nb_quarts_eq,\
                                          m.nb_eq_par_creneau, m.nb_creneau_disp , \
@@ -93,6 +107,7 @@ class horaire:
         self.config_modele = cur_modele.execute(sql_modele_affect).fetchall()
 
     def semaine(self):
+        """Créer une liste de jours et de dates pour la semaine à générer, selon la date fournier à l'app."""
         calendar.setfirstweekday(6)
         locale.setlocale(locale.LC_ALL, 'FR_ca')
         self.les_jours = [['Lundi', ''], ['Mardi', ''], ['Mercredi', ''], ['Jeudi', ''], ['Vendredi', ''], ['Samedi', ''],['dimanche', '']]
@@ -104,6 +119,7 @@ class horaire:
         print("\n" + str(self.les_jours))
     
     def create_connection(self, db_file): #//TODO reorganiser le code sasn rapport avec la connection (sortir de cette methode)
+        """Connecter avec DB sqlite (7 tables)."""
         try:
             self.conn = sqlite3.connect(db_file)
             if self.conn is not None:
@@ -116,6 +132,7 @@ class horaire:
 
 
     def check_conflit(self, ref, les_non_dispo):
+        """Vérifie les conflits de dates dans la table des non-dispo et journée courante."""
         retourne = bool()
         for enr in les_non_dispo:
             deb = enr[0]
@@ -131,6 +148,7 @@ class horaire:
         return retourne
 
     def get_employes(self):
+        """Obtenir la liste complète des employés (table sqlite) avant de les valider """
         all_emp = "SELECT distinct nom, prenom, debut, fin, id from employes order by rang"
         curseur_emp = self.conn.cursor()
         curseur_emp.execute(all_emp)
@@ -138,6 +156,7 @@ class horaire:
         return les_emp
 
     def get_dispos(self,emp):
+        """Obtenir une liste des non-dipos (table sqlite) pour un employé donné"""
         find_dispo_dates_and_type = "select emp_non_dispo.t_exact_debut,emp_non_dispo.t_exact_fin, emp_non_dispo.type_non_dispo, id_empl_fk from emp_non_dispo where id_empl_fk = '%s' order by id_empl_fk"
         curseur_dispo = self.conn.cursor()
         curseur_dispo.execute(find_dispo_dates_and_type % emp)
@@ -145,6 +164,10 @@ class horaire:
         return d
 
     def ajout_valide_dans_eq(self):  # cette fonction
+        """
+        Ajoute les membres aux équipes définies précédemment. Évite les répétitions et vérifie les non-dispos. Maintient les équipes d'un jour à l'autre.
+
+        """
         conflit = bool()
         res = None
         emp_courant = ''
@@ -171,9 +194,11 @@ class horaire:
 
 
     def assigne_empl_eq_jour(self, la_date, nom_eq):
+        """Appelle fonction d,ajout des emp dasn les equipes et leur validation"""
         self.ajout_valide_dans_eq()
 
     def initialise_calendrier_equipes(self, nb_eq):
+        """Initialiser le calendrier pour pouvoir le renseigner plus tard avec les références sur les clés"""
         self.les_cles = list(self.equipes_maximales.keys())[:nb_eq]
         lesdates = [self.les_jours[i][1] for i in range(0, len(self.les_jours))] # obtenir juste les dates
 
@@ -186,7 +211,8 @@ class horaire:
                 self.calendrier_equipes[k].append([[self.les_cles[i]],[]])
 
     def ecriture_excel2(self):
-        workbook = xlsxwriter.Workbook('horaire_B.xlsx')
+        """Écriture dans fichier excel via xlsxwriter. 2 worksheets: une pour le calendrier des équipes, l'autre pour les membres des équipes. Gère les répétitions pour les jours, créneaux, nb d'équipes, etc."""
+        workbook = xlsxwriter.Workbook('../horaire_B.xlsx')
         worksheet = workbook.add_worksheet('equipes')
 
         bold = workbook.add_format({'bold': True})
@@ -310,10 +336,10 @@ class horaire:
         worksheet2.write_string(row, colo+1, "Émis le " + date_prod, cell_format_red)
         workbook.close()
 
-appli = horaire('2022-02-15 12:12')
-
-print(str(appli.calendrier_equipes))
-appli.conn.close()
+if __name__ == '__main__':
+    appli = horaire('2022-04-01 12:12')
+    print(str(appli.calendrier_equipes))
+    appli.conn.close()
 
 #  config_modele [0][v. liste suivante]
 # 0 = num de semaine
