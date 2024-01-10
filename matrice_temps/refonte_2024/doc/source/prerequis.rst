@@ -9,6 +9,7 @@ Par exemple: gestion des équipes, des quarts, horaires, modèles et **conventio
 
 .. todo:: structure du modèle : la db, les 'presets', locale, semaine, etc. (prévisions pers-h, etc.)
 
+.. todo:: structure uml de l'approche gestionnaire
 
 
 
