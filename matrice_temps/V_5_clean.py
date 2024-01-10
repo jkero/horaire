@@ -55,7 +55,7 @@ class horaire:
         self.auj = datetime.fromisoformat(la_journee)        
         self.week = str(self.auj.isocalendar()[1])
         try:
-            self.create_connection(r"C:\Users\j\Documents\pythonProject\matrice_temps\letemps.db")
+            self.create_connection(r"/home/jack/python_projets/horaire/horaire/matrice_temps/letemps.db")
             self.post_init()
         except Exception as e:
             print(e)
@@ -141,7 +141,7 @@ class horaire:
 
     def semaine(self):
         calendar.setfirstweekday(6)
-        locale.setlocale(locale.LC_ALL, 'FR_ca')
+        locale.setlocale(locale.LC_ALL, 'fr_CA.utf8')
         self.les_jours = [['Lundi', ''], ['Mardi', ''], ['Mercredi', ''], ['Jeudi', ''], ['Vendredi', ''], ['Samedi', ''],['dimanche', '']]
         lundi = self.auj + timedelta(days=-self.auj.weekday())
         incr = self.auj.weekday()
@@ -232,7 +232,7 @@ class horaire:
                         res = self.get_dispos(emp_courant[4])
                         conflit = self.check_conflit(datetime.fromisoformat(key), res)
                         if conflit:
-                            print("bobo avec" + str(emp_courant[4]) + " "  + str(datetime.fromisoformat(key)))
+                            print("bobo avec " + str(emp_courant[4]) + " "  + str(datetime.fromisoformat(key)))
                             continue
                         else:
                             self.calendrier_equipes[key][ix][1].append(
@@ -264,7 +264,7 @@ class horaire:
                 self.calendrier_equipes[k].append([[self.les_cles[i]],[]])
 
     def ecriture_excel2(self):
-        workbook = xlsxwriter.Workbook('horaire_B.xlsx')
+        workbook = xlsxwriter.Workbook('horaire_2024.xlsx')
         worksheet = workbook.add_worksheet('equipes')
 
         bold = workbook.add_format({'bold': True})
