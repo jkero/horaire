@@ -264,7 +264,7 @@ class horaire:
                 self.calendrier_equipes[k].append([[self.les_cles[i]],[]])
 
     def ecriture_excel2(self):
-        workbook = xlsxwriter.Workbook('horaire_2024.xlsx')
+        workbook = xlsxwriter.Workbook('horaire_2024_a.xlsx')
         worksheet = workbook.add_worksheet('equipes')
 
         bold = workbook.add_format({'bold': True})
