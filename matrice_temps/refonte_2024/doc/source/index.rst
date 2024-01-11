@@ -11,6 +11,7 @@ La documentation et notes de Horaire_refonte_2024
    :caption: Contents:
 
    prerequis
+   cas_utilisation
 
 À propos de cette mise à jour:
 ++++++++++++++++++++++++++++++
