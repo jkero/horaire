@@ -18,7 +18,7 @@ Conditions
 ++++++++++
 * Une liste générale des employés doit être accessible ainsi que l'information à jour pour les non-disponibilités des employés. Ces informations doivebt être sous forme d'enregistrements dans la base de données retenue pour l'application. Selon l'interface de l'application, ces informations peuvent être maintenues dans l'application ou indépendamment d'elle.
 * L'application emploie un modèle prévisionnel reflétant les exigences en heures de travail pour des semaines à venir.
-
+* Types de conditions: avoir un employé *permanent* désigné comme leader pour chaque équipe, donc info employé doit contenir statut conventionnel.
 Paramètres
 ----------
 #. Comme gestionnaire, je veux créer des scénarios applicables sur des semaines précises, scénarios qui déterminent les heures de travail totales, la quantité de quarts, d'équipes, d'équipes par quart, de personnes par équipes, d'heures par quart. À la création de l'horaire, les scénarios seront alors reflétés dans les affectations.
