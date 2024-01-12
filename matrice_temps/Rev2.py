@@ -3,21 +3,10 @@ import locale
 import sqlite3
 import sys
 import traceback
-from datetime import datetime, timedelta
+from datetime import datetime, date, timedelta
 from sqlite3 import Error
 
 import xlsxwriter
-
-
-# pour demarrer la generation de l'horaire pour une période donnée, ça prend la saisie de valeurs de base.
-# nb employes
-# nb equipes
-# prévisions heures/personnes pour la période v. table previsions_hpers
-# self.auj= datetime.today()
-# self.auj2 = "2022-01-03 01:00"
-# dt_string = self.auj.strftime("%Y-%m-%d %H:%M")
-# print("date = " + dt_string)
-# print("semaine " + str((self.auj).isocalendar()[1]))
 
 class horaire:
     auj = ''
@@ -36,12 +25,7 @@ class horaire:
                          'D': [['5-13'], []], 'E': [['5-13'], []], 'F': [['5-13'], []], \
                          'G': [['12-20'], []], 'H': [['12-20'], []], 'I': [['12-20'], []]}
     calendrier_equipes = dict() #pour inscrire toutes les equipes par dates
-    #                              = par exemple {
-    #le_dico = {
-    #    'A': [['2022-04-01', ['momo', 'famo', 'Bozo']], ['2022-04-02', ['momo', 'flamo', 'Bozo']]],
-    #    'B': [['2022-04-01', ['koko', 'klamo', 'kozo']], ['2022-04-02', ['koko', 'klamo', 'lozo']]]
-    #}
-    #ETC.                               aussi if le_dico['A'][0][1] == le_dico['A'][1][1], etc
+
     les_cles = list()
     liste_emp_a_assigner = list()
     liste_emp_assignes = list()
@@ -49,7 +33,6 @@ class horaire:
     valeur_repartition = 0
     nom_modele = ''
     config_modele = None
-
 
     def __init__(self, la_journee):
         self.auj = datetime.fromisoformat(la_journee)        
@@ -70,29 +53,8 @@ class horaire:
                 " round(round(previsions_hpers.hpers / previsions_hpers.heures_par_jour,1)/" \
                 "previsions_hpers.nb_max_par_eq,1) as nb_quarts from previsions_hpers  where annee = ? and semaine = ?"
                 cur_previsions = self.conn.cursor()
-                # print("date de réf. :" + str(self.auj))
-                # print("sem : " + str(self.week))
-                # liste_prev = cur_previsions.execute(string_previsions_config, (self.auj.year, self.week)).fetchall()
-                # self.hpers = liste_prev[0][0]
-                # print("Prévisions pour " + str(self.hpers) + " h-pers")
-                # self.duree_quart = liste_prev[0][1]
-                # print("\t duree_quart: " + str(self.duree_quart))
-                # self.nb_quarts_indivi = liste_prev[0][3] # prev hpers/heures par quart
-                # print("\t nb_quart_indivi: " + str(self.nb_quarts_indivi))
-                # self.max_emp_par_equipe = liste_prev[0][2]
-                # print("\t max emp par eq: " + str(self.max_emp_par_equipe))
-                # self.nb_quart_en_eq = liste_prev[0][4]
-                # print("\t nb quarts en eq: " + str(self.nb_quart_en_eq))
-                # self.employes_tot = self.select_count_emp_dispo()
-                # print("\t employes_tot: " + str(self.select_count_emp_dispo()))
 
                 self.les_dates_de_la_semaine = self.semaine()
-
-                # cpt_key = 0
-                # for key in self.equipes_maximales:
-                #     if cpt_key < round(self.nb_quart_en_eq,1):
-                #         self.equipes[key] = self.equipes_maximales[key]
-                #     cpt_key = cpt_key + 1
 
                 self.init_valeurs_modele()
 
@@ -113,7 +75,8 @@ class horaire:
             traceback.print_exc(file=sys.stdout)
 
     def init_valeurs_modele(self):
-        sql_modele_affect = "select p.semaine, p.hpers, p.heures_par_jour, round(p.hpers / p.heures_par_jour,1) as presences, m.nb_eq, m.nb_emp_par_eq as nb_par_eq, \
+        sql_modele_affect = "select p.semaine, p.hpers, p.heures_par_jour, round(p.hpers / p.heures_par_jour,1) as presences,\
+                                        m.nb_eq, m.nb_emp_par_eq as nb_par_eq, \
                                         round(round(p.hpers *1.0 / p.heures_par_jour,1)/m.nb_emp_par_eq,1) as nb_quarts_eq,\
                                          m.nb_eq_par_creneau, m.nb_creneau_disp , \
                                          round(round(cast(p.hpers as float) / p.heures_par_jour,2) / \
@@ -264,7 +227,9 @@ class horaire:
                 self.calendrier_equipes[k].append([[self.les_cles[i]],[]])
 
     def ecriture_excel2(self):
-        workbook = xlsxwriter.Workbook('horaire_2024_a.xlsx')
+        e = datetime
+        nomfich = e.today().strftime('%y_%m_%d_%H%M')
+        workbook = xlsxwriter.Workbook('rev2_' + nomfich + '.xlsx')
         worksheet = workbook.add_worksheet('equipes')
 
         bold = workbook.add_format({'bold': True})
