@@ -34,3 +34,5 @@ Vrac pseudo-code
 
 .. note::
     Le nombre d'équipes est déterminé par le modèle désigné lors de la requête dans la table prev_num_semaine. C'est la prévision budgétaite en heures-personnes. Pour éclaircir le calcul: supposons qu'une tâche requiert 1000 heures-personnes alors si je divise par 25 (personnes), ça indique que que 25 personnes travaillant 40 heures pourraient théoriquement accomplir la tâche (en une semaine de 40 h). Ça pourrait être 5 équipes de 5, 2 équipes de 2 (en 6 semaines 1/4), etc. Pour les besoins de l'application, j'essaie de limiter les modèles et les tests pour générer un horaire sur un calendrier d'une semaine. Rien n'est fixe et je pourrais affecter des employés ad vitam aeternam sur un projet d'un milliard d'heures....
+
+.. todo:: (dans scratch.py) methodes pour tester prefetch des leads, faire une passe partielle pour affecter chaque lead par equipe (après avoir testé/calculé valeur modele prev); ensuite finier affecter equipes avec autres non-leads (pourraient être récupérés à la passe leads)
