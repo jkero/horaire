@@ -68,8 +68,8 @@ class test_semaine:
                 incr = incr - 1
             #print("\n" + str(self.les_jours))
 
-def get_model_values(self, week_num):
-    model_query = self.conn.cursor)()
+# def get_model_values(self, week_num):
+#     model_query = self.conn.cursor)
 
 
 if __name__ == "__main__":
