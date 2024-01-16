@@ -1,22 +1,19 @@
 from operator import itemgetter
 
 import mariadb
-from mariadb import Error
-import pandas as pd
 import csv
 import sys
 import random
 
 class trafic_mariadb:
     conn = None
-    dict_transfert_forbes = {'num_emp': None, 'nom': None, 'prenom': None, 'anciennete':None,'pref_creneau_deb':None,'pref_creneau_fin':None,'niveau':None}
     dict_transfert = {}
     list_transfert = []
+    liste_unique = []
     def __init__(self):
-        self.create_connection()
-        self.lire_fich()
-        self.ecrire_fich()
-        self.ajouter_employe()
+        self.lire_fich_csv()
+        self.ecrire_fich_pour_load()
+        self.ajouter_employe_dans_db()
     def create_connection(self):
         """ create a database connection to a SQLite database """
         # Connect to MariaDB Platform
@@ -32,9 +29,7 @@ class trafic_mariadb:
             print(f"Error connecting to MariaDB Platform: {e}")
             sys.exit(1)
 
-
-
-    def lire_fich(self):
+    def lire_fich_csv(self):
         with open('rev2_forbes.csv', newline='\n') as csvfile:
             readr = csv.reader(csvfile, delimiter=',', quotechar='"',skipinitialspace=True)
             i = 0
@@ -45,40 +40,36 @@ class trafic_mariadb:
         self.list_transfert = sorted(self.list_transfert, key=itemgetter(3),reverse=True)
         print(self.list_transfert)
 
-    def ecrire_fich(self):
+    def ecrire_fich_pour_load(self):
         liste_unique = []
+        liste_transfert = []
         f = open("tri_employes.csv", "w+")
         with open(f.name, "a", newline='\n') as csvfile:
             wrtr = csv.writer(csvfile, delimiter=',', quotechar='"')
             i = 0
             for row  in self.list_transfert:
                 if row[1] not in liste_unique:
+                    #pas de doublons dans les noms -source hétéroclite
                     liste_unique.append(row[1])
+                    liste_transfert.append(row)
                     wrtr.writerow(row)
         print(liste_unique)
+        self.liste_transfert = liste_transfert
 
-    def ajouter_employe(self):
-        # araay qui suit : multiple, h_debut, h_fin
-
-        #chaine_sql = "insert into employes(\"nom\",\"prenom\",\"debut\",\"fin\",\"rang\") values ('"+ nom + "','" + prenom +"','" + hd + "' ,'" + hf + "','" + rang +"')"
-#        to_mariadb_req = "insert into employe(num_emp, nom, prenom, anciennete, pref_creneau_deb, pref_creneau_fin, niveau)
-#        values('jk_001', 'Kéroack', 'Jacques', 30, '2024-1-1 07:00', '2024-1-1 15:00', 4)";
-        c = self.conn.cursor()
-        data = pd.read_csv("dict_file.csv", sep=',', encoding="UTF-8")
-        # df = pd.DataFrame(data)
-        # df.columns = ["num_emp", "nom", "prenom", "anciennete", "pref_creneau_deb", "pref_creneau_fin", "niveau"]
-        # for row in df.iterrows():
-        #     print (row)
-        #
-        #     stringExec = "insert into employe(num_emp, nom, prenom, anciennete, pref_creneau_deb, pref_creneau_fin, niveau";
-        #     listParams = row
-        # try:
-        #     c.execute(chaine_sql)
-        # except Error:
-        #     print(Error)
-        # finally:
-        #     conn.commit()
-
+    def ajouter_employe_dans_db(self):
+        """ plus simple de le faire via mariadb command line load infile"""
+        self.create_connection()
+        le_curseur = self.conn.cursor()
+        print(type(le_curseur))
+        string_insert = "insert into employe_kill_me (num_emp, nom, prenom,anciennete,pref_creneau_deb,pref_creneau_fin,niveau) values (?,?,?,?,?,?,?)"
+        try:
+            for emp in self.liste_transfert:
+                le_curseur.execute(string_insert, (emp[0],emp[1],emp[2],emp[3],emp[4],emp[5],emp[6]))
+        except Exception as e:
+            print(e)
+        finally:
+            self.conn.commit()
+            self.conn.close()
 
 
 if __name__ == '__main__':
