@@ -21,9 +21,18 @@ foreign key (emp_id) references employe(id)
 on delete cascade
 ) engine = InnoDB;
 
-insert into non_dispo(creneaux, FK_emp) values ('2025-03-18 08:00@2025-03-28 17:00')
+MariaDB [horaire]> insert into non_dispo(creneaux, emp_id) values ('2025-03-18 08:00@2025-03-28 17:00',28);
+
 
 select id,nom, prenom, creneaux from employe right join non_dispo on employe.id = non_dispo.emp_id;
+
+MariaDB [horaire]> select id,nom, prenom, creneaux from employe right join non_dispo on employe.id = non_dispo.emp_id;
++------+-------+--------+-----------------------------------+
+| id   | nom   | prenom | creneaux                          |
++------+-------+--------+-----------------------------------+
+|   28 | Brees | Drew   | 2025-03-18 08:00@2025-03-28 17:00 |
++------+-------+--------+-----------------------------------+
+
 
 create table modele_affectations (id smallint unsigned not null auto_increment primary key,
 nom varchar(240) not null,
@@ -48,7 +57,7 @@ on delete cascade
 
 insert into previsions_par_semaine(annee,num_semaine,prevision_pers_h, modele_id) values (2025,52,30,1);
 
-select * from modele_affectations as p right join previsions_par_semaine as r on r.id = p.id;
+MariaDB [horaire]> select * from modele_affectations as m left join previsions_par_semaine as p on m.id = p.modele_id;
 
 **remarque windows: Load infile avec double \\ pour path, pas de "local"
 
