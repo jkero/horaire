@@ -29,15 +29,12 @@ Je vais représenter par un uml la logique d'exploitation de cette application (
 
 Il n'a pas été considéré de solutions d'installation (docker etc.) ou de déploiement, ou de sécurité des données , ni de tests orthodoxes. Ça pourra changer dans la v. 2.
 
-
-
-
-
-
+--
 
 .. uml::
 
     @startuml
+
     object liste_employes
     object employe
     object disponibilites

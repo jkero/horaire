@@ -5,7 +5,7 @@ Vrac pseudo-code
 
 2- Créer dictionnaire équipes
 
-3_ Créer dictionnaire semaine
+3- Créer dictionnaire semaine
 
 4- Dans la liste générale des employés:
 

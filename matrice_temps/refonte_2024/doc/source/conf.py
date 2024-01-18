@@ -25,7 +25,7 @@ extensions = ['sphinx.ext.autodoc',
 'sphinx.ext.intersphinx',
 'sphinx_design',
 ]
-plantuml = ['java', '-jar', '/usr/share/umltools/plantuml.jar']
+plantuml = ['java', '-jar', 'C:\\UML_tools\\plantuml.jar']
 
 todo_include_todos = True
 
@@ -40,4 +40,4 @@ language = 'FR'
 
 html_theme = "sphinx_rtd_theme"
 
-html_static_path = ['_static']
+html_static_path = []

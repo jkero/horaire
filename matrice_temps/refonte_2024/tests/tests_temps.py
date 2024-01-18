@@ -35,8 +35,7 @@ class test_semaine:
         except Exception as e:
             print(e)
 
-    def create_connection(self,
-                          db_file):  # //TODO reorganiser le code sasn rapport avec la connection (sortir de cette methode)
+    def create_connection(self,db_file):  
         """ create a database connection to a SQLite database """
         try:
             self.conn = sqlite3.connect(db_file)
