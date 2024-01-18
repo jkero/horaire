@@ -1,0 +1,3 @@
+LOAD DATA LOCAL INFILE '/home/jack/python_projets/horaire/horaire/matrice_temps/refonte_2024/tri_employes_load.csv' INTO TABLE employe FIELDS TERMINATED BY ',' (num_emp, nom, prenom,anciennete,pref_creneau_deb,pref_creneau_fin,niveau ) ;
+
+CREATE TABLE employe_kill_me AS SELECT * FROM employe;

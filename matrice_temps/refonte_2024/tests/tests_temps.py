@@ -15,6 +15,8 @@ class test_semaine:
     auj = ''
     conn = None
     dbfile = urljoin("..", "letemps2024.db")
+    dict_modele_vals = {}
+
 
     def __init__(self, la_journee):
         self.auj = datetime.fromisoformat(la_journee)
@@ -64,6 +66,10 @@ class test_semaine:
                 #print(str(jours))
                 incr = incr - 1
             #print("\n" + str(self.les_jours))
+
+# def get_model_values(self, week_num):
+#     model_query = self.conn.cursor)
+
 
 if __name__ == "__main__":
     test_semaine('2024-01-12 11:49')

@@ -50,6 +50,7 @@ Il n'a pas été considéré de solutions d'installation (docker etc.) ou de dé
     object nb_quarts
     object heures_quarts
     object composition_equipes
+    object liste_affectations
 
 
     diamond d1
@@ -69,7 +70,7 @@ Il n'a pas été considéré de solutions d'installation (docker etc.) ou de dé
     composition_equipes --> composition_quarts
     emp_par_equip --> composition_equipes
     heures_quarts --> composition_quarts
-
+    composition_quarts --> liste_affectations : "enregistrer"
 
     @enduml
 
