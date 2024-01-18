@@ -50,4 +50,6 @@ insert into previsions_par_semaine(annee,num_semaine,prevision_pers_h, modele_id
 
 select * from modele_affectations as p right join previsions_par_semaine as r on r.id = p.id;
 
+**remarque windows: Load infile avec double \\ pour path, pas de "local"
+
 
