@@ -57,19 +57,19 @@ class test_semaine:
             locale.setlocale(locale.LC_ALL, 'fr_CA.utf8')
             self.les_jours = [['Lundi', ''], ['Mardi', ''], ['Mercredi', ''], ['Jeudi', ''], ['Vendredi', ''], ['Samedi', ''],['dimanche', '']]
             lundi = self.auj + timedelta(days=-self.auj.weekday())
-            #print('lundi ' + str(lundi))
+            print('lundi ' + str(lundi))
             incr = self.auj.weekday()
-            #print("aujour jour "+ str(incr))
+            print("aujour jour "+ str(incr))
             for jours in self.les_jours:
                 #print(incr)
                 jours[1] = (self.auj + timedelta(days=-incr)).strftime('%Y-%m-%d')
                 #print(str(jours))
                 incr = incr - 1
-            #print("\n" + str(self.les_jours))
+            print("\n" + str(self.les_jours))
 
 # def get_model_values(self, week_num):
 #     model_query = self.conn.cursor)
 
 
 if __name__ == "__main__":
-    test_semaine('2024-01-12 11:49')
+    test_semaine('2024-01-18 11:49')

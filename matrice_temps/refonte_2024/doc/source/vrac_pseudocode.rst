@@ -70,6 +70,8 @@ tq modele:
     passer au modèle suivant
 
 
-Sèlection des éuipes
+Sélection des équipes
 +++++++++++++++++++++
-MariaDB [horaire]> select * from employe where anciennete > 55 and niveau >= 3;
+MariaDB [horaire]> select * from employe where anciennete > 55 and niveau >= 3; //par exemple pour leads (ça fait 9 équipes possibles):
+
+Il pourrait y avoir un test de cohérence pour la table des modeles avec des métadonnées d'entreprise...
