@@ -52,6 +52,8 @@ Pour tests
 
 Remarque: si une projet a 10 employés à 8 heures pas jour, normalement il devrait pouvoir soutenir et saisir des semaines de 8 h * 10 pers * 5 jours = 400 hpers par semaine. Je suppose que ça prend une cohérence dans l'entrée de données. Ma db a une liste de 33 employes, avec des niveuax différents (lead, temps partiel, etc.) Il y a de quoi faire pas mal de règles.
 
+Devrais-je ajouter un indicateur de surtemps dans la db ou alors c'est automatique selon la valeur de hpers ? Pour les tests je dois restreindre les paramètres et la portée. C'est la table des prévisions qui doit porter une partie de la cohérence, alors que cette app doit constituer des équipes et des quarts dans un calendrier. OK.
+
 Donc,
 
 * 1 quart de jour < 2 quarts de jour < 3 quarts de jour;
