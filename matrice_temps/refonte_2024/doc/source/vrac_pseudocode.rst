@@ -54,7 +54,7 @@ Remarque: si une projet a 10 employés à 8 heures pas jour, normalement il devr
 
 Devrais-je ajouter un indicateur de surtemps dans la db ou alors c'est automatique selon la valeur de hpers ? Pour les tests je dois restreindre les paramètres et la portée. C'est la table des prévisions qui doit porter une partie de la cohérence, alors que cette app doit constituer des équipes et des quarts dans un calendrier. OK.
 
-Donc,
+Donc, j'ai une table de modeles triée par hpers mais aussi par nb quarts, nb_equipes_par_quart (emp par équipe pourrait aussi être utilisé pour les hp égales..)
 
 * 1 quart de jour < 2 quarts de jour < 3 quarts de jour;
 
@@ -62,8 +62,14 @@ Donc,
 
 * Durée quart 7.5 < durée sup à 7.5 (surtemps)
 
-modele = t_mod.next \\trouver les modèles disponibles
+modele = trier(t_mod).next \\trouver les modèles disponibles et les trier par (nbq * dq * nbeqq * nbempq)
 
 tq modele:
-    si hpers / nbquarts * dureequarts * nbequipequart * nbemployeparequipe
+    si hpers / nbquarts * dureequarts * nbequipequart * nbemployeparequipe > 37.5 (40) //règle déterminée ailleurs
+    alors
+    passer au modèle suivant
 
+
+Sèlection des éuipes
++++++++++++++++++++++
+MariaDB [horaire]> select * from employe where anciennete > 55 and niveau >= 3;

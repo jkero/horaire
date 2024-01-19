@@ -62,3 +62,17 @@ MariaDB [horaire]> select * from modele_affectations as m left join previsions_p
 **remarque windows: Load infile avec double \\ pour path, pas de "local"
 
 
+MariaDB [horaire]> select *, (nb_quarts * duree_quart * nb_equipes_par_quart * nb_employe_par_equipe) as hp from modele_affectations order by hp desc, nb_quarts desc, nb_equipes_par_quart desc;
++----+---------------------+-----------------------+-----------+-------------+----------------------+-----------------------+-------+
+| id | nom                 | description           | nb_quarts | duree_quart | nb_equipes_par_quart | nb_employe_par_equipe | hp    |
++----+---------------------+-----------------------+-----------+-------------+----------------------+-----------------------+-------+
+|  6 | grandes equipes 1 q | 1 q eq 7              |         2 |         7.5 |                    1 |                     7 | 105.0 |
+|  7 | grosse eq 1 q       | 2 q eq 3              |         1 |         7.5 |                    2 |                     7 | 105.0 |
+|  4 | semaine 75 2 q      | Pas ou peu de travail |         2 |         7.5 |                    1 |                     5 |  75.0 |
+|  5 | petites eq 1 q      | 2 q eq 3              |         1 |         7.5 |                    2 |                     3 |  45.0 |
+|  2 | semaine 45 eq 6     | Pas ou peu de travail |         1 |         7.5 |                    1 |                     6 |  45.0 |
+|  3 | semaine 37.5        | Pas ou peu de travail |         1 |         7.5 |                    1 |                     5 |  37.5 |
+|  1 | minimal             | Pas ou peu de travail |         1 |         7.5 |                    1 |                     4 |  30.0 |
++----+---------------------+-----------------------+-----------+-------------+----------------------+-----------------------+-------+
+
+
