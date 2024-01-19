@@ -40,3 +40,28 @@ Vrac pseudo-code
 .. todo:: Calculs simu pour les modeles et les valeurs qui serviront au xlsx
 
 .. todo:: aussi contraintes de type calendrier
+
+.. todo:: ecrire template pour modele xlsx (rangees, colonnes, plages nommees, onglets, etc.)
+
+Pour tests
+++++++++++
+
+*Automatiser* la décision pour les équipes et les quarts, le seul paramètre à l'entrée est le nombre prévu de heures-personnes. Ensuite c'est un calcul basé sur le salaire moyen donc, *in fine*, les heures de jour (quart de jour seulement) et la quantité de personnel que le modèle propose.
+
+À la base il y a déjà un modèle assigné pour chaque semaine, on va essayer de reviser et réécrire.
+
+Remarque: si une projet a 10 employés à 8 heures pas jour, normalement il devrait pouvoir soutenir et saisir des semaines de 8 h * 10 pers * 5 jours = 400 hpers par semaine. Je suppose que ça prend une cohérence dans l'entrée de données. Ma db a une liste de 33 employes, avec des niveuax différents (lead, temps partiel, etc.) Il y a de quoi faire pas mal de règles.
+
+Donc,
+
+* 1 quart de jour < 2 quarts de jour < 3 quarts de jour;
+
+* équipe(2) < equipe(3), etc.;
+
+* Durée quart 7.5 < durée sup à 7.5 (surtemps)
+
+modele = t_mod.next \\trouver les modèles disponibles
+
+tq modele:
+    si hpers / nbquarts * dureequarts * nbequipequart * nbemployeparequipe
+
