@@ -35,8 +35,6 @@ class test_affect_equipes(unittest.TestCase):
         self.assertNotEqual(jkcur, None)
         if jkcur is not None:
             h = jkcur.fetchone()
-            print(h[0])
-            print(type(h[0]))
             self.hpers = h[0]
 
     def test_ventile_hpers_v_modeles(self):
@@ -51,21 +49,25 @@ class test_affect_equipes(unittest.TestCase):
         num_semaine = self.num_semaine
         self.la_conn = ma_connect()
         jkcur = self.la_conn.conn.cursor()
-        queryHpers = "select prevision_pers_h from previsions_par_semaine where annee =  ? and num_semaine = ?"
+        queryHpers = "select prevision_pers_h from previsions_par_semaine where annee =  ? and num_semaine = ? order by prevision_pers_h asc"
         jkcur.execute(queryHpers,(an,num_semaine))
         self.assertNotEqual(jkcur, None)
         self.hpers = jkcur.fetchone()[0]
+        print( "hpers " + str(self.hpers))
         queryModeles = "select *, (nb_quarts * duree_quart * nb_equipes_par_quart * nb_employe_par_equipe) as hp from modele_affectations order by hp asc, nb_quarts asc, nb_equipes_par_quart asc"
         #la requête ordonne en préférant le nb heures , le nb de quarts et le nb equipes minimaux (si h est pareil), dans cet ordre.
         jkcur.execute(queryModeles)
         for row in jkcur.fetchall():
             #print(str(row))
             # 3: nb_quart 4:h par quart 5:nb_equipes 6:emp_par_eq 7: le produit des précédentes
-            #print(str(row[7]))
+            print(str(row[7]))
             if self.hpers > row[7]: #le nb heures le plus rapproché dans le modele
+                print("pass")
                 continue
             else:
+                print("+++++")
                 print(row)
+                print("+++++")
                 break
 
 

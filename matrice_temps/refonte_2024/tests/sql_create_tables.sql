@@ -75,4 +75,5 @@ MariaDB [horaire]> select *, (nb_quarts * duree_quart * nb_equipes_par_quart * n
 |  1 | minimal             | Pas ou peu de travail |         1 |         7.5 |                    1 |                     4 |  30.0 |
 +----+---------------------+-----------------------+-----------+-------------+----------------------+-----------------------+-------+
 
+insert into modele_affectations(nom, description, nb_quarts, duree_quart, nb_equipes_par_quart, nb_employe_par_equipe) values ('semaine + 2eq', 'charge normale', 1, 7.5, 2,3);
 
