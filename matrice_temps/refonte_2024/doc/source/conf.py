@@ -25,7 +25,8 @@ extensions = ['sphinx.ext.autodoc',
 'sphinx.ext.intersphinx',
 'sphinx_design',
 ]
-plantuml = ['java', '-jar', 'C:\\UML_tools\\plantuml.jar']
+#plantuml = ['java', '-jar', 'C:\\UML_tools\\plantuml.jar']
+plantuml = ['java', '-jar', '/usr/share/umltools/plantuml.jar']
 
 todo_include_todos = True
 
