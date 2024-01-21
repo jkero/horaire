@@ -157,7 +157,7 @@ class test_affect_equipes(unittest.TestCase):
         jkcur.execute(queryNoLeads)
         les_emp = list(jkcur.fetchmany(int(nb_leads) * int(nb_emplo_par_eq - 1)))
             #print(row)
-        while les_emp:
+        while les_emp:#cet ordre répartit les forces (niveau et anc entre les equipes)
             for i in dict_equipes:
                 dict_equipes[i].append(list(les_emp.pop()))
 
