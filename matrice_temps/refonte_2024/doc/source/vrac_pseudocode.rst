@@ -77,3 +77,4 @@ MariaDB [horaire]> select * from employe where anciennete > 55 and niveau >= 3; 
 Il pourrait y avoir un test de cohérence pour la table des modeles avec des métadonnées d'entreprise...
 
 .. todo:: Pendant la sélection des leads et des autres employés, constituer un dictionnaire du temps affecté... (à éventuellement comparer avec temps max?). Rappel : c'est un horaore d'une semaine avec reset des affectations pour chaque jour, donc, sauf non-dispo (sinon il y a décalage), les mêmes équipes se retrouvent sur les même quarts pour chaque jour.
+.. todo:: ramener le montant hebdo à journalier. Introduire un facteur de tolérance en comparant prévisions et modele affectation
