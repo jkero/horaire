@@ -64,11 +64,11 @@ class test_affect_equipes(unittest.TestCase):
         jkcur.execute(queryModeles)
         id_mod = 0
         for row in jkcur.fetchall():
-            print(row)
-            h_quot = sem_hpers / row[5]
-            print("la charge hebdo. de %d implique  %d heures par jour (%d) " % (sem_hpers, h_quot, row[5] ))
+            #print(row)
+            h_quot = sem_hpers / row[5]# ça donne les heures quotidiennes et de là on dérive le modèle compatible via affectations eq et q par jour
+            #print("la charge hebdo. de %d implique  %d heures par jour (%d) " % (sem_hpers, h_quot, row[5] ))
             #print(str(row))
-            print(" query modele %d >= hquot %d ?" % (row[6],h_quot))
+            #print(" query modele %d >= hquot %d ?" % (row[6],h_quot))
             if row[6] >= h_quot : #le nb heures le plus rapproché dans le modele
                 query_mod_hres = row[6]
                 id_mod = row[0]
@@ -86,12 +86,23 @@ class test_affect_equipes(unittest.TestCase):
         Avec les param de modele trouvé plut tôt, on a le nb équipes et emp par equipes et nb de quarts.
         Donc, nb_eq * nb_quarts = nb_leads à affecter (liste equipes) (emp_reste = nb_emp_par_eq - 1);
         S'en suit l'affectation des equipes avec les niveaux autres que leads tq emp_reste < query.
+        #soit une charge de 150 heures pour une semaine donnée
+        # prédéfini: 5 jours semaine, même modele chaque jour (répétition equipe sauf non-dispo)
+        #1- répartir cette charge sur une semaine (5 jours)
+        #2- 150/5 = 30 h par jour
+        #3- diviser 30 par h_par_quart (7.5) = 4 personnes
+        #4- trouver le modele qui supporte la charge prévue (total des heures accomplissables en une semaine)
+
         """
         an = self.an
         num_semaine = self.num_semaine
         self.la_conn = ma_connect()
         jkcur = self.la_conn.conn.cursor()
         query_mod_hres = sem_hpers = 0
+        nb_equipes = 0
+        nb_quarts = 0
+        nb_emplo_par_eq = 0
+        dict_equipes = {}
         queryHpers = "select prevision_pers_h from previsions_par_semaine where annee =  ? and num_semaine = ? order by prevision_pers_h asc"
         jkcur.execute(queryHpers,(an,num_semaine))
         sem_hpers = jkcur.fetchone()[0]
@@ -106,20 +117,51 @@ class test_affect_equipes(unittest.TestCase):
                 id_mod = row[0]
                 print("\nTEST 2 ---- modele trouvé ! (%d, id %d) >= que charge travail (%d)" % (
                     query_mod_hres, id_mod, h_quot))
+                # rappel: id, nb_quarts, duree_quart, nb_equipes_par_quart, nb_employe_par_equipe, jours_trav_par_semaine
+                nb_equipes_par_q = row[3]
+                nb_quarts = row[1]
+                nb_emplo_par_eq = row[4]
+                print("----modele : nb_equipes_par_q %d, nb_quarts %d, nb_empl_eq %d " % ( row[3],row[1],row[4]))
+                print(row)
+                print("----modele")
                 break
             else:
                 # print("pass")
                 continue
                 #equipes --leads
         liste_leads = []
-        #soit une charge de 150 heures pour une semaine donnée
-        # prédéfini: 5 jours semaine, même modele chaque jour (répétition equipe sauf non-dispo)
-        #1- répartir cette charge sur une semaine (5 jours)
-        #2- 150/5 = 30 h par jour
-        #3- diviser 30 par h_par_quart (7.5) = 4 personnes
-        #4- trouver le modele (à reviser)
         jkcur = self.la_conn.conn.cursor()
-        queryLeads = "select * from employe where anciennete > 55 and niveau >= 3 order by niveau desc"
+        queryLeads = "select * from employe where anciennete > 55 and niveau >= 3 order by niveau desc, anciennete desc"
+        # combien d'équipes par jour = nb_quarts * nb_eq_par_quart
+        nb_leads = nb_quarts * nb_equipes_par_q
+        print("nb équipes par jour = %d" % (nb_leads))
         jkcur.execute(queryLeads)
+        # jkcur.fetchmany(int(nb_leads))
+
+        for row in jkcur.fetchmany(int(nb_leads)):
+            print(row)
+            list_e = list([row[1],row[2],row[3]])
+            liste_leads.append(list_e)
+            dict_equipes["Team " + row[2]] = list([list_e])
+        print(" le dico ")
+        print(dict_equipes)
+
+        print("\nTEST 3 ---- nb leads = tot eq du modele ? (%d = %d)" % (len(liste_leads), nb_leads))
+        self.assertEqual(len(liste_leads), nb_leads)
+        #creer liste equipes
+
+        liste_emp = []
+        print("liste employes requis = %d" % (int(nb_leads) * int(nb_emplo_par_eq - 1)))
+        # //todo l'algo écarte tous les autres leads des équipes (comme employe ordinaire), ajuster
+        queryNoLeads = "select num_emp, nom, prenom from employe where anciennete <= 55 and niveau <= 2 order by niveau desc, anciennete desc"
+        jkcur.execute(queryNoLeads)
+        les_emp = list(jkcur.fetchmany(int(nb_leads) * int(nb_emplo_par_eq - 1)))
+            #print(row)
+        while les_emp:
+            for i in dict_equipes:
+                dict_equipes[i].append(list(les_emp.pop()))
+
+        print(dict_equipes)
+
 
 
