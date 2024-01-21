@@ -161,7 +161,10 @@ class test_affect_equipes(unittest.TestCase):
             for i in dict_equipes:
                 dict_equipes[i].append(list(les_emp.pop()))
 
-        print(dict_equipes)
+        for k in dict_equipes:
+            print("\n************")
+            for j in dict_equipes[k]:
+                print(str(j))
 
 
 
