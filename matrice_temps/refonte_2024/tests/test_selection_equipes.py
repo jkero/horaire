@@ -166,15 +166,33 @@ class test_affect_equipes(unittest.TestCase):
         liste_non_dispos = jkcur2.fetchall()
         for nondispo in liste_non_dispos:
             la_semaine = MesSemaines().renseigne_jours_semaine()
-            print(la_semaine)
+            print(la_semaine[0][1])
+            print("************** %s" % type(la_semaine[0][1]))
             deb, fin = nondispo[3].split('@')
+            print("******** %s  %s" % (type(deb),type(deb)))
             for sem in la_semaine:# si le debut ou la fin entrent dans l'intervalle ... préciser algo pour heures
                 if datetime.datetime.strptime(deb,'%Y-%m-%d %H:%M') >= datetime.datetime.strptime(sem[1],'%Y-%m-%d %H:%M'):
                     if datetime.datetime.strptime(fin,'%Y-%m-%d %H:%M') > datetime.datetime.strptime(sem[1],'%Y-%m-%d %H:%M') + datetime.timedelta(hours=23.99):
                         print("deb %s fin %s jour d %s jour f %s" % (str(deb), str(fin), str(sem[1]), str(datetime.datetime.strptime(sem[1],'%Y-%m-%d %H:%M') + datetime.timedelta(hours=23.99))) )
 # quelque part ici je dois ajouter la fin de la journée traitée (+ 23h59) OK
 
-# //todo inverser la logique
+# //todo inverser la logique et balayer la liste d'employes en même temps
+        #pour chaq jour sem
+            #copier liste orig empl
+            #pour chq emp dans lis_copi
+                #si emp_id est dans non-dispo
+                    #pour chaque non-dispo de cet emp
+                        #si deb >= jd et fin < jf
+                          #lis_copi.pop(emp)
+                          #break
+                        #sinon continue
+
+            #utiliser list_copi pour aaffecter ce jour
+            # .....
+
+
+        # for sem in la_semaine:
+        #     for nondispo in liste_non_dispos:
 
 
         #2e passe
