@@ -4,6 +4,7 @@ import calendar
 from tests_connection import ma_connect
 import unittest
 import tests_connection
+from util_calcul_dates_semaines import MesSemaines
 
 class test_affect_equipes(unittest.TestCase):
     dummy_dico_staff ={}
@@ -99,7 +100,6 @@ class test_affect_equipes(unittest.TestCase):
         self.la_conn = ma_connect()
         jkcur = self.la_conn.conn.cursor()
         query_mod_hres = sem_hpers = 0
-        nb_equipes = 0
         nb_quarts = 0
         nb_emplo_par_eq = 0
         dict_equipes = {}
@@ -111,9 +111,9 @@ class test_affect_equipes(unittest.TestCase):
         #charge de la semaine / jours travaillés par semaine dans le modele
         id_modele = 0
         for row in jkcur:
-            h_quot = sem_hpers / row[5]
+            h_quot = sem_hpers / row[5]# row[5] = jours travaillés dans la semaine
             if row[6] >= h_quot:  # le nb heures le plus rapproché dans le modele
-                query_mod_hres = row[6]
+                query_mod_hres = row[6]# row[6] = quarts * eq-par-quart * emp-par-eq * temps-hr-par quart
                 id_mod = row[0]
                 print("\nTEST 2 ---- modele trouvé ! (%d, id %d) >= que charge travail (%d)" % (
                     query_mod_hres, id_mod, h_quot))
@@ -136,7 +136,7 @@ class test_affect_equipes(unittest.TestCase):
         nb_leads = nb_quarts * nb_equipes_par_q
         print("nb équipes par jour = %d" % (nb_leads))
         jkcur.execute(queryLeads)
-        # jkcur.fetchmany(int(nb_leads))
+        # jkcur.fetchall(int(nb_leads))
 
         for row in jkcur.fetchmany(int(nb_leads)):
             print(row)
@@ -155,8 +155,31 @@ class test_affect_equipes(unittest.TestCase):
         # //todo l'algo écarte tous les autres leads des équipes (comme employe ordinaire), ajuster
         queryNoLeads = "select num_emp, nom, prenom from employe where anciennete <= 55 and niveau <= 2 order by niveau desc, anciennete desc"
         jkcur.execute(queryNoLeads)
-        les_emp = list(jkcur.fetchmany(int(nb_leads) * int(nb_emplo_par_eq - 1)))
-            #print(row)
+        #premiere passe des no-leads: toute la liste des dispos
+
+        les_emp = list(jkcur.fetchall())
+        # on elimine les-non-dispos tout en renseignant la liste avec le nb (nb_emplo_par_eq - 1) requis
+
+        queryNonDispo = "select num_emp, nom, prenom, creneaux from employe right join non_dispo on employe.id = non_dispo.emp_id order by creneaux"
+        jkcur2 = self.la_conn.conn.cursor()
+        jkcur2.execute(queryNonDispo)
+        liste_non_dispos = jkcur2.fetchall()
+        for nondispo in liste_non_dispos:
+            la_semaine = MesSemaines().renseigne_jours_semaine()
+            print(la_semaine)
+            deb, fin = nondispo[3].split('@')
+            for sem in la_semaine:# si le debut ou la fin entrent dans l'intervalle ... préciser algo pour heures
+                if datetime.datetime.strptime(deb,'%Y-%m-%d %H:%M') >= datetime.datetime.strptime(sem[1],'%Y-%m-%d %H:%M'):
+                    if datetime.datetime.strptime(fin,'%Y-%m-%d %H:%M') > datetime.datetime.strptime(sem[1],'%Y-%m-%d %H:%M') + datetime.timedelta(hours=23.99):
+                        print("deb %s fin %s jour d %s jour f %s" % (str(deb), str(fin), str(sem[1]), str(datetime.datetime.strptime(sem[1],'%Y-%m-%d %H:%M') + datetime.timedelta(hours=23.99))) )
+# quelque part ici je dois ajouter la fin de la journée traitée (+ 23h59) OK
+
+# //todo inverser la logique
+
+
+        #2e passe
+        les_emp = list(jkcur.fetchmany(int(nb_leads) * int(nb_emplo_par_eq - 1)))# ("-1")le lead est un memdre de l'équipe
+        #            #print(row)
         while les_emp:#cet ordre répartit les forces (niveau et anc entre les equipes)
             for i in dict_equipes:
                 dict_equipes[i].append(list(les_emp.pop()))
