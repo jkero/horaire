@@ -41,7 +41,7 @@ class MesSemaines():
         for j in les_jours:
             incr = incr + 1
             les_jours[incr][1] = (self.utilitaire_prem_jour_sem(6) + timedelta(days=incr)).strftime('%Y-%m-%d %H:%M')
-        print("\n" + str(les_jours))
+        #print("\n" + str(les_jours))
         return les_jours
 
 

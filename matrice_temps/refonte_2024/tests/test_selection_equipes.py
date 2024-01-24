@@ -5,6 +5,7 @@ from tests_connection import ma_connect
 import unittest
 import tests_connection
 from util_calcul_dates_semaines import MesSemaines
+from util_calcule_non_dispo import check_non_dispo as ndispo
 
 class test_affect_equipes(unittest.TestCase):
     dummy_dico_staff ={}
@@ -14,7 +15,7 @@ class test_affect_equipes(unittest.TestCase):
     hpers = 0.0
     def test_1etablir_conn(self):
         self.la_conn = ma_connect()
-        print("TEST ---- connection != None")
+        #print("TEST ---- connection != None")
         self.assertNotEqual(self.la_conn.conn,None)
         #self.getLeads()
 
@@ -23,7 +24,7 @@ class test_affect_equipes(unittest.TestCase):
         jkcur = self.la_conn.conn.cursor()
         queryLeads = "select * from employe where anciennete > 55 and niveau >= 3 order by niveau desc"
         jkcur.execute(queryLeads)
-        print("TEST ---- query niveau des employes != None")
+        #print("TEST ---- query niveau des employes != None")
         self.assertNotEqual(jkcur, None)
         # for emp in jkcur:
         #     print(" %s, %s, n = %d" % (emp[2],emp[3],emp[7]))
@@ -35,7 +36,7 @@ class test_affect_equipes(unittest.TestCase):
         jkcur = self.la_conn.conn.cursor()
         queryHpers = "select prevision_pers_h from previsions_par_semaine where annee =  ? and num_semaine = ?"
         jkcur.execute(queryHpers,(an,num_semaine))
-        print("TEST ---- querysemaine != None")
+        #print("TEST ---- querysemaine != None")
         self.assertNotEqual(jkcur, None)
         if jkcur is not None:
             h = jkcur.fetchone()
@@ -56,10 +57,10 @@ class test_affect_equipes(unittest.TestCase):
         query_mod_hres = sem_hpers = 0
         queryHpers = "select prevision_pers_h from previsions_par_semaine where annee =  ? and num_semaine = ? order by prevision_pers_h asc"
         jkcur.execute(queryHpers,(an,num_semaine))
-        print("TEST ---- curseur != None (la charge de la semmaine)")
+        #print("TEST ---- curseur != None (la charge de la semmaine)")
         self.assertNotEqual(jkcur, None)
         sem_hpers = jkcur.fetchone()[0]
-        print( "hpers " + str(sem_hpers))
+        #print( "hpers " + str(sem_hpers))
         queryModeles = "select id, nb_quarts, duree_quart, nb_equipes_par_quart, nb_employe_par_equipe, jours_trav_par_semaine, ((nb_quarts * duree_quart * nb_equipes_par_quart * nb_employe_par_equipe)) as hp from modele_affectations order by hp asc, nb_quarts asc, nb_equipes_par_quart asc"
         #la requête ordonne en préférant le nb heures , le nb de quarts et le nb equipes minimaux (si h est pareil), dans cet ordre.
         jkcur.execute(queryModeles)
@@ -73,8 +74,8 @@ class test_affect_equipes(unittest.TestCase):
             if row[6] >= h_quot : #le nb heures le plus rapproché dans le modele
                 query_mod_hres = row[6]
                 id_mod = row[0]
-                print("\nTEST 1 ---- modele trouvé ! (%d, id %d) >= que charge travail (%d)" % (
-                    query_mod_hres, id_mod, h_quot))
+                #print("\nTEST 1 ---- modele trouvé ! (%d, id %d) >= que charge travail (%d)" % (
+                    #query_mod_hres, id_mod, h_quot))
                 break
             else:
                 # print("pass")
@@ -115,15 +116,15 @@ class test_affect_equipes(unittest.TestCase):
             if row[6] >= h_quot:  # le nb heures le plus rapproché dans le modele
                 query_mod_hres = row[6]# row[6] = quarts * eq-par-quart * emp-par-eq * temps-hr-par quart
                 id_mod = row[0]
-                print("\nTEST 2 ---- modele trouvé ! (%d, id %d) >= que charge travail (%d)" % (
-                    query_mod_hres, id_mod, h_quot))
+         #       print("\nTEST 2 ---- modele trouvé ! (%d, id %d) >= que charge travail (%d)" % (
+                #query_mod_hres, id_mod, h_quot))
                 # rappel: id, nb_quarts, duree_quart, nb_equipes_par_quart, nb_employe_par_equipe, jours_trav_par_semaine
                 nb_equipes_par_q = row[3]
                 nb_quarts = row[1]
                 nb_emplo_par_eq = row[4]
-                print("----modele : nb_equipes_par_q %d, nb_quarts %d, nb_empl_eq %d " % ( row[3],row[1],row[4]))
-                print(row)
-                print("----modele")
+                #print("----modele : nb_equipes_par_q %d, nb_quarts %d, nb_empl_eq %d " % ( row[3],row[1],row[4]))
+                #print(row)
+                #print("----modele")
                 break
             else:
                 # print("pass")
@@ -134,24 +135,24 @@ class test_affect_equipes(unittest.TestCase):
         queryLeads = "select * from employe where anciennete > 55 and niveau >= 3 order by niveau desc, anciennete desc"
         # combien d'équipes par jour = nb_quarts * nb_eq_par_quart
         nb_leads = nb_quarts * nb_equipes_par_q
-        print("nb équipes par jour = %d" % (nb_leads))
+        #print("nb équipes par jour = %d" % (nb_leads))
         jkcur.execute(queryLeads)
         # jkcur.fetchall(int(nb_leads))
 
         for row in jkcur.fetchmany(int(nb_leads)):
-            print(row)
+            #print(row)
             list_e = list([row[1],row[2],row[3]])
             liste_leads.append(list_e)
             dict_equipes["Team " + row[2]] = list([list_e])
-        print(" le dico ")
-        print(dict_equipes)
+        #print(" le dico ")
+        #print(dict_equipes)
 
-        print("\nTEST 3 ---- nb leads = tot eq du modele ? (%d = %d)" % (len(liste_leads), nb_leads))
+        #print("\nTEST 3 ---- nb leads = tot eq du modele ? (%d = %d)" % (len(liste_leads), nb_leads))
         self.assertEqual(len(liste_leads), nb_leads)
         #creer liste equipes
 
         liste_emp = []
-        print("liste employes requis = %d" % (int(nb_leads) * int(nb_emplo_par_eq - 1)))
+        #print("liste employes requis = %d" % (int(nb_leads) * int(nb_emplo_par_eq - 1)))
         # //todo l'algo écarte tous les autres leads des équipes (comme employe ordinaire), ajuster
         queryNoLeads = "select num_emp, nom, prenom from employe where anciennete <= 55 and niveau <= 2 order by niveau desc, anciennete desc"
         jkcur.execute(queryNoLeads)
@@ -166,14 +167,18 @@ class test_affect_equipes(unittest.TestCase):
         liste_non_dispos = jkcur2.fetchall()
         for nondispo in liste_non_dispos:
             la_semaine = MesSemaines().renseigne_jours_semaine()
-            print(la_semaine[0][1])
-            print("************** %s" % type(la_semaine[0][1]))
+            #print(la_semaine[0][1])
+            #print("************** %s" % type(la_semaine[0][1]))
             deb, fin = nondispo[3].split('@')
-            print("******** %s  %s" % (type(deb),type(deb)))
+            #print("******** %s  %s" % (type(deb),type(deb)))
+
             for sem in la_semaine:# si le debut ou la fin entrent dans l'intervalle ... préciser algo pour heures
-                if datetime.datetime.strptime(deb,'%Y-%m-%d %H:%M') >= datetime.datetime.strptime(sem[1],'%Y-%m-%d %H:%M'):
-                    if datetime.datetime.strptime(fin,'%Y-%m-%d %H:%M') > datetime.datetime.strptime(sem[1],'%Y-%m-%d %H:%M') + datetime.timedelta(hours=23.99):
-                        print("deb %s fin %s jour d %s jour f %s" % (str(deb), str(fin), str(sem[1]), str(datetime.datetime.strptime(sem[1],'%Y-%m-%d %H:%M') + datetime.timedelta(hours=23.99))) )
+                #print(sem[1])
+                if not ndispo.is_not_dispo(deb, fin,sem[1]):
+                    print("\n ******************************************")
+                    print(str(liste_non_dispos[1]) + " %s " % str(sem[1]) )
+                    print("\n ******************************************")
+
 # quelque part ici je dois ajouter la fin de la journée traitée (+ 23h59) OK
 
 # //todo inverser la logique et balayer la liste d'employes en même temps
