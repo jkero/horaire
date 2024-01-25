@@ -58,15 +58,37 @@ class CompositionEquipes:
         # +----------+--------------------
         # | id_dispo | creneaux | emp_id |
         # +----------+--------------------
-        liste_all_lead_pop = liste_all_leads
+        liste_all_lead_pop = liste_all_leads.copy()
+        liste_all_under_leads_pop = liste_all_under_leads.copy()
         # +----+---------+-----------+--------+------------+---------------------+---------------------+
         # | id | num_emp | nom | prenom | anciennete | pref_creneau_deb | pref_creneau_fin | niveau |
         # +----+---------+-----------+--------+------------+---------------------+---------------------+
         liste_jours_semaine = LaSemaine.renseigne_jours_semaine(premier_jour_sem,an,semaine)# \\todo hard code here for tests ;1st day must be 0 (Monday) to 6 (Sunday)
         print (liste_jours_semaine)
-        # for pot_lead in liste_all_lead_pop:
-        #     for non_dispo in list_all_non_dispos:
-        #         if()
+
+        for jour in liste_jours_semaine:
+            liste_all_lead_pop = liste_all_leads.copy()
+            liste_all_under_leads_pop = liste_all_under_leads.copy()
+            for pot_lead in liste_all_lead_pop:
+                #print(pot_lead[0])
+                for non_dispo in liste_all_non_dispos:
+#                    print(non_dispo[0])
+                    if Check_non_dispo.is_not_dispo(non_dispo[3],jour[1]):
+                        if(pot_lead[0] == non_dispo[0]):
+                            print (" %s  %s" % (str(jour[1]),str(pot_lead[2])))
+                            liste_all_lead_pop.pop(liste_all_lead_pop.index(pot_lead))
+
+            for pot_under_lead in liste_all_under_leads_pop:
+                # print(pot_lead[0])
+                for non_dispo in liste_all_non_dispos:
+                    #                    print(non_dispo[0])
+                    if Check_non_dispo.is_not_dispo(non_dispo[3], jour[1]):
+                        if (pot_under_lead[0] == non_dispo[0]):
+                            print(" %s  %s" % (str(jour[1]), str(pot_under_lead[2])))
+                            liste_all_under_leads_pop.pop(liste_all_under_leads_pop.index(pot_under_lead))
+
+
+        #ltot = liste_all_lead_pop
 
 
         jkcur = CompositionEquipes.connection.conn.cursor()

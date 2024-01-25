@@ -20,8 +20,9 @@ class Check_non_dispo:
     #     print("classe instanciée")
 
     @staticmethod
-    def is_not_dispo(d, f, j):
+    def is_not_dispo(deb_fin, j):
         resultat = False
+        d,f = deb_fin.split('@')
         xd = datetime.strptime(d, '%Y-%m-%d %H:%M')
         xf = datetime.strptime(f, '%Y-%m-%d %H:%M')
         xjd = datetime.strptime(j, '%Y-%m-%d %H:%M')
