@@ -12,7 +12,7 @@ en sortie: True ou False
 import locale
 import calendar
 from datetime import timedelta,datetime
-class check_non_dispo:
+class Check_non_dispo:
     deb = None
     fin = None
     le_jour = None

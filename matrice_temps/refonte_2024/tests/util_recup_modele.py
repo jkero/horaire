@@ -1,4 +1,5 @@
 from tests_connection import ma_connect
+from util_calcul_dates_semaines import LaSemaine
 class Modele:
     connection = ma_connect()
     prev_an = 0
@@ -44,7 +45,8 @@ class Modele:
             #     # equipes --leads
 
 if __name__ == '__main__':
-    Modele.db_recup_modele(2024, 6)
-    print(Modele.prev_an)
-    print(Modele.prev_num_sem)
-    print(Modele.prev_heures_sem)
+    print("a static method")
+    # Modele.db_recup_modele(2024, 6)
+    # print(Modele.prev_an)
+    # print(Modele.prev_num_sem)
+    # print(Modele.prev_heures_sem)

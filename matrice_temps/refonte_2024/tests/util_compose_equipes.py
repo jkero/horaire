@@ -1,5 +1,7 @@
 from tests_connection import ma_connect
 from util_recup_modele import Modele
+from util_calcule_non_dispo import Check_non_dispo
+from util_calcul_dates_semaines import LaSemaine
 class CompositionEquipes:
     connection = ma_connect()
     modele = Modele
@@ -11,23 +13,63 @@ class CompositionEquipes:
         m = CompositionEquipes.modele
         jkcur = CompositionEquipes.connection.conn.cursor()
         nb_equipes_par_q = m.nb_equipes_par_q
-        nb_quarts = m.nb_q
+        nb_quarts = m.nb_quarts
         nb_leads = nb_quarts * nb_equipes_par_q
         queryLeads = "select * from employe where anciennete > 55 and niveau >= 3 order by niveau desc, anciennete desc"
         # # combien d'équipes par jour = nb_quarts * nb_eq_par_quart
         jkcur.execute(queryLeads)
-        l_all_leads = jkcur.fetchall(int(nb_leads))
+        l_all_leads = jkcur.fetchall()
         #
-        # for row in jkcur.fetchmany(int(nb_leads)):
-        # # print(row)
+        return list(l_all_leads)
     @staticmethod
-    def getModele(an, num):
-        CompositionEquipes.modele.db_recup_modele(an,num)
+    def getUnderLeads():
+        m = CompositionEquipes.modele
+        jkcur = CompositionEquipes.connection.conn.cursor()
+        nb_equipes_par_q = m.nb_equipes_par_q
+        nb_quarts = m.nb_quarts
+        nb_under_leads = (nb_quarts * nb_equipes_par_q) - 1
+        queryUnderLeads = "select * from employe where anciennete <= 55 and niveau < 3 order by niveau desc, anciennete desc"
+        # # combien d'équipes par jour = nb_quarts * nb_eq_par_quart
+        jkcur.execute(queryUnderLeads)
+        l_all_under_leads = jkcur.fetchall()
+        #
+        return list(l_all_under_leads)
 
-        liste_leads = CompositionEquipes.getLeads()
+    @staticmethod
 
 
-        jkcur = la_conn.conn.cursor()
+
+    def get_all_non_dispos():
+        jkcur = CompositionEquipes.connection.conn.cursor()
+        queryNonDispo = "select emp_id, nom, prenom, creneaux from employe right join non_dispo on employe.id = non_dispo.emp_id order by creneaux"
+        jkcur.execute(queryNonDispo)
+        liste_non_dispos = list(jkcur.fetchall())
+
+        return liste_non_dispos
+
+    @staticmethod
+    def get_emp_dispo(premier_jour_sem, an, semaine):
+        liste_all_leads = CompositionEquipes.getLeads()
+        liste_all_under_leads = CompositionEquipes.getUnderLeads()
+        liste_all_non_dispos = CompositionEquipes.get_all_non_dispos()
+        modele_previsions = CompositionEquipes.modele
+        modele_previsions.db_recup_modele(an, semaine)
+        #print(modele_previsions.prev_an)
+        # +----------+--------------------
+        # | id_dispo | creneaux | emp_id |
+        # +----------+--------------------
+        liste_all_lead_pop = liste_all_leads
+        # +----+---------+-----------+--------+------------+---------------------+---------------------+
+        # | id | num_emp | nom | prenom | anciennete | pref_creneau_deb | pref_creneau_fin | niveau |
+        # +----+---------+-----------+--------+------------+---------------------+---------------------+
+        liste_jours_semaine = LaSemaine.renseigne_jours_semaine(premier_jour_sem,an,semaine)# \\todo hard code here for tests ;1st day must be 0 (Monday) to 6 (Sunday)
+        print (liste_jours_semaine)
+        # for pot_lead in liste_all_lead_pop:
+        #     for non_dispo in list_all_non_dispos:
+        #         if()
+
+
+        jkcur = CompositionEquipes.connection.conn.cursor()
         # queryLeads = "select * from employe where anciennete > 55 and niveau >= 3 order by niveau desc, anciennete desc"
         # # combien d'équipes par jour = nb_quarts * nb_eq_par_quart
         # nb_leads = nb_quarts * nb_equipes_par_q
@@ -63,7 +105,4 @@ class CompositionEquipes:
 
 
 if __name__ == '__main__':
-    CompositionEquipes.getModele(2024,6)
-    #print(CompositionEquipes.modele.prev_an)
-    print(CompositionEquipes.modele.prev_heures_sem)
-    # print(CompositionEquipes.modele.nb_equipes_par_q)
+    CompositionEquipes.get_emp_dispo(0,2024,6)
