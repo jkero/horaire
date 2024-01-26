@@ -1,7 +1,7 @@
 import locale
 import calendar
 from datetime import timedelta, datetime
-from tests_connection import ma_connect
+from util_connection import ma_connect
 
 class LaSemaine:
     annee = 0
@@ -28,10 +28,8 @@ class LaSemaine:
         if LaSemaine.premier_jour_semaine == 0:
             les_jours = [['Lundi', ''], ['Mardi', ''], ['Mercredi', ''], ['Jeudi', ''], ['Vendredi', ''], ['Samedi', ''], ['dimanche', '']]
         elif LaSemaine.premier_jour_semaine == 6:
-            les_jours = [['dimanche', '']['Lundi', ''], ['Mardi', ''], ['Mercredi', ''], ['Jeudi', ''], ['Vendredi', ''], ['Samedi', '']]
+            les_jours = [['dimanche', ''],['Lundi', ''], ['Mardi', ''], ['Mercredi', ''], ['Jeudi', ''], ['Vendredi', ''], ['Samedi', '']]
 
-        #lundi = datetime.strptime(self.utilitaire_lundi() , '%Y-%m-%d')
-        #print("lundi type %s" % type(self.utilitaire_prem_jour_sem(6)))
         incr = -1
         for j in les_jours:
             incr = incr + 1
@@ -40,11 +38,11 @@ class LaSemaine:
         return les_jours
 
 
-# if __name__ == '__main__':
-#    list_jours = LaSemaine.renseigne_jours_semaine(6,2024,6)
+if __name__ == '__main__':
+    list_jours = LaSemaine.renseigne_jours_semaine(6,2024,6)
 #     LaSemaine.annee =2024
 #     LaSemaine.la_num_semaine = 6
 #     j = LaSemaine.utilitaire_prem_jour_sem(0)
 #     print(j)
-#    print(list_jours)
+    print(list_jours)
 

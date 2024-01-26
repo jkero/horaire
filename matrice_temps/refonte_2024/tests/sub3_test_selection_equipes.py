@@ -1,12 +1,8 @@
 import datetime
 from datetime import datetime
-import locale
-import calendar
 from tests_connection import ma_connect
-import unittest
-import tests_connection
-from util_calcul_dates_semaines import MesSemaines
-from util_calcule_non_dispo import Check_non_dispo as ndispo
+from matrice_temps.refonte_2024.dev.util_calcul_dates_semaines import MesSemaines
+from matrice_temps.refonte_2024.dev.util_calcule_non_dispo import Check_non_dispo as ndispo
 
 class sub_test_equipes:
     @staticmethod

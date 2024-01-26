@@ -16,9 +16,6 @@ class Check_non_dispo:
     deb = None
     fin = None
     le_jour = None
-    # def __init__(self):
-    #     print("classe instanciée")
-
     @staticmethod
     def is_not_dispo(deb_fin, j):
         resultat = False
@@ -37,24 +34,3 @@ class Check_non_dispo:
             resultat = True
 
         return resultat
-
-#pour les tests
-# rawd = '2024-03-23  08:00'
-# rawf = '2024-03-23  17:00'
-# rawj ='2024-03-23  00:00'
-#
-# list_jeu_de_tests = [['non_dispo n\'intercepte pas la journée','2024-03-23 08:00','2024-03-23 17:00','2024-03-24 00:00'],
-#           ['non_dispo intercepte la journée','2024-03-23 08:00','2024-03-23 17:00','2024-03-23 07:00'],
-#            ['non_dispo n\'intercepte pas la journée','2024-03-23 08:00', '2024-03-23 17:00', '2024-03-23 18:00'],
-#            ['non_dispo n\'intercepte pas la journée', '2024-03-23 08:00', '2024-03-23 17:00', '2024-03-22 05:00'],
-#            ['dispo intercepte la journée', '2024-03-23 08:00', '2024-03-23 17:00', '2024-03-22 12:00'],
-#            ['dispo intercepte la journée', '2024-03-23 08:00', '2024-03-23 17:00', '2024-03-23 12:00']
-#            ]
-#
-# if __name__ == '__main__':
-#     #app = check_non_dispo()
-#     for jeu in list_jeu_de_tests:
-#         print(jeu[0])
-#         print(check_non_dispo.is_not_dispo(jeu[1],jeu[2],jeu[3]))
-
-

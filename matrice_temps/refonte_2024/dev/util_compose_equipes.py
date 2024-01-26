@@ -1,4 +1,4 @@
-from tests_connection import ma_connect
+from util_connection import ma_connect
 from util_recup_modele import Modele
 from util_calcule_non_dispo import Check_non_dispo
 from util_calcul_dates_semaines import LaSemaine

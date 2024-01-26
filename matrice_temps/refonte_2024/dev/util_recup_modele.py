@@ -1,4 +1,4 @@
-from tests_connection import ma_connect
+from util_connection import ma_connect
 from util_calcul_dates_semaines import LaSemaine
 class Modele:
     connection = ma_connect()
