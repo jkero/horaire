@@ -8,6 +8,7 @@ from util_compose_equipes import CompositionEquipes
 import xlsxwriter as xl
 from xlsxwriter import format
 class prod_chiffrier:
+    semaine = 6
     @staticmethod
     def print_dict(le_dict):
         for j in le_dict:
@@ -16,7 +17,7 @@ class prod_chiffrier:
                 print(v)
     @staticmethod
     def ecriture_excel2():
-        dict_semaine =  CompositionEquipes.get_emp_dispo(0,2024,6)
+        dict_semaine =  CompositionEquipes.get_emp_dispo(0,2024,prod_chiffrier.semaine)
         prod_chiffrier.print_dict(dict_semaine)
         date_prod = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
         e = datetime
@@ -25,25 +26,32 @@ class prod_chiffrier:
         ws = wb.add_worksheet('Équipes')
 
         bold = wb.add_format({'bold': True})
-        cell_format_red = wb.add_format({'bold': True, 'font_color': 'red', 'font_size': '20'})
-        cell_format_noir = wb.add_format({'bold': True, 'font_color': 'black','text_wrap':'true','align':'center','valign':'top'})
+        cell_format_red = wb.add_format({'bold': True, 'font_color': 'red', 'font_size': '20','align': 'center','valign':'vcenter' })
+        cell_format_noir = wb.add_format({'bold': True, 'font_color': 'black','text_wrap':'true','align':'center','valign':'vcenter'})
         ws.set_column('A:A', 20)
-        ws.write(1,0, "Émis le " + date_prod)
+        ws.write(1,0, "Émis le :")
+        ws.set_row(2, 20)
+        ws.write(2, 0,date_prod, cell_format_noir)
+        ws.set_row(0, 44)
         ws.write('A1', 'Equipes', cell_format_red)
         col = 2
         row = 3
-        for keys in dict_semaine:  # dates
-            print(keys)
-            row = row + 1
-            ws.set_column(col,col,25)
-            ws.write_string(row, col, keys, cell_format_noir)
-        #     for indx in range(0, len(self.calendrier_equipes[keys])):  # nb eq
+        s_jour_date = CompositionEquipes.semaine
+        #print(s_jour_date)
+        for jour in s_jour_date:  # dates
+            ws.set_column(col, col, 18)
+            ws.write_string(row, col, jour[0], cell_format_noir)
+            col = col + 1
+            ws.set_column(col,col, 18)
+            ws.write_string(row, col, jour[1][:10], cell_format_noir)
+            col = col -1
             row = row + 1
         ###############
         ws = wb.add_worksheet('Modèle')
         le_modele = CompositionEquipes.modele
         une_string = "Semaine # " + str(le_modele.prev_num_sem) + ", Nb quarts: " + str(le_modele.nb_quarts) + ", Nb équipes par quart: " + str(le_modele.nb_equipes_par_q) +", Nb employés par équipes: " + str(le_modele.nb_emplo_par_eq)
         #cell_format = wb.add_format({'bold': True, 'font_color': 'red'})
+
         ws.merge_range(1,1,3,15, '')
         ws.write_string(1,1, str(une_string),cell_format_red)
         #################

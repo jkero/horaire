@@ -5,6 +5,7 @@ from util_calcul_dates_semaines import LaSemaine
 class CompositionEquipes:
     connection = ma_connect()
     modele = Modele
+    semaine = None
     # def __init__(self, an, num):
     #     self.prev_annee = an
     #     self.prev_num_semaine = num
@@ -64,7 +65,8 @@ class CompositionEquipes:
         # | id | num_emp | nom | prenom | anciennete | pref_creneau_deb | pref_creneau_fin | niveau |
         # +----+---------+-----------+--------+------------+---------------------+---------------------+
         liste_jours_semaine = LaSemaine.renseigne_jours_semaine(premier_jour_sem,an,semaine)# \\todo hard code here for tests ;1st day must be 0 (Monday) to 6 (Sunday)
-        print (liste_jours_semaine)
+        CompositionEquipes.semaine = liste_jours_semaine
+        #print (liste_jours_semaine)
 
         dict_equipes_semaine = {}
 
