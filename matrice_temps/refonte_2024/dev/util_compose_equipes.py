@@ -105,14 +105,15 @@ class CompositionEquipes:
             # // finalement la semaine est structurée dans un dictionnaire de jours et d'équipes
             dict_equipes_semaine[jour[1][:10]] = dict_equipe
 
+        return dict_equipes_semaine
         #vérif la semaine
-        for j in dict_equipes_semaine:
-            print(j)
-            for v in dict_equipes_semaine[j].values():
-                print(v)
+        # for j in dict_equipes_semaine:
+        #     print(j)
+        #     for v in dict_equipes_semaine[j].values():
+        #         print(v)
             # for e in j:
             #     print("\n\t %s" % str(e))
-        #ltot = liste_all_lead_pop
+
 
 if __name__ == '__main__':
     CompositionEquipes.get_emp_dispo(0,2024,6)
