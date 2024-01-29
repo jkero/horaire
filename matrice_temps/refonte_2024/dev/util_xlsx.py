@@ -7,8 +7,30 @@ from datetime import datetime, date, timedelta
 from util_compose_equipes import CompositionEquipes
 import xlsxwriter as xl
 from xlsxwriter import format
-class prod_chiffrier:
+class Prod_chiffrier:
+    prem_jour_sem = 0 # 0=lundi 6=dimanche
     semaine = 6
+    annee = 2024
+    dict_semaine = None
+    date_sem_ref = None
+    aujourd = None
+
+    @staticmethod
+    def initialise():
+        Prod_chiffrier.dict_semaine =  CompositionEquipes.get_emp_dispo(Prod_chiffrier.prem_jour_sem,Prod_chiffrier.annee,Prod_chiffrier.semaine)
+        #Prod_chiffrier.print_dict(Prod_chiffrier.dict_semaine)
+        Prod_chiffrier.date_sem_ref = CompositionEquipes.semaine
+        e = datetime
+        Prod_chiffrier.aujourd = e.today()
+        nomfich = Prod_chiffrier.aujourd.strftime('%y_%m_%d_%H%M')
+        wb = xl.Workbook('builds_xlsx/rev3_' + nomfich + '.xlsx')
+
+
+        Prod_chiffrier.onglet_equipes(wb)
+        Prod_chiffrier.onglet_modele(wb)
+
+
+
     @staticmethod
     def print_dict(le_dict):
         for j in le_dict:
@@ -16,44 +38,53 @@ class prod_chiffrier:
             for v in le_dict.values():
                 print(v)
     @staticmethod
-    def ecriture_excel2():
-        dict_semaine =  CompositionEquipes.get_emp_dispo(0,2024,prod_chiffrier.semaine)
-        prod_chiffrier.print_dict(dict_semaine)
-        date_prod = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
-        e = datetime
-        nomfich = e.today().strftime('%y_%m_%d_%H%M')
-        wb = xl.Workbook('builds_xlsx/rev3_' + nomfich + '.xlsx')
+    def onglet_equipes(wb):
         ws = wb.add_worksheet('Équipes')
-
         bold = wb.add_format({'bold': True})
-        cell_format_red = wb.add_format({'bold': True, 'font_color': 'red', 'font_size': '20','align': 'center','valign':'vcenter' })
-        cell_format_noir = wb.add_format({'bold': True, 'font_color': 'black','text_wrap':'true','align':'center','valign':'vcenter'})
+        cell_format_red_small = wb.add_format({'bold': False, 'font_color': 'red', 'font_size': '13','align': 'right','valign':'vcenter' })
+        cell_format_noir = wb.add_format({'bold': True, 'font_color': 'black','text_wrap':'true','align':'right','valign':'vcenter'})
+        cell_format_bleu = wb.add_format({'bold': False, 'font_color': 'blue', 'font_size': '15','text_wrap': 'true', 'align': 'center', 'valign': 'vcenter'})
+        cell_format_vert = wb.add_format({'italic': True, 'bold': False, 'font_color': '#337722', 'font_size': '13','text_wrap': 'true', 'align': 'center', 'valign': 'vcenter'})
+
         ws.set_column('A:A', 20)
         ws.write(1,0, "Émis le :")
         ws.set_row(2, 20)
-        ws.write(2, 0,date_prod, cell_format_noir)
+        ws.write(2, 0, Prod_chiffrier.aujourd.strftime('%y-%m-%d %H:%M'), cell_format_bleu)
         ws.set_row(0, 44)
-        ws.write('A1', 'Equipes', cell_format_red)
+        ws.write('A1', 'Equipes', cell_format_red_small)
         col = 2
         row = 3
         s_jour_date = CompositionEquipes.semaine
-        #print(s_jour_date)
-        for jour in s_jour_date:  # dates
-            ws.set_column(col, col, 18)
-            ws.write_string(row, col, jour[0], cell_format_noir)
-            col = col + 1
-            ws.set_column(col,col, 18)
-            ws.write_string(row, col, jour[1][:10], cell_format_noir)
-            col = col -1
+        s_equipe_jour = Prod_chiffrier.dict_semaine
+        #print(str(str(s_equipe_jour)))
+        for date_jour in s_equipe_jour.keys():
+            col = 1 # dates
+            ws.set_column(1, 1, 22)
+            ws.write_string(row, col, str(date_jour), cell_format_red_small)
             row = row + 1
-        ###############
+            for team in s_equipe_jour[date_jour]: #nom_eq (chef)
+                col = 1
+                ws.write_string(row, col, str(team), cell_format_vert)
+                col = 2
+                for equipiers in s_equipe_jour[date_jour][team]:
+                    ws.set_column(col, col, 29)
+                    a = str( " %s, %s (%s)" % (equipiers[2],equipiers[3],equipiers[1]))
+                    ws.write_string(row, col, a, cell_format_noir)
+                    col = col + 1
+                #
+                col = 2
+                row = row + 1
+
+    @staticmethod
+    def onglet_modele(wb):
         ws = wb.add_worksheet('Modèle')
         le_modele = CompositionEquipes.modele
+        cell_format_red = wb.add_format({'bold': True, 'font_color': 'red', 'font_size': '20', 'align': 'center', 'valign': 'vcenter'})
         une_string = "Semaine # " + str(le_modele.prev_num_sem) + ", Nb quarts: " + str(le_modele.nb_quarts) + ", Nb équipes par quart: " + str(le_modele.nb_equipes_par_q) +", Nb employés par équipes: " + str(le_modele.nb_emplo_par_eq)
         #cell_format = wb.add_format({'bold': True, 'font_color': 'red'})
-
         ws.merge_range(1,1,3,15, '')
         ws.write_string(1,1, str(une_string),cell_format_red)
+
         #################
         #         for j in range(0, len(self.calendrier_equipes[keys][indx])):
         #             ws.write(row,col,str(self.calendrier_equipes[keys][indx][0][0]),cell_format_noir) #nom eq
@@ -157,4 +188,4 @@ class prod_chiffrier:
         # ws2.write_string(row, colo+1, "Émis le " + date_prod, cell_format_red)
         wb.close()
 
-prod_chiffrier.ecriture_excel2() #juste pourverifier quelques lignes sinon ça plante pour le moment
+Prod_chiffrier.initialise() #juste pourverifier quelques lignes sinon ça plante pour le moment
