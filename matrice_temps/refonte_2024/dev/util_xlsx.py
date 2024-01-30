@@ -9,7 +9,7 @@ import xlsxwriter as xl
 from xlsxwriter import format
 class Prod_chiffrier:
     prem_jour_sem = 0 # 0=lundi 6=dimanche
-    semaine = 6
+    semaine = 42
     annee = 2024
     dict_semaine = None
     date_sem_ref = None
@@ -50,8 +50,8 @@ class Prod_chiffrier:
             + ", Nb quarts: " + str(CompositionEquipes.modele.nb_quarts) \
             + ", Nb équipes par quart: " + str(CompositionEquipes.modele.nb_equipes_par_q)  \
             + ", Nb employés par équipes: " \
-            + str(CompositionEquipes.modele.nb_emplo_par_eq) + " ,Heures totales: " \
-            + str(CompositionEquipes.modele.prev_heures_sem) + ", Modele : " + str(CompositionEquipes.modele.id_mod)
+            + str(CompositionEquipes.modele.nb_emplo_par_eq) + " , Heures prévues: " \
+            + str(CompositionEquipes.modele.prev_heures_sem) + " Excédent " + str(CompositionEquipes.modele.excedent)  +" h , Modele : " + str(CompositionEquipes.modele.id_mod)
         ws.merge_range(0, 2, 0, 5, '')
         print(une_string)
         ws.write(0,2, str(une_string), cell_format_ardoise)
@@ -82,6 +82,7 @@ class Prod_chiffrier:
                 for eq_p_q in range(CompositionEquipes.modele.nb_equipes_par_q):
                     chef = les_chefs.pop(0)
                     col = col_chef_equipe
+                    ws.set_column(col, col, 19)
                     ws.write_string(row, col, str(chef), cell_format_vert)
                     col = col_nom_equipiers
                     for equipiers in s_equipe_jour[date_jour][chef]:
