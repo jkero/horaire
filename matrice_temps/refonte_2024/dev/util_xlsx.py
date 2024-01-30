@@ -9,7 +9,7 @@ import xlsxwriter as xl
 from xlsxwriter import format
 class Prod_chiffrier:
     prem_jour_sem = 0 # 0=lundi 6=dimanche
-    semaine = 42
+    semaine = 44
     annee = 2024
     dict_semaine = None
     date_sem_ref = None
@@ -66,32 +66,34 @@ class Prod_chiffrier:
         ws.write('A1', 'Equipes', cell_format_red_small)
         debut_donnees = row = 3
         s_equipe_jour = Prod_chiffrier.dict_semaine
-
+        compte_jours = 0
         for date_jour in s_equipe_jour.keys():
-            eq_pop = s_equipe_jour[date_jour]
-            col = col_date # dates
-            ws.set_column(1, 1, 22)
-            ws.write_string(row, col, str(date_jour), cell_format_red_small)
-            row = row + 1
-            les_chefs = list(eq_pop) # pas plus bas : doit être poppé
-            for q in range(CompositionEquipes.modele.nb_quarts):
-                row = row +1
-                #print("quart %s" % str(q+1))
-                col = col_quart
-                ws.write_string(row, col, "quart " + str(q + 1), cell_format_ardoise)
-                for eq_p_q in range(CompositionEquipes.modele.nb_equipes_par_q):
-                    chef = les_chefs.pop(0)
-                    col = col_chef_equipe
-                    ws.set_column(col, col, 19)
-                    ws.write_string(row, col, str(chef), cell_format_vert)
-                    col = col_nom_equipiers
-                    for equipiers in s_equipe_jour[date_jour][chef]:
-                        ws.set_column(col, col, 29)
-                        a = str(" %s, %s (%s)" % (equipiers[2], equipiers[3], equipiers[1]))
-                        ws.write_string(row, col, a, cell_format_noir)
-                        col = col + 1
-                    row = row + 1
-            row = row + 1    #print(eq_p_q)
+            if compte_jours < CompositionEquipes.modele.nb_jours_sem:
+                eq_pop = s_equipe_jour[date_jour]
+                col = col_date # dates
+                ws.set_column(1, 1, 22)
+                ws.write_string(row, col, str(date_jour), cell_format_red_small)
+                row = row + 1
+                les_chefs = list(eq_pop) # pas plus bas : doit être poppé
+                for q in range(CompositionEquipes.modele.nb_quarts):
+                    row = row +1
+                    #print("quart %s" % str(q+1))
+                    col = col_quart
+                    ws.write_string(row, col, "quart " + str(q + 1), cell_format_ardoise)
+                    for eq_p_q in range(CompositionEquipes.modele.nb_equipes_par_q):
+                        chef = les_chefs.pop(0)
+                        col = col_chef_equipe
+                        ws.set_column(col, col, 19)
+                        ws.write_string(row, col, str(chef), cell_format_vert)
+                        col = col_nom_equipiers
+                        for equipiers in s_equipe_jour[date_jour][chef]:
+                            ws.set_column(col, col, 29)
+                            a = str(" %s, %s (%s)" % (equipiers[2], equipiers[3], equipiers[1]))
+                            ws.write_string(row, col, a, cell_format_noir)
+                            col = col + 1
+                        row = row + 1
+                row = row + 1    #print(eq_p_q)
+            compte_jours = compte_jours + 1
 
 
     @staticmethod
