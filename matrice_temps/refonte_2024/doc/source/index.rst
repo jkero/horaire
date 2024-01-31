@@ -14,6 +14,7 @@ La documentation et notes de Horaire_refonte_2024
    cas_utilisation
    vrac_pseudocode
    classes
+   modules
 
 À propos de cette mise à jour:
 ++++++++++++++++++++++++++++++

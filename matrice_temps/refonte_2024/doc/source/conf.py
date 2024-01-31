@@ -10,6 +10,8 @@ release = '0.1'
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
+autodoc_mock_imports = ["xlsxwriter"]
+
 extensions = ['sphinx.ext.autodoc',
 'sphinx.ext.autosummary',
 'sphinx.ext.napoleon',

@@ -1,25 +1,29 @@
+"""
+Cette  classe contient les appels à tous les autres utilitaires pour finalement générer un chiffrier.
+Ici, les valeurs de lancement sont codées en dur.
+
+Attributes:
+     semaine  int -- codé en dur  : La semaine de l'horaire à produire
+     annee  int-- codé en dur  : année
+     dict_semaine -- appelé dans utilitaire : La grosse structure : dict de liste de dictionnaires de listes.  n jours -> n equipes -> membres
+     date_sem_ref -- appelé dans utilitaire : Liste des jours-dates correspondant à la semaine
+     aujourd -- appelé dans utilitaire : pour nom de fichier et signer l'horaire
+
+"""
 import calendar
 import locale
 import sys
 import traceback
 
-"""
-Cette  classe contient les appels à tous les autres utilitaires pour finalement générer un chiffrier.
-Ici, les valeurs de lancement sont codées en dur.
-
-:param semaine  -- codé en dur
-:param annee = -- codé en dur
-:param  dict_semaine -- appelé dans utilitaire
-:param date_sem_ref-- appelé dans utilitaire
-:param aujourd -- appelé dans utilitaire
-
-"""
-
 from datetime import datetime, date, timedelta
 from util_compose_equipes import CompositionEquipes
 import xlsxwriter as xl
 from xlsxwriter import format
+
 class Prod_chiffrier:
+    """
+
+    """
     prem_jour_sem = 0 # 0=lundi 6=dimanche
     semaine = 44
     annee = 2024
@@ -29,6 +33,9 @@ class Prod_chiffrier:
 
     @staticmethod
     def initialise():
+        """
+        Cette méthde statique est appelée pour générer l'horaire
+        """
         Prod_chiffrier.dict_semaine =  CompositionEquipes.get_emp_dispo(Prod_chiffrier.prem_jour_sem,Prod_chiffrier.annee,Prod_chiffrier.semaine)
         #Prod_chiffrier.print_dict(Prod_chiffrier.dict_semaine)
         Prod_chiffrier.date_sem_ref = CompositionEquipes.semaine
@@ -51,6 +58,9 @@ class Prod_chiffrier:
                 print(v)
     @staticmethod
     def onglet_equipes(wb):
+        """
+        La répartition à travers le ou les quarts est déterminée selon le niveau et l'ancienneté
+        """
         ws = wb.add_worksheet('Équipes')
         bold = wb.add_format({'bold': True})
         cell_format_red_small = wb.add_format({'bold': False, 'font_color': 'red', 'font_size': '13','align': 'right','valign':'vcenter' })
