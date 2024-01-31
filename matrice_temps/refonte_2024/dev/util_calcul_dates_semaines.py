@@ -24,6 +24,11 @@ class LaSemaine:
 
     @staticmethod
     def renseigne_jours_semaine(premier_jour_semaine, an, num_semaine):
+        """
+        La liste de jours produite est toujours pour toute la semaine.
+        L'horaire produit s'arrête au nombre de jours fourni par le modèle
+
+        """
         LaSemaine.annee = an
         LaSemaine.la_num_semaine = num_semaine
         LaSemaine.premier_jour_semaine = premier_jour_semaine
