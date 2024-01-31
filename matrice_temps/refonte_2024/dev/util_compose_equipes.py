@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from util_connection import ma_connect
 from util_recup_modele import Modele
 from util_calcule_non_dispo import Check_non_dispo
@@ -83,6 +85,7 @@ class CompositionEquipes:
                     if Check_non_dispo.is_not_dispo(non_dispo[3],jour[1]):
                         if(pot_lead[0] == non_dispo[0]):
                             liste_all_lead_pop.pop(liste_all_lead_pop.index(pot_lead))
+                            #print(str(liste_all_lead_pop))
 
             for pot_under_lead in liste_all_under_leads_pop:
                 for non_dispo in liste_all_non_dispos:
@@ -90,22 +93,32 @@ class CompositionEquipes:
                         if (pot_under_lead[0] == non_dispo[0]):
                             liste_all_under_leads_pop.pop(liste_all_under_leads_pop.index(pot_under_lead))
 
-            dict_equipe = {} # une version par jour
+            dict_equipe = defaultdict(list) # une version par jour
 
             # // ici je renseigne le dico equipe (chaque équipe) avec les leaders disponibles
             for i in range(modele_previsions.nb_quarts * modele_previsions.nb_equipes_par_q):# = le nb equipes total
                 dict_equipe[liste_all_lead_pop[i][2]] = list(liste_all_lead_pop[i])
+                #print(str(dict_equipe))
 
 
             # // ici je récupère ce qu'il faut d'employés disponibles (triés par ancienneté, niveau) et les ajoute aux dicos equipes
+            for j in dict_equipe:
+                dict_equipe[j] = list([dict_equipe[j]])
+
             for i in range(((modele_previsions.nb_emplo_par_eq - 1))):
                 #print(i)
+
                 for j in dict_equipe:
                     dict_equipe[j].append(list(liste_all_under_leads_pop.pop(0)))
+                    #print(str(dict_equipe[j]))
+
+                    # print(list([dict_equipe[j],['a']]))
+                    # dict_equipe[j] = list([dict_equipe[j], liste_all_under_leads_pop.pop(0)])
+                    # #print(str(dict_equipe[j]))
 
 
             # // finalement la semaine est structurée dans un dictionnaire de jours et d'équipes
-            dict_equipes_semaine[jour[1][:10]] = dict_equipe
+            dict_equipes_semaine[jour[0] + " " + jour[1][:10]] = dict_equipe
 
         return dict_equipes_semaine
         #vérif la semaine
@@ -118,4 +131,4 @@ class CompositionEquipes:
 
 
 if __name__ == '__main__':
-    CompositionEquipes.get_emp_dispo(0,2024,6)
+    print(str(CompositionEquipes.get_emp_dispo(0,2024,6)))
