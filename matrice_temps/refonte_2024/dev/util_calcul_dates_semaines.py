@@ -9,9 +9,14 @@ class LaSemaine:
     connection = ma_connect()
     premier_jour_semaine = 0
     @staticmethod
-    def utilitaire_prem_jour_sem(j): #obtenir la date du preier jour de la semaine donnee
+    def utilitaire_prem_jour_sem(j):
+        """
+        obtenir la date du premier jour de la semaine donnee
+         utilise # "SELECT STR_TO_DATE('<anneesemaine> '<monday |sunday>', '%X%V %W')"
+         %X et %V = annee et semaine ; %W = nom de jour de semaine au long en anglais
+        """
         prem_jour = "monday" if (j == 0) else "sunday" if (j == 6) else "monday"
-        # "SELECT STR_TO_DATE('200442 sunday', '%X%V %W')"
+
         querySemaine = "select annee, num_semaine, str_to_date(concat((?),(?), ?), '%X%V %W') as jour from previsions_par_semaine where num_semaine = ?"
         jkcur = LaSemaine.connection.conn.cursor()
         jkcur.execute(querySemaine, (LaSemaine.annee, LaSemaine.la_num_semaine, prem_jour, LaSemaine.la_num_semaine))
