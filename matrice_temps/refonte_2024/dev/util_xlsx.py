@@ -1,8 +1,20 @@
 import calendar
 import locale
-
 import sys
 import traceback
+
+"""
+Cette  classe contient les appels à tous les autres utilitaires pour finalement générer un chiffrier.
+Ici, les valeurs de lancement sont codées en dur.
+
+:param semaine  -- codé en dur
+:param annee = -- codé en dur
+:param  dict_semaine -- appelé dans utilitaire
+:param date_sem_ref-- appelé dans utilitaire
+:param aujourd -- appelé dans utilitaire
+
+"""
+
 from datetime import datetime, date, timedelta
 from util_compose_equipes import CompositionEquipes
 import xlsxwriter as xl

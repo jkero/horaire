@@ -1,10 +1,6 @@
-# Configuration file for the Sphinx documentation builder.
-#
-# For the full list of built-in configuration values, see the documentation:
-# https://www.sphinx-doc.org/en/master/usage/configuration.html
+import sys,os
 
-# -- Project information -----------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
+sys.path.append(os.path.abspath('../../dev'))
 
 project = 'Horaire_refonte_2024'
 copyright = '2024, jk'
