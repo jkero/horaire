@@ -22,7 +22,7 @@ class prod_chiffrier:
         date_prod = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
         e = datetime
         nomfich = e.today().strftime('%y_%m_%d_%H%M')
-        wb = xl.Workbook('builds_xlsx/rev3_' + nomfich + '.xlsx')
+        wb = xl.Workbook('.\\builds_xlsx\\rev3_' + nomfich + '.xlsx')
         ws = wb.add_worksheet('Équipes')
 
         bold = wb.add_format({'bold': True})
