@@ -1,3 +1,9 @@
+"""
+Ce module est reponsable de composer des équipes selon le modèle (quantité, leaders, autres) déterminé par util_recup_modele.
+En cours de constitution, les équipiers sont validés avec utiL_calcule_non_dispo, pré-triés selon niveau (gestion) et ancienneté (pour choisir les chefs d'équipe) puis les autres.
+
+"""
+
 from collections import defaultdict
 
 from util_connection import ma_connect
@@ -13,6 +19,11 @@ class CompositionEquipes:
     #     self.prev_num_semaine = num
     @staticmethod
     def getLeads():
+        """
+        Requête dans la db pour obtenir la liste des employés aptes à diriger une équipe
+
+        Renseigne la liste globale pour leads. (pas encore validé)
+        """
         m = CompositionEquipes.modele
         jkcur = CompositionEquipes.connection.conn.cursor()
         nb_equipes_par_q = m.nb_equipes_par_q
@@ -26,6 +37,11 @@ class CompositionEquipes:
         return list(l_all_leads)
     @staticmethod
     def getUnderLeads():
+        """
+        Requête dans la db pour obtenir la liste des employés autres que ceux aptes à diriger une équipe
+
+        Renseigne la liste globale pour non-leads. (pas encore validé)
+        """
         m = CompositionEquipes.modele
         jkcur = CompositionEquipes.connection.conn.cursor()
         nb_equipes_par_q = m.nb_equipes_par_q
@@ -39,10 +55,10 @@ class CompositionEquipes:
         return list(l_all_under_leads)
 
     @staticmethod
-
-
-
     def get_all_non_dispos():
+        """
+        Renseigne la liste globale de toutes les non-dispositions, pour comparaisons futures lors des traitements individuels.
+        """
         jkcur = CompositionEquipes.connection.conn.cursor()
         queryNonDispo = "select emp_id, nom, prenom, creneaux from employe right join non_dispo on employe.id = non_dispo.emp_id order by creneaux"
         jkcur.execute(queryNonDispo)
@@ -52,6 +68,19 @@ class CompositionEquipes:
 
     @staticmethod
     def get_emp_dispo(premier_jour_sem, an, semaine):
+        """
+        Différencie les employés de la liste générale vs. ceux qui n'ont pas de conflit d'horaire.
+
+        Nécessite l'appel aux utilitaires de gestion des dates et de non-disponibilité.
+
+        Cette classe retourne le *gros dictionnaire* c.-à-d. le dictionnaire qui contient :
+
+         - les jours de la semaine (dictionnaire de listes)
+         - les équipes pour chaque jour de cette semaine (dictionnaire de listes)
+         - liste des équipiers
+
+        Du fait de la profondeur du dictionnaire les boucles d'itérations sont assez nombreuses.
+        """
         liste_all_leads = CompositionEquipes.getLeads()
         liste_all_under_leads = CompositionEquipes.getUnderLeads()
         liste_all_non_dispos = CompositionEquipes.get_all_non_dispos()

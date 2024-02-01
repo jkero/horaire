@@ -1,12 +1,15 @@
-"""Vérifie si une date (jour 24h) intersecte avec une plage de dates-heures (ou vice-versa)
-**contexte**: pour chaque jour d'une semaine, vérifier une liste d'employés
-qui ne seraient pas disponibles (selon table non-dispo) ce jour là.
+"""Vérifie si une date d'une semaine donnée (jour heure) intersecte avec une plage de non-disponibilités, dates-heures inscrites à la base de données(ou vice-versa)
+
+**contexte**: pour chaque jour d'une semaine, vérifier une liste d'employés qui ne seraient pas disponibles (selon table non-dispo) ce jour là.
 
 // todo : prévoir la vérification de portions de journées (quarts) au lieu de 0 à 23h59
 
-en entrée: une plage (deb et fin en datetime) de non-dispos et un jour (date).
+Attributes:
+     semaine  int -- codé en dur  : La semaine de l'horaire à produire
+     annee  int-- codé en dur  : année
+     dict_semaine -- appelé dans utilitaire :
 
-en sortie: True ou False
+en sortie (Check_non_dispo): True ou False
 
 """
 import locale
@@ -18,6 +21,11 @@ class Check_non_dispo:
     le_jour = None
     @staticmethod
     def is_not_dispo(deb_fin, j):
+        """
+        :param deb, fin String obtenu de la colonne creneaux dans table non_dispo
+        :param j String la date du jour de la semaine
+        :returns Bool.
+        """
         resultat = False
         d,f = deb_fin.split('@')
         xd = datetime.strptime(d, '%Y-%m-%d %H:%M')

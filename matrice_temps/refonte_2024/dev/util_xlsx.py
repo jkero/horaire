@@ -42,8 +42,8 @@ class Prod_chiffrier:
         e = datetime
         Prod_chiffrier.aujourd = e.today()
         nomfich = Prod_chiffrier.aujourd.strftime('%y_%m_%d_%H%M')
-        wb = xl.Workbook('builds_xlsx/rev3_' + nomfich + '.xlsx')
-
+#        wb = xl.Workbook('builds_xlsx/rev3_' + nomfich + '.xlsx')
+        wb = xl.Workbook('.\\builds_xlsx\\rev3_' + nomfich + '.xlsx')
 
         Prod_chiffrier.onglet_equipes(wb)
         Prod_chiffrier.onglet_modele(wb)

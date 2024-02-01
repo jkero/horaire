@@ -1,3 +1,8 @@
+"""
+Ce module contient la classe qui contient les méthodes responsables de calculer le jour de la semaine
+d'après un numéro de semaine et une année fournis au module util_xlsx.
+"""
+
 import locale
 import calendar
 from datetime import timedelta, datetime
@@ -11,9 +16,10 @@ class LaSemaine:
     @staticmethod
     def utilitaire_prem_jour_sem(j):
         """
-        obtenir la date du premier jour de la semaine donnee
-         utilise # "SELECT STR_TO_DATE('<anneesemaine> '<monday |sunday>', '%X%V %W')"
+         obtenir la date du premier jour de la semaine donnee
+         utilise  SELECT STR_TO_DATE('<anneesemaine> '<monday |sunday>', '%X%V %W')
          %X et %V = annee et semaine ; %W = nom de jour de semaine au long en anglais
+
         """
         prem_jour = "monday" if (j == 0) else "sunday" if (j == 6) else "monday"
 
@@ -25,8 +31,13 @@ class LaSemaine:
     @staticmethod
     def renseigne_jours_semaine(premier_jour_semaine, an, num_semaine):
         """
-        La liste de jours produite est toujours pour toute la semaine.
-        L'horaire produit s'arrête au nombre de jours fourni par le modèle
+        La liste de jours produite comprend toujours tous les jours de la semaine.
+        L'horaire produit s'arrête au nombre de jours de travail par semaine fourni par le modèle.
+        Le début de semaine est soit lundi (0),  soit dimanche (6)
+
+        :param  premier_jour_semaine int
+        :param an int
+        :param num_semaine int
 
         """
         LaSemaine.annee = an
