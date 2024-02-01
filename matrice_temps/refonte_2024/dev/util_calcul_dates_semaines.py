@@ -16,11 +16,12 @@ class LaSemaine:
     @staticmethod
     def utilitaire_prem_jour_sem(j):
         """
-         obtenir la date du premier jour de la semaine donnee
-         utilise  SELECT STR_TO_DATE('<anneesemaine> '<monday |sunday>', '%X%V %W')
-         %X et %V = annee et semaine ; %W = nom de jour de semaine au long en anglais
+        Obtenir la date du premier jour de la semaine donnee
+
+        utilise SELECT STR_TO_DATE(<anneesemaine>, <monday|sunday>, %X%V %W) #%X et %V = annee et semaine ; %W = nom de jour de semaine au long en anglais
 
         """
+
         prem_jour = "monday" if (j == 0) else "sunday" if (j == 6) else "monday"
 
         querySemaine = "select annee, num_semaine, str_to_date(concat((?),(?), ?), '%X%V %W') as jour from previsions_par_semaine where num_semaine = ?"
@@ -35,7 +36,7 @@ class LaSemaine:
         L'horaire produit s'arrête au nombre de jours de travail par semaine fourni par le modèle.
         Le début de semaine est soit lundi (0),  soit dimanche (6)
 
-        :param  premier_jour_semaine int
+        :param premier_jour_semaine int
         :param an int
         :param num_semaine int
 

@@ -1,3 +1,8 @@
+"""
+Connecter avec la db et passer object connection.
+
+"""
+
 import mariadb
 import sys
 
@@ -8,6 +13,16 @@ class ma_connect:
         self.etablir_conn()
 
     def etablir_conn(self):
+
+        """
+        Connecter la db.
+
+        :meta hide-value:
+
+        :meta private:
+
+        """
+
         # Connect to MariaDB Platform
         try:
             self.conn = mariadb.connect(

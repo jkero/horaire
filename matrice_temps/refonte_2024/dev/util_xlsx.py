@@ -23,6 +23,9 @@ from xlsxwriter import format
 class Prod_chiffrier:
     """
 
+    :meta: hide-value:
+
+ #     :meta private:
     """
     prem_jour_sem = 0 # 0=lundi 6=dimanche
     semaine = 44
@@ -35,6 +38,7 @@ class Prod_chiffrier:
     def initialise():
         """
         Cette méthde statique est appelée pour générer l'horaire
+
         """
         Prod_chiffrier.dict_semaine =  CompositionEquipes.get_emp_dispo(Prod_chiffrier.prem_jour_sem,Prod_chiffrier.annee,Prod_chiffrier.semaine)
         #Prod_chiffrier.print_dict(Prod_chiffrier.dict_semaine)
@@ -60,6 +64,10 @@ class Prod_chiffrier:
     def onglet_equipes(wb):
         """
         La répartition à travers le ou les quarts est déterminée selon le niveau et l'ancienneté
+
+        :meta hide-value:
+
+        :meta private:
         """
         ws = wb.add_worksheet('Équipes')
         bold = wb.add_format({'bold': True})
