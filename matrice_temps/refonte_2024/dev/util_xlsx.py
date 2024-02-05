@@ -96,6 +96,13 @@ class Prod_chiffrier:
         ws.write('A1', 'Equipes', cell_format_red_small)
         debut_donnees = row = 3
         s_equipe_jour = Prod_chiffrier.dict_semaine
+        ###########debug####
+        print(type(s_equipe_jour))
+        a = list (s_equipe_jour.keys())
+        print(a)
+        print(s_equipe_jour[a[5]])
+
+        ######################
         compte_jours = 0
         for date_jour in s_equipe_jour.keys():
             if compte_jours < CompositionEquipes.modele.nb_jours_sem:

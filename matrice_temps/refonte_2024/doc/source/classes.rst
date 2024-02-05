@@ -45,3 +45,15 @@ Classes
         employe "1" --> "n" non_dispos : a soumis
         modele_affectations "1" --> "n" prev_num_semaine
     @enduml
+
+La structure principale:
+
+.. uml::
+
+@startuml
+    title   Structure du dictionnaire principal
+
+    map dict_semaine.dict_jour.dict_equipes.liste_equipiers {
+       equipiers => chef
+    }
+ @enduml
