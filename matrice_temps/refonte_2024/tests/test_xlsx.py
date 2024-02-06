@@ -1,5 +1,4 @@
 import datetime
-import time
 from datetime import timedelta, datetime
 import locale
 import calendar
@@ -18,7 +17,8 @@ class TestProd_xlsx(unittest.TestCase):
     def test_initialise(self):
         try:
             horaire = util_xlsx.Prod_chiffrier
-            zefile = os.path.join('C:\\' ,'sphynx_repo', 'sphinx_repo', 'horaire', 'matrice_temps', 'refonte_2024', 'dev', 'builds_xlsx')
+            #zefile = os.path.join('C:\', 'sphynx_repo', 'sphinx_repo', 'horaire', 'matrice_temps', 'refonte_2024', 'dev', 'builds_xlsx')
+            zefile = os.path.join('/','home','jack','python_projets','horaire','horaire','matrice_temps','refonte_2024','dev','builds_xlsx')
             print("zefile :" + zefile)
             props = horaire.initialise(zefile, 0, 2024, 44)
             print('Aujourd\'hui:')
@@ -30,10 +30,9 @@ class TestProd_xlsx(unittest.TestCase):
             print(datetime.strptime(str(horaire.date_sem_ref[0][1]),"%Y-%m-%d %H:%M").weekday())
             # print("_______________________________________________")
             # print(str(horaire.dict_semaine))
-        except xlsxwriter.exceptions.FileCreateError as e:
+        except  xlsxwriter.exceptions.FileCreateError as e:
             print(e)
         finally:
-            time.sleep(5)
             horaire.wb.close()
 
 
