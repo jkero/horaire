@@ -1,7 +1,7 @@
-from util_connection import ma_connect
-from util_calcul_dates_semaines import LaSemaine
+from matrice_temps.refonte_2024.dev.util_connection import MaConnect
+from matrice_temps.refonte_2024.dev.util_calcul_dates_semaines import LaSemaine
 class Modele:
-    connection = ma_connect()
+    connection = MaConnect()
     prev_an = 0
     prev_num_sem = 0
     prev_heures_sem = 0
@@ -45,17 +45,17 @@ class Modele:
                 Modele.duree_quart = row[2]
                 Modele.nb_quarts = row[1]
                 Modele.nb_emplo_par_eq = row[4]
-                print("  %d - %d" % (heures_du_modele, charge_prevue))
+#                print("  %d - %d" % (heures_du_modele, charge_prevue))
                 Modele.excedent = heures_du_modele- charge_prevue
-                print("----modele : nb_equipes_par_q %d, nb_quarts %d, nb_empl_eq %d, excédent: %d " % (
-                Modele.nb_equipes_par_q, Modele.nb_quarts, Modele.nb_emplo_par_eq, Modele.excedent))
+#                print("----modele : nb_equipes_par_q %d, nb_quarts %d, nb_empl_eq %d, excédent: %d " % (
+#                Modele.nb_equipes_par_q, Modele.nb_quarts, Modele.nb_emplo_par_eq, Modele.excedent))
                 # print(row)
                 # print("----modele")
                 break
 
 
 if __name__ == '__main__':
-    print("a static method")
+#    print("a static method")
     Modele.db_recup_modele(2024, 6)
     # print(Modele.prev_an)
     # print(Modele.prev_num_sem)

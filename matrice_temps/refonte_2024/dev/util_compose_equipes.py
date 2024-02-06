@@ -7,12 +7,12 @@ En cours de constitution, les équipiers sont validés avec utiL_calcule_non_dis
 
 from collections import defaultdict
 
-from util_connection import ma_connect
-from util_recup_modele import Modele
-from util_calcule_non_dispo import Check_non_dispo
-from util_calcul_dates_semaines import LaSemaine
+from matrice_temps.refonte_2024.dev.util_connection import MaConnect
+from matrice_temps.refonte_2024.dev.util_recup_modele import Modele
+from matrice_temps.refonte_2024.dev.util_calcule_non_dispo import Check_non_dispo
+from matrice_temps.refonte_2024.dev.util_calcul_dates_semaines import LaSemaine
 class CompositionEquipes:
-    connection = ma_connect()
+    connection = MaConnect()
     modele = Modele
     semaine = None
     # def __init__(self, an, num):

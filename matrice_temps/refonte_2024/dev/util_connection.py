@@ -6,7 +6,7 @@ Connecter avec la db et passer object connection.
 import mariadb
 import sys
 
-class ma_connect:
+class MaConnect:
     conn = None
 
     def __init__(self):

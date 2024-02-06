@@ -12,11 +12,15 @@ Attributes:
 """
 import calendar
 import locale
+import os.path
 import sys
 import traceback
 
 from datetime import datetime, date, timedelta
-from util_compose_equipes import CompositionEquipes
+import re
+import xlsxwriter.exceptions
+
+import matrice_temps.refonte_2024.dev.util_compose_equipes as cp
 import xlsxwriter as xl
 from xlsxwriter import format
 
@@ -28,38 +32,47 @@ class Prod_chiffrier:
  #     :meta private:
     """
     prem_jour_sem = 0 # 0=lundi 6=dimanche
-    semaine = 44
-    annee = 2024
+    semaine = 0
+    annee = 0
     dict_semaine = None
     date_sem_ref = None
     aujourd = None
+    wb = None
 
     @staticmethod
-    def initialise():
+    def initialise(chemin_fichier, p_jour, an, no_sem):
         """
         Cette méthde statique est appelée pour générer l'horaire
-
         """
-        Prod_chiffrier.dict_semaine =  CompositionEquipes.get_emp_dispo(Prod_chiffrier.prem_jour_sem,Prod_chiffrier.annee,Prod_chiffrier.semaine)
+        Prod_chiffrier.prem_jour_sem = p_jour  # 0=lundi 6=dimanche
+        Prod_chiffrier.semaine = no_sem
+        Prod_chiffrier.annee = an
+        Prod_chiffrier.dict_semaine =  cp.CompositionEquipes.get_emp_dispo(p_jour, an, no_sem)
         #Prod_chiffrier.print_dict(Prod_chiffrier.dict_semaine)
-        Prod_chiffrier.date_sem_ref = CompositionEquipes.semaine
+        Prod_chiffrier.date_sem_ref = cp.CompositionEquipes.semaine
         e = datetime
         Prod_chiffrier.aujourd = e.today()
         nomfich = Prod_chiffrier.aujourd.strftime('%y_%m_%d_%H%M')
-#        wb = xl.Workbook('builds_xlsx/rev3_' + nomfich + '.xlsx')
-        wb = xl.Workbook('.\\builds_xlsx\\rev3_' + nomfich + '.xlsx')
+
+        wb = xl.Workbook(os.path.join(chemin_fichier, 'rev3_' + nomfich + '.xlsx'))
+        Prod_chiffrier.wb = wb
+        print ("ecriture dans : %s " % wb.filename)
+
 
         Prod_chiffrier.onglet_equipes(wb)
+
         Prod_chiffrier.onglet_modele(wb)
 
 
 
+
+
     @staticmethod
-    def print_dict(le_dict):
-        for j in le_dict:
-            print(j)
-            for v in le_dict.values():
-                print(v)
+#     def print_dict(le_dict):
+#         for j in le_dict:
+# #            print(j)
+#             for v in le_dict.values():
+# #                print(v)
     @staticmethod
     def onglet_equipes(wb):
         """
@@ -70,20 +83,21 @@ class Prod_chiffrier:
         :meta private:
         """
         ws = wb.add_worksheet('Équipes')
+        print("ajoute onglet equipes")
         bold = wb.add_format({'bold': True})
         cell_format_red_small = wb.add_format({'bold': False, 'font_color': 'red', 'font_size': '13','align': 'right','valign':'vcenter' })
         cell_format_noir = wb.add_format({'bold': True, 'font_color': 'black','text_wrap':'true','align':'right','valign':'vcenter'})
         cell_format_bleu = wb.add_format({'bold': False, 'font_color': 'blue', 'font_size': '15','text_wrap': 'true', 'align': 'center', 'valign': 'vcenter'})
         cell_format_vert = wb.add_format({'italic': True, 'bold': False, 'font_color': '#337722', 'font_size': '13','text_wrap': 'true', 'align': 'right', 'valign': 'vcenter'})
         cell_format_ardoise = wb.add_format({'italic': True, 'bold': False, 'font_color': '#2F4F4F', 'font_size': '12','text_wrap': 'true', 'align': 'center', 'valign': 'vcenter'})
-        une_string = "Semaine # " + str(CompositionEquipes.modele.prev_num_sem) \
-            + ", Nb quarts: " + str(CompositionEquipes.modele.nb_quarts) \
-            + ", Nb équipes par quart: " + str(CompositionEquipes.modele.nb_equipes_par_q)  \
+        une_string = "Semaine # " + str(cp.CompositionEquipes.modele.prev_num_sem) \
+            + ", Nb quarts: " + str(cp.CompositionEquipes.modele.nb_quarts) \
+            + ", Nb équipes par quart: " + str(cp.CompositionEquipes.modele.nb_equipes_par_q)  \
             + ", Nb employés par équipes: " \
-            + str(CompositionEquipes.modele.nb_emplo_par_eq) + " , Heures prévues: " \
-            + str(CompositionEquipes.modele.prev_heures_sem) + " Excédent " + str(CompositionEquipes.modele.excedent)  +" h , Modele : " + str(CompositionEquipes.modele.id_mod)
+            + str(cp.CompositionEquipes.modele.nb_emplo_par_eq) + " , Heures prévues: " \
+            + str(cp.CompositionEquipes.modele.prev_heures_sem) + " Excédent " + str(cp.CompositionEquipes.modele.excedent)  +" h , Modele : " + str(cp.CompositionEquipes.modele.id_mod)
         ws.merge_range(0, 2, 0, 5, '')
-        print(une_string)
+#        print(une_string)
         ws.write(0,2, str(une_string), cell_format_ardoise)
         col_quart = col_date = 1 #repères pour excel
         col_nom_equipiers = 3
@@ -97,27 +111,27 @@ class Prod_chiffrier:
         debut_donnees = row = 3
         s_equipe_jour = Prod_chiffrier.dict_semaine
         ###########debug####
-        print(type(s_equipe_jour))
+#        print(type(s_equipe_jour))
         a = list (s_equipe_jour.keys())
-        print(a)
-        print(s_equipe_jour[a[5]])
+#        print(a)
+#        print(s_equipe_jour[a[5]])
 
         ######################
         compte_jours = 0
         for date_jour in s_equipe_jour.keys():
-            if compte_jours < CompositionEquipes.modele.nb_jours_sem:
+            if compte_jours < cp.CompositionEquipes.modele.nb_jours_sem:
                 eq_pop = s_equipe_jour[date_jour]
                 col = col_date # dates
                 ws.set_column(1, 1, 22)
                 ws.write_string(row, col, str(date_jour), cell_format_red_small)
                 row = row + 1
                 les_chefs = list(eq_pop) # pas plus bas : doit être poppé
-                for q in range(CompositionEquipes.modele.nb_quarts):
+                for q in range(cp.CompositionEquipes.modele.nb_quarts):
                     row = row +1
                     #print("quart %s" % str(q+1))
                     col = col_quart
                     ws.write_string(row, col, "quart " + str(q + 1), cell_format_ardoise)
-                    for eq_p_q in range(CompositionEquipes.modele.nb_equipes_par_q):
+                    for eq_p_q in range(cp.CompositionEquipes.modele.nb_equipes_par_q):
                         chef = les_chefs.pop(0)
                         col = col_chef_equipe
                         ws.set_column(col, col, 19)
@@ -136,12 +150,14 @@ class Prod_chiffrier:
     @staticmethod
     def onglet_modele(wb):
         ws = wb.add_worksheet('Modèle')
-        le_modele = CompositionEquipes.modele
+        le_modele = cp.CompositionEquipes.modele
         cell_format_red = wb.add_format({'bold': True, 'font_color': 'red', 'font_size': '20', 'align': 'center', 'valign': 'vcenter'})
         une_string = "Semaine # " + str(le_modele.prev_num_sem) + ", Nb quarts: " + str(le_modele.nb_quarts) + ", Nb équipes par quart: " + str(le_modele.nb_equipes_par_q) + ", Nb employés par équipes: " + str(le_modele.nb_emplo_par_eq) + "Heures totales : " + str(le_modele.prev_heures_sem)
         #cell_format = wb.add_format({'bold': True, 'font_color': 'red'})
         ws.merge_range(1,1,3,25, '')
         ws.write_string(1,1, str(une_string),cell_format_red)
-        wb.close()
+        #wb.close()
 
-Prod_chiffrier.initialise() #juste pourverifier quelques lignes sinon ça plante pour le moment
+if __name__ == "__main__":
+    Prod_chiffrier.initialise(os.path.join('builds_xlsx'),0,2024, 44)
+    Prod_chiffrier.wb.close()
