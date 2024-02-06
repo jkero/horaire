@@ -3,15 +3,15 @@ Ce module contient la classe qui contient les méthodes responsables de calculer
 d'après un numéro de semaine et une année fournis au module util_xlsx.
 """
 
-import locale
+import locale, os, sys
 import calendar
 from datetime import timedelta, datetime
-from util_connection import ma_connect
+from matrice_temps.refonte_2024.dev.util_connection import MaConnect
 
 class LaSemaine:
     annee = 0
     la_num_semaine = 0
-    connection = ma_connect()
+    connection = None
     premier_jour_semaine = 0
     @staticmethod
     def utilitaire_prem_jour_sem(j):
@@ -21,7 +21,7 @@ class LaSemaine:
         utilise SELECT STR_TO_DATE(<anneesemaine>, <monday|sunday>, %X%V %W) #%X et %V = annee et semaine ; %W = nom de jour de semaine au long en anglais
 
         """
-
+        LaSemaine.connection = MaConnect()
         prem_jour = "monday" if (j == 0) else "sunday" if (j == 6) else "monday"
 
         querySemaine = "select annee, num_semaine, str_to_date(concat((?),(?), ?), '%X%V %W') as jour from previsions_par_semaine where num_semaine = ?"

@@ -1,0 +1,6 @@
+Composition des tests pour la v2:
+
+- la connection
+- les dates : les types aussi. storé en datetime, récup en string etc...
+- Bonne semaine retourmée etc.
+- sécurité ? données maria ? exceptions connect/queries
