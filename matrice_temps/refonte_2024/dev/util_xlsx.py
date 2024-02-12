@@ -45,8 +45,8 @@ class Prod_chiffrier:
         Cette méthde statique est appelée pour générer l'horaire
         """
         Prod_chiffrier.prem_jour_sem = p_jour  # 0=lundi 6=dimanche
-        Prod_chiffrier.semaine = no_sem
-        Prod_chiffrier.annee = an
+        Prod_chiffrier.semaine = no_sem # pout unittest
+        Prod_chiffrier.annee = an # pout unittest
         Prod_chiffrier.dict_semaine =  cp.CompositionEquipes.get_emp_dispo(p_jour, an, no_sem)
         #Prod_chiffrier.print_dict(Prod_chiffrier.dict_semaine)
         Prod_chiffrier.date_sem_ref = cp.CompositionEquipes.semaine
@@ -56,7 +56,7 @@ class Prod_chiffrier:
 
         wb = xl.Workbook(os.path.join(chemin_fichier, 'rev3_' + nomfich + '.xlsx'))
         Prod_chiffrier.wb = wb
-        print ("ecriture dans : %s " % wb.filename)
+        #print ("ecriture dans : %s " % wb.filename)
 
 
         Prod_chiffrier.onglet_equipes(wb)
@@ -83,7 +83,7 @@ class Prod_chiffrier:
         :meta private:
         """
         ws = wb.add_worksheet('Équipes')
-        print("ajoute onglet equipes")
+        #print("ajoute onglet equipes")
         bold = wb.add_format({'bold': True})
         cell_format_red_small = wb.add_format({'bold': False, 'font_color': 'red', 'font_size': '13','align': 'right','valign':'vcenter' })
         cell_format_noir = wb.add_format({'bold': True, 'font_color': 'black','text_wrap':'true','align':'right','valign':'vcenter'})

@@ -7,6 +7,8 @@ En cours de constitution, les équipiers sont validés avec utiL_calcule_non_dis
 
 from collections import defaultdict
 
+import mariadb
+
 from matrice_temps.refonte_2024.dev.util_connection import MaConnect
 from matrice_temps.refonte_2024.dev.util_recup_modele import Modele
 from matrice_temps.refonte_2024.dev.util_calcule_non_dispo import Check_non_dispo
@@ -33,10 +35,13 @@ class CompositionEquipes:
         nb_leads = nb_quarts * nb_equipes_par_q
         queryLeads = "select id, num_emp, nom, prenom from employe where anciennete > 55 and niveau >= 3 order by niveau desc, anciennete desc"
         # # combien d'équipes par jour = nb_quarts * nb_eq_par_quart
-        jkcur.execute(queryLeads)
-        l_all_leads = jkcur.fetchall()
-        #
-        return list(l_all_leads)
+        try:
+            jkcur.execute(queryLeads)
+            l_all_leads = jkcur.fetchall()
+        except mariadb.Error as m:
+            print(m)
+        finally:
+            return list(l_all_leads)
     @staticmethod
     def getUnderLeads():
         """
@@ -52,10 +57,13 @@ class CompositionEquipes:
         nb_under_leads = (nb_quarts * nb_equipes_par_q) - 1
         queryUnderLeads = "select id, num_emp, nom, prenom from employe where  niveau < 3 order by anciennete desc, niveau desc"
         # # combien d'équipes par jour = nb_quarts * nb_eq_par_quart
-        jkcur.execute(queryUnderLeads)
-        l_all_under_leads = jkcur.fetchall()
-        #
-        return list(l_all_under_leads)
+        try:
+            jkcur.execute(queryUnderLeads)
+            l_all_under_leads = jkcur.fetchall()
+        except mariadb.Error as m:
+            print(m)
+        finally:
+            return list(l_all_under_leads)
 
     @staticmethod
     def get_all_non_dispos():
@@ -66,10 +74,13 @@ class CompositionEquipes:
         """
         jkcur = CompositionEquipes.connection.conn.cursor()
         queryNonDispo = "select emp_id, nom, prenom, creneaux from employe right join non_dispo on employe.id = non_dispo.emp_id order by creneaux"
-        jkcur.execute(queryNonDispo)
-        liste_non_dispos = list(jkcur.fetchall())
-
-        return list(liste_non_dispos)
+        try:
+            jkcur.execute(queryNonDispo)
+            liste_non_dispos = list(jkcur.fetchall())
+        except mariadb.Error as m:
+            print(m)
+        finally:
+            return list(liste_non_dispos)
 
     @staticmethod
     def get_emp_dispo(premier_jour_sem, an, semaine):
