@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="FR" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vrac pseudo-code &mdash; Documentation Horaire_refonte_2024 0.1</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+        <script src="_static/design-tabs.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Recherche" href="search.html" />
+    <link rel="next" title="Classes" href="classes.html" />
+    <link rel="prev" title="Cas d’utilisation" href="cas_utilisation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Horaire_refonte_2024
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Rechercher docs" aria-label="Rechercher docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="prerequis.html">Liste à faire</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cas_utilisation.html">Cas d’utilisation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Vrac pseudo-code</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#pour-tests">Pour tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#selection-des-equipes">Sélection des équipes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="classes.html">Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">dev</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Horaire_refonte_2024</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Vrac pseudo-code</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/vrac_pseudocode.rst.txt" rel="nofollow"> Afficher la source de la page</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="vrac-pseudo-code">
+<h1>Vrac pseudo-code<a class="headerlink" href="#vrac-pseudo-code" title="Lien permanent vers cette rubrique"></a></h1>
+<p>1- Obtenir p_aramètres modèle (selon semaine horaire)</p>
+<p>2- Créer dictionnaire équipes</p>
+<p>3- Créer dictionnaire semaine</p>
+<p>4- Dans la liste générale des employés:</p>
+<blockquote>
+<div><p>sélectionner <em>p_nb_eq</em> seniors/leads et garder dans v_leads[]</p>
+<p>cpt_eq = 0</p>
+<p>TQ cpt_eq &lt;= <em>p_nb_eq</em>  //param de modele</p>
+<blockquote>
+<div><p>vérifier dispo/conflit(v_leads[cpt_eq])</p>
+<p>vérifier heures travaillees (v_leads[0]) (v. heures normales conv.)</p>
+<blockquote>
+<div><p>si ht + <em>p_h_par_quart</em> &gt;  h_conv</p>
+<blockquote>
+<div><p>émettre message surtemps ou passer au suivant (R?)</p>
+</div></blockquote>
+<p>sinon</p>
+<blockquote>
+<div><p>affecter v_leads[cpt_eq]) dans d_eqp[cpt_eq] //list(dico)[ix]</p>
+<p>cpt_eq++</p>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<p># répéter étape 4 mais pour les employés non-lead et remplir équipes</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Le nombre d’équipes est déterminé par le modèle désigné lors de la requête dans la table prev_num_semaine. C’est la prévision budgétaite en heures-personnes. Pour éclaircir le calcul: supposons qu’une tâche requiert 1000 heures-personnes alors si je divise par 25 (personnes), ça indique que que 25 personnes travaillant 40 heures pourraient théoriquement accomplir la tâche (en une semaine de 40 h). Ça pourrait être 5 équipes de 5, 2 équipes de 2 (en 6 semaines 1/4), etc. Pour les besoins de l’application, j’essaie de limiter les modèles et les tests pour générer un horaire sur un calendrier d’une semaine. Rien n’est fixe et je pourrais affecter des employés ad vitam aeternam sur un projet d’un milliard d’heures….</p>
+</div>
+<div class="admonition-todo admonition" id="id1">
+<p class="admonition-title">À faire</p>
+<p>(dans scratch.py) methodes pour tester prefetch des leads, faire une passe partielle pour affecter chaque lead par equipe (après avoir testé/calculé valeur modele prev); ensuite finier affecter equipes avec autres non-leads (pourraient être récupérés à la passe leads)</p>
+</div>
+<div class="admonition-todo admonition" id="id2">
+<p class="admonition-title">À faire</p>
+<p>Calculs simu pour les modeles et les valeurs qui serviront au xlsx</p>
+</div>
+<div class="admonition-todo admonition" id="id3">
+<p class="admonition-title">À faire</p>
+<p>aussi contraintes de type calendrier</p>
+</div>
+<div class="admonition-todo admonition" id="id4">
+<p class="admonition-title">À faire</p>
+<p>ecrire template pour modele xlsx (rangees, colonnes, plages nommees, onglets, etc.)</p>
+</div>
+<section id="pour-tests">
+<h2>Pour tests<a class="headerlink" href="#pour-tests" title="Lien permanent vers cette rubrique"></a></h2>
+<p><em>Automatiser</em> la décision pour les équipes et les quarts, le seul paramètre à l’entrée est le nombre prévu de heures-personnes. Ensuite c’est un calcul basé sur le salaire moyen donc, <em>in fine</em>, les heures de jour (quart de jour seulement) et la quantité de personnel que le modèle propose.</p>
+<p>À la base il y a déjà un modèle assigné pour chaque semaine, on va essayer de reviser et réécrire.</p>
+<p>Remarque: si une projet a 10 employés à 8 heures pas jour, normalement il devrait pouvoir soutenir et saisir des semaines de 8 h * 10 pers * 5 jours = 400 hpers par semaine. Je suppose que ça prend une cohérence dans l’entrée de données. Ma db a une liste de 33 employes, avec des niveuax différents (lead, temps partiel, etc.) Il y a de quoi faire pas mal de règles.</p>
+<p>Devrais-je ajouter un indicateur de surtemps dans la db ou alors c’est automatique selon la valeur de hpers ? Pour les tests je dois restreindre les paramètres et la portée. C’est la table des prévisions qui doit porter une partie de la cohérence, alors que cette app doit constituer des équipes et des quarts dans un calendrier. OK.</p>
+<p>Donc, j’ai une table de modeles triée par hpers mais aussi par nb quarts, nb_equipes_par_quart (emp par équipe pourrait aussi être utilisé pour les hp égales..)</p>
+<ul class="simple">
+<li><p>1 quart de jour &lt; 2 quarts de jour &lt; 3 quarts de jour;</p></li>
+<li><p>équipe(2) &lt; equipe(3), etc.;</p></li>
+<li><p>Durée quart 7.5 &lt; durée sup à 7.5 (surtemps)</p></li>
+</ul>
+<p>modele = trier(t_mod).next \trouver les modèles disponibles et les trier par (nbq * dq * nbeqq * nbempq)</p>
+<dl class="simple">
+<dt>tq modele:</dt><dd><p>si hpers / nbquarts * dureequarts * nbequipequart * nbemployeparequipe &gt; 37.5 (40) //règle déterminée ailleurs
+alors
+passer au modèle suivant</p>
+</dd>
+</dl>
+</section>
+<section id="selection-des-equipes">
+<h2>Sélection des équipes<a class="headerlink" href="#selection-des-equipes" title="Lien permanent vers cette rubrique"></a></h2>
+<p>MariaDB [horaire]&gt; select * from employe where anciennete &gt; 55 and niveau &gt;= 3; //par exemple pour leads (ça fait 9 équipes possibles):</p>
+<p>Il pourrait y avoir un test de cohérence pour la table des modeles avec des métadonnées d’entreprise…</p>
+<div class="admonition-todo admonition" id="id5">
+<p class="admonition-title">À faire</p>
+<p>Pendant la sélection des leads et des autres employés, constituer un dictionnaire du temps affecté… (à éventuellement comparer avec temps max?). Rappel : c’est un horaore d’une semaine avec reset des affectations pour chaque jour, donc, sauf non-dispo (sinon il y a décalage), les mêmes équipes se retrouvent sur les même quarts pour chaque jour.</p>
+</div>
+<div class="admonition-todo admonition" id="id6">
+<p class="admonition-title">À faire</p>
+<p>ramener le montant hebdo à journalier. Introduire un facteur de tolérance en comparant prévisions et modele affectation</p>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Pied de page">
+        <a href="cas_utilisation.html" class="btn btn-neutral float-left" title="Cas d’utilisation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Précédent</a>
+        <a href="classes.html" class="btn btn-neutral float-right" title="Classes" accesskey="n" rel="next">Suivant <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, jk.</p>
+  </div>
+
+  Compilé avec <a href="https://www.sphinx-doc.org/">Sphinx</a> en utilisant un
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">thème</a>
+    fourni par <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

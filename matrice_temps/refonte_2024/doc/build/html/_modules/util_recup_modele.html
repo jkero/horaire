@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="FR" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>util_recup_modele &mdash; Documentation Horaire_refonte_2024 0.1</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/design-tabs.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Recherche" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Horaire_refonte_2024
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Rechercher docs" aria-label="Rechercher docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../prerequis.html">Liste à faire</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cas_utilisation.html">Cas d’utilisation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../vrac_pseudocode.html">Vrac pseudo-code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../classes.html">Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">dev</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Horaire_refonte_2024</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Code du module</a></li>
+      <li class="breadcrumb-item active">util_recup_modele</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Code source de util_recup_modele</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">util_connection</span> <span class="kn">import</span> <span class="n">ma_connect</span>
+<span class="kn">from</span> <span class="nn">util_calcul_dates_semaines</span> <span class="kn">import</span> <span class="n">LaSemaine</span>
+<div class="viewcode-block" id="Modele"><a class="viewcode-back" href="../util_recup_modele.html#util_recup_modele.Modele">[docs]</a><span class="k">class</span> <span class="nc">Modele</span><span class="p">:</span>
+    <span class="n">connection</span> <span class="o">=</span> <span class="n">ma_connect</span><span class="p">()</span>
+    <span class="n">prev_an</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">prev_num_sem</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">prev_heures_sem</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">nb_equipes_par_q</span>  <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">nb_quarts</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">nb_emplo_par_eq</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">id_mod</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">duree_quart</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">nb_jours_sem</span> <span class="o">=</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="Modele.db_recup_modele"><a class="viewcode-back" href="../util_recup_modele.html#util_recup_modele.Modele.db_recup_modele">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">db_recup_modele</span><span class="p">(</span><span class="n">an</span><span class="p">,</span> <span class="n">num</span><span class="p">):</span>
+        <span class="n">queryHpers</span> <span class="o">=</span> <span class="s2">&quot;select prevision_pers_h from previsions_par_semaine where annee =  ? and num_semaine = ? order by prevision_pers_h asc&quot;</span>
+        <span class="n">jkcur</span> <span class="o">=</span> <span class="n">Modele</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">jkcur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">queryHpers</span><span class="p">,</span> <span class="p">(</span><span class="n">an</span><span class="p">,</span> <span class="n">num</span><span class="p">))</span>
+        <span class="n">Modele</span><span class="o">.</span><span class="n">prev_an</span> <span class="o">=</span> <span class="n">an</span>
+        <span class="n">Modele</span><span class="o">.</span><span class="n">prev_num_sem</span> <span class="o">=</span> <span class="n">num</span>
+        <span class="n">Modele</span><span class="o">.</span><span class="n">excedent</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">Modele</span><span class="o">.</span><span class="n">prev_heures_sem</span> <span class="o">=</span> <span class="n">jkcur</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">queryModeles</span> <span class="o">=</span> <span class="s2">&quot;select id, nb_quarts, duree_quart, nb_equipes_par_quart, nb_employe_par_equipe, jours_trav_par_semaine, (nb_quarts * duree_quart * nb_equipes_par_quart * nb_employe_par_equipe * jours_trav_par_semaine) as hp from modele_affectations order by hp asc, nb_quarts asc, nb_equipes_par_quart asc&quot;</span>
+        <span class="n">jkcur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">queryModeles</span><span class="p">)</span>
+        <span class="c1"># # charge de la semaine / jours travaillés par semaine dans le modele</span>
+        <span class="n">id_modele</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">charge_prevue</span> <span class="o">=</span> <span class="n">Modele</span><span class="o">.</span><span class="n">prev_heures_sem</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">jkcur</span><span class="p">:</span>
+            <span class="n">heures_du_modele</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span>
+            <span class="n">Modele</span><span class="o">.</span><span class="n">nb_jours_sem</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+<span class="c1">#            h_quot = Modele.prev_heures_sem / row[5]  # row[5] = jours travaillés dans la semaine</span>
+            <span class="k">if</span> <span class="n">heures_du_modele</span> <span class="o">&lt;</span> <span class="n">charge_prevue</span><span class="p">:</span>  <span class="c1"># le nb heures le plus rapproché dans le modele</span>
+                <span class="c1"># print(&quot;pass&quot;)</span>
+                <span class="k">continue</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">query_mod_hres</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span>  <span class="c1"># row[6] = quarts * eq-par-quart * emp-par-eq * temps-hr-par quart</span>
+                <span class="n">Modele</span><span class="o">.</span><span class="n">id_mod</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="c1">#       print(&quot;\nTEST 2 ---- modele trouvé ! (%d, id %d) &gt;= que charge travail (%d)&quot; % (</span>
+                <span class="c1"># query_mod_hres, id_mod, h_quot))</span>
+                <span class="c1"># rappel: id, nb_quarts, duree_quart, nb_equipes_par_quart, nb_employe_par_equipe, jours_trav_par_semaine</span>
+                <span class="n">Modele</span><span class="o">.</span><span class="n">nb_equipes_par_q</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+                <span class="n">Modele</span><span class="o">.</span><span class="n">duree_quart</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+                <span class="n">Modele</span><span class="o">.</span><span class="n">nb_quarts</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">Modele</span><span class="o">.</span><span class="n">nb_emplo_par_eq</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  </span><span class="si">%d</span><span class="s2"> - </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">heures_du_modele</span><span class="p">,</span> <span class="n">charge_prevue</span><span class="p">))</span>
+                <span class="n">Modele</span><span class="o">.</span><span class="n">excedent</span> <span class="o">=</span> <span class="n">heures_du_modele</span><span class="o">-</span> <span class="n">charge_prevue</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;----modele : nb_equipes_par_q </span><span class="si">%d</span><span class="s2">, nb_quarts </span><span class="si">%d</span><span class="s2">, nb_empl_eq </span><span class="si">%d</span><span class="s2">, excédent: </span><span class="si">%d</span><span class="s2"> &quot;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="n">Modele</span><span class="o">.</span><span class="n">nb_equipes_par_q</span><span class="p">,</span> <span class="n">Modele</span><span class="o">.</span><span class="n">nb_quarts</span><span class="p">,</span> <span class="n">Modele</span><span class="o">.</span><span class="n">nb_emplo_par_eq</span><span class="p">,</span> <span class="n">Modele</span><span class="o">.</span><span class="n">excedent</span><span class="p">))</span>
+                <span class="c1"># print(row)</span>
+                <span class="c1"># print(&quot;----modele&quot;)</span>
+                <span class="k">break</span></div></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;a static method&quot;</span><span class="p">)</span>
+    <span class="n">Modele</span><span class="o">.</span><span class="n">db_recup_modele</span><span class="p">(</span><span class="mi">2024</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+    <span class="c1"># print(Modele.prev_an)</span>
+    <span class="c1"># print(Modele.prev_num_sem)</span>
+    <span class="c1"># print(Modele.prev_heures_sem)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, jk.</p>
+  </div>
+
+  Compilé avec <a href="https://www.sphinx-doc.org/">Sphinx</a> en utilisant un
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">thème</a>
+    fourni par <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

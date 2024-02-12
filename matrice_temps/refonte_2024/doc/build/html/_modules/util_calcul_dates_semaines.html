@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="FR" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>util_calcul_dates_semaines &mdash; Documentation Horaire_refonte_2024 0.1</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/design-tabs.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Recherche" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Horaire_refonte_2024
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Rechercher docs" aria-label="Rechercher docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../prerequis.html">Liste à faire</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cas_utilisation.html">Cas d’utilisation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../vrac_pseudocode.html">Vrac pseudo-code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../classes.html">Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">dev</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Horaire_refonte_2024</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Code du module</a></li>
+      <li class="breadcrumb-item active">util_calcul_dates_semaines</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Code source de util_calcul_dates_semaines</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">locale</span>
+<span class="kn">import</span> <span class="nn">calendar</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">timedelta</span><span class="p">,</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">util_connection</span> <span class="kn">import</span> <span class="n">ma_connect</span>
+
+<div class="viewcode-block" id="LaSemaine"><a class="viewcode-back" href="../util_calcul_dates_semaines.html#util_calcul_dates_semaines.LaSemaine">[docs]</a><span class="k">class</span> <span class="nc">LaSemaine</span><span class="p">:</span>
+    <span class="n">annee</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">la_num_semaine</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">connection</span> <span class="o">=</span> <span class="n">ma_connect</span><span class="p">()</span>
+    <span class="n">premier_jour_semaine</span> <span class="o">=</span> <span class="mi">0</span>
+<div class="viewcode-block" id="LaSemaine.utilitaire_prem_jour_sem"><a class="viewcode-back" href="../util_calcul_dates_semaines.html#util_calcul_dates_semaines.LaSemaine.utilitaire_prem_jour_sem">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">utilitaire_prem_jour_sem</span><span class="p">(</span><span class="n">j</span><span class="p">):</span> <span class="c1">#obtenir la date du preier jour de la semaine donnee</span>
+        <span class="n">prem_jour</span> <span class="o">=</span> <span class="s2">&quot;monday&quot;</span> <span class="k">if</span> <span class="p">(</span><span class="n">j</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="k">else</span> <span class="s2">&quot;sunday&quot;</span> <span class="k">if</span> <span class="p">(</span><span class="n">j</span> <span class="o">==</span> <span class="mi">6</span><span class="p">)</span> <span class="k">else</span> <span class="s2">&quot;monday&quot;</span>
+        <span class="c1"># &quot;SELECT STR_TO_DATE(&#39;200442 sunday&#39;, &#39;%X%V %W&#39;)&quot;</span>
+        <span class="n">querySemaine</span> <span class="o">=</span> <span class="s2">&quot;select annee, num_semaine, str_to_date(concat((?),(?), ?), &#39;</span><span class="si">%X</span><span class="s2">%V %W&#39;) as jour from previsions_par_semaine where num_semaine = ?&quot;</span>
+        <span class="n">jkcur</span> <span class="o">=</span> <span class="n">LaSemaine</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">jkcur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">querySemaine</span><span class="p">,</span> <span class="p">(</span><span class="n">LaSemaine</span><span class="o">.</span><span class="n">annee</span><span class="p">,</span> <span class="n">LaSemaine</span><span class="o">.</span><span class="n">la_num_semaine</span><span class="p">,</span> <span class="n">prem_jour</span><span class="p">,</span> <span class="n">LaSemaine</span><span class="o">.</span><span class="n">la_num_semaine</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">jkcur</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()[</span><span class="mi">2</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="LaSemaine.renseigne_jours_semaine"><a class="viewcode-back" href="../util_calcul_dates_semaines.html#util_calcul_dates_semaines.LaSemaine.renseigne_jours_semaine">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">renseigne_jours_semaine</span><span class="p">(</span><span class="n">premier_jour_semaine</span><span class="p">,</span> <span class="n">an</span><span class="p">,</span> <span class="n">num_semaine</span><span class="p">):</span>
+        <span class="n">LaSemaine</span><span class="o">.</span><span class="n">annee</span> <span class="o">=</span> <span class="n">an</span>
+        <span class="n">LaSemaine</span><span class="o">.</span><span class="n">la_num_semaine</span> <span class="o">=</span> <span class="n">num_semaine</span>
+        <span class="n">LaSemaine</span><span class="o">.</span><span class="n">premier_jour_semaine</span> <span class="o">=</span> <span class="n">premier_jour_semaine</span>
+        <span class="n">calendar</span><span class="o">.</span><span class="n">setfirstweekday</span><span class="p">(</span><span class="n">premier_jour_semaine</span><span class="p">)</span>
+        <span class="n">locale</span><span class="o">.</span><span class="n">setlocale</span><span class="p">(</span><span class="n">locale</span><span class="o">.</span><span class="n">LC_ALL</span><span class="p">,</span> <span class="s1">&#39;fr_CA.utf8&#39;</span><span class="p">)</span>
+        <span class="n">les_jours</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">LaSemaine</span><span class="o">.</span><span class="n">premier_jour_semaine</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">les_jours</span> <span class="o">=</span> <span class="p">[[</span><span class="s1">&#39;Lundi&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;Mardi&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;Mercredi&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;Jeudi&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;Vendredi&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;Samedi&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;dimanche&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">]]</span>
+        <span class="k">elif</span> <span class="n">LaSemaine</span><span class="o">.</span><span class="n">premier_jour_semaine</span> <span class="o">==</span> <span class="mi">6</span><span class="p">:</span>
+            <span class="n">les_jours</span> <span class="o">=</span> <span class="p">[[</span><span class="s1">&#39;dimanche&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">],[</span><span class="s1">&#39;Lundi&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;Mardi&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;Mercredi&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;Jeudi&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;Vendredi&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;Samedi&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">]]</span>
+
+        <span class="n">incr</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">les_jours</span><span class="p">:</span>
+            <span class="n">incr</span> <span class="o">=</span> <span class="n">incr</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="n">les_jours</span><span class="p">[</span><span class="n">incr</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">LaSemaine</span><span class="o">.</span><span class="n">utilitaire_prem_jour_sem</span><span class="p">(</span><span class="n">premier_jour_semaine</span><span class="p">)</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="n">incr</span><span class="p">))</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M&#39;</span><span class="p">)</span>
+        <span class="c1">#print(&quot;\n&quot; + str(les_jours))</span>
+        <span class="k">return</span> <span class="n">les_jours</span></div></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">list_jours</span> <span class="o">=</span> <span class="n">LaSemaine</span><span class="o">.</span><span class="n">renseigne_jours_semaine</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="mi">2024</span><span class="p">,</span><span class="mi">6</span><span class="p">)</span>
+<span class="c1">#     LaSemaine.annee =2024</span>
+<span class="c1">#     LaSemaine.la_num_semaine = 6</span>
+<span class="c1">#     j = LaSemaine.utilitaire_prem_jour_sem(0)</span>
+<span class="c1">#     print(j)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">list_jours</span><span class="p">)</span>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, jk.</p>
+  </div>
+
+  Compilé avec <a href="https://www.sphinx-doc.org/">Sphinx</a> en utilisant un
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">thème</a>
+    fourni par <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

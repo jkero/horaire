@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="FR" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>util_compose_equipes &mdash; Documentation Horaire_refonte_2024 0.1</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/design-tabs.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Recherche" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Horaire_refonte_2024
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Rechercher docs" aria-label="Rechercher docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../prerequis.html">Liste à faire</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cas_utilisation.html">Cas d’utilisation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../vrac_pseudocode.html">Vrac pseudo-code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../classes.html">Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">dev</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Horaire_refonte_2024</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Code du module</a></li>
+      <li class="breadcrumb-item active">util_compose_equipes</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Code source de util_compose_equipes</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+
+<span class="kn">from</span> <span class="nn">util_connection</span> <span class="kn">import</span> <span class="n">ma_connect</span>
+<span class="kn">from</span> <span class="nn">util_recup_modele</span> <span class="kn">import</span> <span class="n">Modele</span>
+<span class="kn">from</span> <span class="nn">util_calcule_non_dispo</span> <span class="kn">import</span> <span class="n">Check_non_dispo</span>
+<span class="kn">from</span> <span class="nn">util_calcul_dates_semaines</span> <span class="kn">import</span> <span class="n">LaSemaine</span>
+<div class="viewcode-block" id="CompositionEquipes"><a class="viewcode-back" href="../util_compose_equipes.html#util_compose_equipes.CompositionEquipes">[docs]</a><span class="k">class</span> <span class="nc">CompositionEquipes</span><span class="p">:</span>
+    <span class="n">connection</span> <span class="o">=</span> <span class="n">ma_connect</span><span class="p">()</span>
+    <span class="n">modele</span> <span class="o">=</span> <span class="n">Modele</span>
+    <span class="n">semaine</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="c1"># def __init__(self, an, num):</span>
+    <span class="c1">#     self.prev_annee = an</span>
+    <span class="c1">#     self.prev_num_semaine = num</span>
+<div class="viewcode-block" id="CompositionEquipes.getLeads"><a class="viewcode-back" href="../util_compose_equipes.html#util_compose_equipes.CompositionEquipes.getLeads">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">getLeads</span><span class="p">():</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">CompositionEquipes</span><span class="o">.</span><span class="n">modele</span>
+        <span class="n">jkcur</span> <span class="o">=</span> <span class="n">CompositionEquipes</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">nb_equipes_par_q</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">nb_equipes_par_q</span>
+        <span class="n">nb_quarts</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">nb_quarts</span>
+        <span class="n">nb_leads</span> <span class="o">=</span> <span class="n">nb_quarts</span> <span class="o">*</span> <span class="n">nb_equipes_par_q</span>
+        <span class="n">queryLeads</span> <span class="o">=</span> <span class="s2">&quot;select id, num_emp, nom, prenom from employe where anciennete &gt; 55 and niveau &gt;= 3 order by niveau desc, anciennete desc&quot;</span>
+        <span class="c1"># # combien d&#39;équipes par jour = nb_quarts * nb_eq_par_quart</span>
+        <span class="n">jkcur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">queryLeads</span><span class="p">)</span>
+        <span class="n">l_all_leads</span> <span class="o">=</span> <span class="n">jkcur</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+        <span class="c1">#</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">l_all_leads</span><span class="p">)</span></div>
+<div class="viewcode-block" id="CompositionEquipes.getUnderLeads"><a class="viewcode-back" href="../util_compose_equipes.html#util_compose_equipes.CompositionEquipes.getUnderLeads">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">getUnderLeads</span><span class="p">():</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">CompositionEquipes</span><span class="o">.</span><span class="n">modele</span>
+        <span class="n">jkcur</span> <span class="o">=</span> <span class="n">CompositionEquipes</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">nb_equipes_par_q</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">nb_equipes_par_q</span>
+        <span class="n">nb_quarts</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">nb_quarts</span>
+        <span class="n">nb_under_leads</span> <span class="o">=</span> <span class="p">(</span><span class="n">nb_quarts</span> <span class="o">*</span> <span class="n">nb_equipes_par_q</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">queryUnderLeads</span> <span class="o">=</span> <span class="s2">&quot;select id, num_emp, nom, prenom from employe where  niveau &lt; 3 order by anciennete desc, niveau desc&quot;</span>
+        <span class="c1"># # combien d&#39;équipes par jour = nb_quarts * nb_eq_par_quart</span>
+        <span class="n">jkcur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">queryUnderLeads</span><span class="p">)</span>
+        <span class="n">l_all_under_leads</span> <span class="o">=</span> <span class="n">jkcur</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+        <span class="c1">#</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">l_all_under_leads</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CompositionEquipes.get_all_non_dispos"><a class="viewcode-back" href="../util_compose_equipes.html#util_compose_equipes.CompositionEquipes.get_all_non_dispos">[docs]</a>    <span class="nd">@staticmethod</span>
+
+
+
+    <span class="k">def</span> <span class="nf">get_all_non_dispos</span><span class="p">():</span>
+        <span class="n">jkcur</span> <span class="o">=</span> <span class="n">CompositionEquipes</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">queryNonDispo</span> <span class="o">=</span> <span class="s2">&quot;select emp_id, nom, prenom, creneaux from employe right join non_dispo on employe.id = non_dispo.emp_id order by creneaux&quot;</span>
+        <span class="n">jkcur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">queryNonDispo</span><span class="p">)</span>
+        <span class="n">liste_non_dispos</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">jkcur</span><span class="o">.</span><span class="n">fetchall</span><span class="p">())</span>
+
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">liste_non_dispos</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CompositionEquipes.get_emp_dispo"><a class="viewcode-back" href="../util_compose_equipes.html#util_compose_equipes.CompositionEquipes.get_emp_dispo">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_emp_dispo</span><span class="p">(</span><span class="n">premier_jour_sem</span><span class="p">,</span> <span class="n">an</span><span class="p">,</span> <span class="n">semaine</span><span class="p">):</span>
+        <span class="n">liste_all_leads</span> <span class="o">=</span> <span class="n">CompositionEquipes</span><span class="o">.</span><span class="n">getLeads</span><span class="p">()</span>
+        <span class="n">liste_all_under_leads</span> <span class="o">=</span> <span class="n">CompositionEquipes</span><span class="o">.</span><span class="n">getUnderLeads</span><span class="p">()</span>
+        <span class="n">liste_all_non_dispos</span> <span class="o">=</span> <span class="n">CompositionEquipes</span><span class="o">.</span><span class="n">get_all_non_dispos</span><span class="p">()</span>
+        <span class="n">modele_previsions</span> <span class="o">=</span> <span class="n">CompositionEquipes</span><span class="o">.</span><span class="n">modele</span>
+        <span class="n">modele_previsions</span><span class="o">.</span><span class="n">db_recup_modele</span><span class="p">(</span><span class="n">an</span><span class="p">,</span> <span class="n">semaine</span><span class="p">)</span>
+        <span class="c1">#print(modele_previsions.prev_an)</span>
+        <span class="c1"># +----------+--------------------</span>
+        <span class="c1"># | id_dispo | creneaux | emp_id |</span>
+        <span class="c1"># +----------+--------------------</span>
+        <span class="n">liste_all_lead_pop</span> <span class="o">=</span> <span class="n">liste_all_leads</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">liste_all_under_leads_pop</span> <span class="o">=</span> <span class="n">liste_all_under_leads</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="c1"># +----+---------+-----------+--------+------------+---------------------+---------------------+</span>
+        <span class="c1"># | id | num_emp | nom | prenom | anciennete | pref_creneau_deb | pref_creneau_fin | niveau |</span>
+        <span class="c1"># +----+---------+-----------+--------+------------+---------------------+---------------------+</span>
+        <span class="n">liste_jours_semaine</span> <span class="o">=</span> <span class="n">LaSemaine</span><span class="o">.</span><span class="n">renseigne_jours_semaine</span><span class="p">(</span><span class="n">premier_jour_sem</span><span class="p">,</span><span class="n">an</span><span class="p">,</span><span class="n">semaine</span><span class="p">)</span><span class="c1"># \\todo hard code here for tests ;1st day must be 0 (Monday) to 6 (Sunday)</span>
+        <span class="n">CompositionEquipes</span><span class="o">.</span><span class="n">semaine</span> <span class="o">=</span> <span class="n">liste_jours_semaine</span>
+        <span class="c1">#print (liste_jours_semaine)</span>
+
+        <span class="n">dict_equipes_semaine</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">jour</span> <span class="ow">in</span> <span class="n">liste_jours_semaine</span><span class="p">:</span>
+            <span class="n">dict__jour</span> <span class="o">=</span> <span class="p">{}</span><span class="c1"># une version par jour (contient les dicos equipes)</span>
+
+            <span class="c1"># // ici je réinitialise les listes des employés diponibles (vérif par jour)</span>
+            <span class="n">liste_all_lead_pop</span> <span class="o">=</span> <span class="n">liste_all_leads</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">liste_all_under_leads_pop</span> <span class="o">=</span> <span class="n">liste_all_under_leads</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+            <span class="c1"># // ici: 2 boucles pour vérifier les non_dispos et valider les listes</span>
+            <span class="k">for</span> <span class="n">pot_lead</span> <span class="ow">in</span> <span class="n">liste_all_lead_pop</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">non_dispo</span> <span class="ow">in</span> <span class="n">liste_all_non_dispos</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">Check_non_dispo</span><span class="o">.</span><span class="n">is_not_dispo</span><span class="p">(</span><span class="n">non_dispo</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span><span class="n">jour</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+                        <span class="k">if</span><span class="p">(</span><span class="n">pot_lead</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">non_dispo</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                            <span class="n">liste_all_lead_pop</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">liste_all_lead_pop</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">pot_lead</span><span class="p">))</span>
+                            <span class="c1">#print(str(liste_all_lead_pop))</span>
+
+            <span class="k">for</span> <span class="n">pot_under_lead</span> <span class="ow">in</span> <span class="n">liste_all_under_leads_pop</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">non_dispo</span> <span class="ow">in</span> <span class="n">liste_all_non_dispos</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">Check_non_dispo</span><span class="o">.</span><span class="n">is_not_dispo</span><span class="p">(</span><span class="n">non_dispo</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">jour</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+                        <span class="k">if</span> <span class="p">(</span><span class="n">pot_under_lead</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">non_dispo</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                            <span class="n">liste_all_under_leads_pop</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">liste_all_under_leads_pop</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">pot_under_lead</span><span class="p">))</span>
+
+            <span class="n">dict_equipe</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span> <span class="c1"># une version par jour</span>
+
+            <span class="c1"># // ici je renseigne le dico equipe (chaque équipe) avec les leaders disponibles</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">modele_previsions</span><span class="o">.</span><span class="n">nb_quarts</span> <span class="o">*</span> <span class="n">modele_previsions</span><span class="o">.</span><span class="n">nb_equipes_par_q</span><span class="p">):</span><span class="c1"># = le nb equipes total</span>
+                <span class="n">dict_equipe</span><span class="p">[</span><span class="n">liste_all_lead_pop</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">2</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">liste_all_lead_pop</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="c1">#print(str(dict_equipe))</span>
+
+
+            <span class="c1"># // ici je récupère ce qu&#39;il faut d&#39;employés disponibles (triés par ancienneté, niveau) et les ajoute aux dicos equipes</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">dict_equipe</span><span class="p">:</span>
+                <span class="n">dict_equipe</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">([</span><span class="n">dict_equipe</span><span class="p">[</span><span class="n">j</span><span class="p">]])</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(((</span><span class="n">modele_previsions</span><span class="o">.</span><span class="n">nb_emplo_par_eq</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))):</span>
+                <span class="c1">#print(i)</span>
+
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">dict_equipe</span><span class="p">:</span>
+                    <span class="n">dict_equipe</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">liste_all_under_leads_pop</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)))</span>
+                    <span class="c1">#print(str(dict_equipe[j]))</span>
+
+                    <span class="c1"># print(list([dict_equipe[j],[&#39;a&#39;]]))</span>
+                    <span class="c1"># dict_equipe[j] = list([dict_equipe[j], liste_all_under_leads_pop.pop(0)])</span>
+                    <span class="c1"># #print(str(dict_equipe[j]))</span>
+
+
+            <span class="c1"># // finalement la semaine est structurée dans un dictionnaire de jours et d&#39;équipes</span>
+            <span class="n">dict_equipes_semaine</span><span class="p">[</span><span class="n">jour</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="n">jour</span><span class="p">[</span><span class="mi">1</span><span class="p">][:</span><span class="mi">10</span><span class="p">]]</span> <span class="o">=</span> <span class="n">dict_equipe</span>
+
+        <span class="k">return</span> <span class="n">dict_equipes_semaine</span></div></div>
+        <span class="c1">#vérif la semaine</span>
+        <span class="c1"># for j in dict_equipes_semaine:</span>
+        <span class="c1">#     print(j)</span>
+        <span class="c1">#     for v in dict_equipes_semaine[j].values():</span>
+        <span class="c1">#         print(v)</span>
+            <span class="c1"># for e in j:</span>
+            <span class="c1">#     print(&quot;\n\t %s&quot; % str(e))</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">CompositionEquipes</span><span class="o">.</span><span class="n">get_emp_dispo</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2024</span><span class="p">,</span><span class="mi">6</span><span class="p">)))</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, jk.</p>
+  </div>
+
+  Compilé avec <a href="https://www.sphinx-doc.org/">Sphinx</a> en utilisant un
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">thème</a>
+    fourni par <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

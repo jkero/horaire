@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="FR" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>util_calcule_non_dispo &mdash; Documentation Horaire_refonte_2024 0.1</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/design-tabs.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Recherche" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Horaire_refonte_2024
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Rechercher docs" aria-label="Rechercher docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../prerequis.html">Liste à faire</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cas_utilisation.html">Cas d’utilisation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../vrac_pseudocode.html">Vrac pseudo-code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../classes.html">Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">dev</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Horaire_refonte_2024</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Code du module</a></li>
+      <li class="breadcrumb-item active">util_calcule_non_dispo</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Code source de util_calcule_non_dispo</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Vérifie si une date (jour 24h) intersecte avec une plage de dates-heures (ou vice-versa)</span>
+<span class="sd">**contexte**: pour chaque jour d&#39;une semaine, vérifier une liste d&#39;employés</span>
+<span class="sd">qui ne seraient pas disponibles (selon table non-dispo) ce jour là.</span>
+
+<span class="sd">// todo : prévoir la vérification de portions de journées (quarts) au lieu de 0 à 23h59</span>
+
+<span class="sd">en entrée: une plage (deb et fin en datetime) de non-dispos et un jour (date).</span>
+
+<span class="sd">en sortie: True ou False</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">locale</span>
+<span class="kn">import</span> <span class="nn">calendar</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">timedelta</span><span class="p">,</span><span class="n">datetime</span>
+<div class="viewcode-block" id="Check_non_dispo"><a class="viewcode-back" href="../util_calcule_non_dispo.html#util_calcule_non_dispo.Check_non_dispo">[docs]</a><span class="k">class</span> <span class="nc">Check_non_dispo</span><span class="p">:</span>
+    <span class="n">deb</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">fin</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">le_jour</span> <span class="o">=</span> <span class="kc">None</span>
+<div class="viewcode-block" id="Check_non_dispo.is_not_dispo"><a class="viewcode-back" href="../util_calcule_non_dispo.html#util_calcule_non_dispo.Check_non_dispo.is_not_dispo">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">is_not_dispo</span><span class="p">(</span><span class="n">deb_fin</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
+        <span class="n">resultat</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">d</span><span class="p">,</span><span class="n">f</span> <span class="o">=</span> <span class="n">deb_fin</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;@&#39;</span><span class="p">)</span>
+        <span class="n">xd</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M&#39;</span><span class="p">)</span>
+        <span class="n">xf</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M&#39;</span><span class="p">)</span>
+        <span class="n">xjd</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M&#39;</span><span class="p">)</span>
+        <span class="n">xjf</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M&#39;</span><span class="p">)</span>  <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="mf">23.999</span><span class="p">)</span>
+        <span class="c1"># print(&quot;\t %s %s \t %s&quot; % (d,f,j))</span>
+        <span class="c1"># print(&quot;\t %s %s \t %s %s&quot; % (str(xd), str(xf), str(xjd), str(xjf)))</span>
+        <span class="k">if</span> <span class="n">xd</span> <span class="o">&lt;=</span> <span class="n">xjd</span> <span class="ow">and</span> <span class="n">xf</span> <span class="o">&gt;</span> <span class="n">xjd</span><span class="p">:</span>
+            <span class="n">resultat</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="n">xd</span> <span class="o">&lt;</span> <span class="n">xjf</span> <span class="ow">and</span> <span class="n">xf</span> <span class="o">&gt;=</span> <span class="n">xjf</span><span class="p">:</span>
+            <span class="n">resultat</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="n">xd</span> <span class="o">&gt;=</span> <span class="n">xjd</span> <span class="ow">and</span> <span class="n">xf</span> <span class="o">&lt;=</span> <span class="n">xjf</span><span class="p">:</span>
+            <span class="n">resultat</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">return</span> <span class="n">resultat</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, jk.</p>
+  </div>
+
+  Compilé avec <a href="https://www.sphinx-doc.org/">Sphinx</a> en utilisant un
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">thème</a>
+    fourni par <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

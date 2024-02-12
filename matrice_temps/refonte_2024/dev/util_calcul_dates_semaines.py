@@ -6,6 +6,9 @@ d'après un numéro de semaine et une année fournis au module util_xlsx.
 import locale, os, sys
 import calendar
 from datetime import timedelta, datetime
+
+import mariadb
+
 from matrice_temps.refonte_2024.dev.util_connection import MaConnect
 
 class LaSemaine:
@@ -25,9 +28,13 @@ class LaSemaine:
         prem_jour = "monday" if (j == 0) else "sunday" if (j == 6) else "monday"
 
         querySemaine = "select annee, num_semaine, str_to_date(concat((?),(?), ?), '%X%V %W') as jour from previsions_par_semaine where num_semaine = ?"
-        jkcur = LaSemaine.connection.conn.cursor()
-        jkcur.execute(querySemaine, (LaSemaine.annee, LaSemaine.la_num_semaine, prem_jour, LaSemaine.la_num_semaine))
-        return jkcur.fetchone()[2]
+        try:
+            jkcur = LaSemaine.connection.conn.cursor()
+            jkcur.execute(querySemaine, (LaSemaine.annee, LaSemaine.la_num_semaine, prem_jour, LaSemaine.la_num_semaine))
+        except mariadb.Error as m:
+            print(m)
+        finally:
+            return jkcur.fetchone()[2]
 
     @staticmethod
     def renseigne_jours_semaine(premier_jour_semaine, an, num_semaine):
